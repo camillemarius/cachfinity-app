@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'd49bb1f78a60';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '1e9198dfd0c3';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -370,6 +370,12 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
 .tool.picked { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
 .tool .pick { position: absolute; top: 8px; left: 8px; z-index: 1; display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px 3px 6px; border-radius: 999px; background: rgba(10, 25, 18, 0.72); color: #eef7f1; font-size: 12px; font-weight: 600; cursor: pointer; }
 .tool.picked .pick { background: var(--accent); color: var(--accent-ink, #1a0f06); }
+/* the test print's result on the card: a mark on the picture, set in the row «Testdruck» */
+.tool .fit { position: absolute; top: 8px; right: 8px; z-index: 1; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; color: #fff; }
+.tool .fit.ok { background: var(--ok); }
+.tool .fit.bad { background: var(--bad); }
+.tool .fit-row { align-items: center; gap: 8px; }
+.tool .fit-row .seg button { font-size: 12px; padding-block: 3px; }
 
 /* overviews of all bins and all cases */
 .pane.active[data-view="all"] > .stage-wrap, .pane.active[data-view="all"] > .panel { display: none; }
@@ -12737,14 +12743,19 @@ const TraceUI = {
   saveTool() {
     const sc = T.toolEdit, t = sc.tool, it = sc.items[0];
     if (!it || it.raw.length < 3) { toast('Der Umriss fehlt. «Abbrechen» lässt das Werkzeug, wie es war.', 'bad'); return; }
+    const before = JSON.stringify(t.outline), oldH = t.height;
     t.outline = cleanPoly(it.raw.map(([x, y]) => [Math.round((x + sc.off[0]) * 100) / 100, Math.round((y + sc.off[1]) * 100) / 100]));
     t.name = it.name.trim() || t.name;
     if (it.height > 0) t.height = it.height;
+    // a test print was made with the old outline: its result no longer says anything
+    const reset = t.fit && JSON.stringify(t.outline) !== before;
+    if (reset) { delete t.fit; delete t.fitAt; }
     Store.save('tool', t);
-    // bins with this tool: new pockets; a bin set to fit its content adapts
+    // bins with this tool: new pockets (and depths when the height changed); a bin set to fit its content adapts
+    if (t.height !== oldH) toolHeightChanged(t);
     const bins = S.bins.filter((b) => b.items.some((x) => x.toolId === t.id));
     for (const b of bins) { fitBin(b); b._rev = (b._rev || 0) + 1; Store.save('bin', b); }
-    toast(`Umriss von «${t.name}» gespeichert` + (bins.length ? `, ${bins.length} Bin${bins.length === 1 ? '' : 's'} angepasst.` : '.'));
+    toast(`Umriss von «${t.name}» gespeichert` + (bins.length ? `, ${bins.length} Bin${bins.length === 1 ? '' : 's'} angepasst.` : '.') + (reset ? ' Der Testdruck-Status steht wieder auf «offen».' : ''));
     this.leaveTool(true);
   },
   // the parts for «Testdruck»: the chosen one, and all that are ticked (else all), with the outline the tool
@@ -12992,6 +13003,8 @@ function hexA(hex, a) {
 }
 
 // ===== Tab 3: tool library =====
+// a tool's test print (t.fit), as shown on its card and in a bin's content list
+const FIT_TEXT = { ok: '✓ Testdruck passt', bad: '✗ Testdruck passt nicht' }, FIT_MARK = { ok: '✓ passt', bad: '✗ passt nicht' };
 const LibUI = {
   confirmId: null, picked: new Set(),
   init() {
@@ -13027,8 +13040,11 @@ const LibUI = {
       const toggle = () => { if (this.picked.has(t.id)) this.picked.delete(t.id); else this.picked.add(t.id); this.render(); };
       const thumb = thumbOf(t.outline, 300, 188, ITEM_COLORS[i % ITEM_COLORS.length]);
       thumb.style.cursor = 'pointer'; thumb.title = 'Antippen wählt das Werkzeug für einen gemeinsamen Bin aus'; thumb.addEventListener('click', toggle);
+      // whether the test print fitted (t.fit 'ok' | 'bad', absent: not tried yet); set by hand here
+      const fitBtn = (val, label) => h('button', { type: 'button', 'aria-pressed': String((t.fit || '') === val), onclick: () => { if (val) { t.fit = val; t.fitAt = Date.now(); } else { delete t.fit; delete t.fitAt; } Store.save('tool', t); this.render(); } }, label);
       grid.append(h('article', { class: 'tool' + (picked ? ' picked' : '') },
         h('label', { class: 'pick' }, h('input', { type: 'checkbox', checked: picked, onchange: toggle, 'aria-label': 'Auswählen' }), picked ? 'Ausgewählt' : 'Auswählen'),
+        t.fit ? h('span', { class: 'fit ' + t.fit, title: FIT_TEXT[t.fit] + (t.fitAt ? ', gesetzt am ' + new Date(t.fitAt).toLocaleDateString('de-CH') : ''), text: FIT_MARK[t.fit] }) : null,
         thumb,
         h('div', { class: 'body' },
           t.example ? h('div', { class: 'ex', text: 'Beispiel' }) : null,
@@ -13042,6 +13058,8 @@ const LibUI = {
                 const bins = toolHeightChanged(t);
                 if (bins.length) toast(`Taschentiefe von «${t.name}» in ${bins.length === 1 ? `«${bins[0].name}»` : `${bins.length} Bins`} angepasst.`);
               } }), h('span', { class: 'unit', text: 'mm' }))),
+          h('div', { class: 'row fit-row' }, h('span', { class: 'unit', text: 'Testdruck' }),
+            h('div', { class: 'seg', role: 'group', 'aria-label': 'Testdruck' }, fitBtn('', 'offen'), fitBtn('ok', 'passt'), fitBtn('bad', 'passt nicht'))),
           h('div', { class: 'row' },
             h('button', { class: 'btn small primary', type: 'button', onclick: () => this.toBin(t) }, 'In Bin legen'),
             h('button', { class: 'btn small', type: 'button', title: 'Umriss mit dem Punkte-Editor korrigieren, ohne Foto', onclick: () => TraceUI.editTool(t) }, 'Umriss bearbeiten'), del))));
@@ -13390,7 +13408,7 @@ const BinUI = {
       const t = toolById(it.toolId);
       items.append(h('div', { class: 'item' + (this.sel && this.sel.id === it.id ? ' sel' : ''), onclick: () => { this.sel = { kind: 'item', id: it.id }; this.renderPanel(); this.stage.redraw(); } },
         h('span', { class: 'swatch', style: { background: b.color } }),
-        h('div', null, h('div', { class: 't', text: t ? t.name : 'fehlt' }), h('div', { class: 's', text: `Tiefe ${nf(Math.min(it.depth, maxDepth(b)), 1)} mm${t && t.height > Math.min(it.depth, maxDepth(b)) + 0.05 ? ` (Werkzeug ${nf(t.height, 1)} mm hoch)` : ''} · ${nf(it.rot, 0)}°${it.mirror ? ' · gespiegelt' : ''}` })),
+        h('div', null, h('div', { class: 't', text: t ? t.name : 'fehlt' }), h('div', { class: 's', text: `Tiefe ${nf(Math.min(it.depth, maxDepth(b)), 1)} mm${t && t.height > Math.min(it.depth, maxDepth(b)) + 0.05 ? ` (Werkzeug ${nf(t.height, 1)} mm hoch)` : ''} · ${nf(it.rot, 0)}°${it.mirror ? ' · gespiegelt' : ''}${t && t.fit ? ' · ' + FIT_TEXT[t.fit] : ''}` })),
         // the tool as a body in the 3D view, to see how deep it sits (off unless ticked; a setting of this
         // browser, not of the bin)
         h('label', { class: 'check', title: 'Werkzeug in der 3D-Ansicht zeigen', style: { fontSize: '12px', gap: '4px' }, onclick: (e) => e.stopPropagation() },
