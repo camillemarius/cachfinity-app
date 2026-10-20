@@ -8483,6 +8483,23 @@ function cap(name) {
 }
 const lsGet = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch { /* storage unavailable */ } };
+// IndexedDB as a key-value store (database 'cachfinity', store 'kv'): the data here and the data folder's
+// file handle. Every call rejects instead of hanging when the browser has no IndexedDB, refuses it, or
+// aborts the write (a full disk aborts it without an error event).
+const idb = (mode, fn) => new Promise((res, rej) => {
+  const open = indexedDB.open('cachfinity', 1);
+  open.onupgradeneeded = () => open.result.createObjectStore('kv');
+  open.onerror = () => rej(open.error);
+  open.onsuccess = () => {
+    const db = open.result;
+    let tx, q;
+    try { tx = db.transaction('kv', mode); q = fn(tx.objectStore('kv')); } catch (e) { db.close(); rej(e); return; }
+    tx.oncomplete = () => { res(q && q.result); db.close(); };
+    tx.onerror = () => { rej(tx.error); db.close(); };
+    tx.onabort = () => { rej(tx.error || new Error('IndexedDB abgebrochen')); db.close(); };
+  };
+});
+const idbGet = (k) => idb('readonly', (s) => s.get(k)), idbSet = (k, v) => idb('readwrite', (s) => s.put(v, k)), idbDel = (k) => idb('readwrite', (s) => s.delete(k));
 
 // ---------- linear algebra ----------
 function solveLinear(A, b) {
@@ -10707,7 +10724,9 @@ const GF = { pitch: 42, gap: 0.5, unit: 7, base: 4.75, r: 3.75, lip: 4.4, lipIns
 const BIN_COLORS = ['#f0782e', '#3d8fe0', '#e8c02a', '#a06ae0', '#e2525f', '#45b7c9', '#9aa7ae', '#f2efe6'];
 
 let S = null; // { cases, tools, bins, ui }
-const LS_KEY = 'gridfinity-werkbank-v1';
+const LS_KEY = 'gridfinity-werkbank-v1'; // the copy here in localStorage (older versions, and without IndexedDB)
+const DATA_KEY = 'data'; // the copy here in IndexedDB (see Store.loadLocal)
+const isFull = (e) => !!e && (e.name === 'QuotaExceededError' || e.code === 22);
 
 // ---------- lookups ----------
 const toolById = (id) => S.tools.find((t) => t.id === id);
@@ -11186,20 +11205,59 @@ const Store = {
     if (!this.db) { if (this.wantsDb() && this.onReload) this.connect(this.onReload); return; }
     for (const [key, e] of Object.entries(this.outbox())) if (!this.pending.has(key) && !this.inflight.get(key)) { this.pending.set(key, e.obj); this.flush(key); }
   },
-  // the browser keeps only about 5 MB per site; when that is full the copy here stops following the changes,
-  // which must not go unnoticed where this copy is all there is
-  snapshotLocal: debounce(() => {
-    try { localStorage.setItem(LS_KEY, JSON.stringify(S)); Store.full = false; } catch (e) {
-      const full = e && (e.name === 'QuotaExceededError' || e.code === 22);
-      if (full && !Store.full && Store.mode !== 'db') toast('Der Speicher dieses Browsers ist voll (etwa 5 MB): neue Änderungen bleiben hier nicht mehr erhalten. Sichere unter «Daten» oder verbinde eine Datendatei.', 'bad');
-      Store.full = full;
-    }
+  // The copy in this browser lives in IndexedDB (key DATA_KEY), where a browser allows far more than the
+  // about 5 MB of localStorage that the photo pieces of many tools outgrow. Older versions kept it in
+  // localStorage (LS_KEY): the first start takes that over, checks that IndexedDB holds it, and removes it
+  // there. Without IndexedDB (switched off, private window) localStorage is used as before.
+  local: 'idb', dirty: false, full: false, writing: Promise.resolve(),
+  // after a change: written 0.4 s later (a burst of changes once), at once when the page is hidden or closed
+  snapshotLocal() { this.dirty = true; this.writeSoon(); },
+  writeSoon: debounce(() => Store.writeLocal(), 400),
+  writeLocal(closing = false) {
+    if (!this.dirty) return this.writing;
+    this.dirty = false;
+    const text = JSON.stringify(S);
     DataFolder.changed(); GDrive.changed();
-  }, 400),
-  loadLocal() {
-    const raw = lsGet(LS_KEY);
-    if (raw) { try { const v = JSON.parse(raw); if (v && Array.isArray(v.tools) && Array.isArray(v.bins) && Array.isArray(v.cases)) { S = v; S.ui = S.ui || {}; return true; } } catch { /* corrupt */ } }
-    return false;
+    // closing: IndexedDB may not finish before the page is gone, so a copy also goes to localStorage at
+    // once when it fits; the next start takes the newer of both (see loadLocal)
+    if (closing && this.local === 'idb') try { localStorage.setItem(LS_KEY, text); } catch { /* too big: IndexedDB only */ }
+    // one write after the other, so an older copy never lands after a newer one
+    this.writing = this.writing.then(async () => {
+      if (this.local === 'idb') {
+        try { await idbSet(DATA_KEY, text); this.full = false; return; } catch (e) {
+          if (isFull(e)) { this.warnFull(); return; }
+          console.warn('IndexedDB', e); this.local = 'ls'; // not usable here: localStorage from now on
+        }
+      }
+      try { localStorage.setItem(LS_KEY, text); this.full = false; } catch (e) { if (isFull(e)) this.warnFull(); }
+    });
+    return this.writing;
+  },
+  // when the space is full the copy here stops following the changes, which must not go unnoticed where
+  // this copy is all there is
+  warnFull() {
+    if (!this.full && this.mode !== 'db') toast('Der Speicher dieses Browsers ist voll: neue Änderungen bleiben hier nicht mehr erhalten. Sichere unter «Daten», verbinde Google Drive oder eine Datendatei, oder gib auf der Festplatte Platz frei.', 'bad');
+    this.full = true;
+  },
+  async loadLocal() {
+    const parse = (raw) => { try { const v = typeof raw === 'string' ? JSON.parse(raw) : null; return v && Array.isArray(v.tools) && Array.isArray(v.bins) && Array.isArray(v.cases) ? v : null; } catch { return null; } };
+    // the newest change in a copy, to choose between two
+    const stamp = (d) => Math.max(0, ...[...d.tools, ...d.bins, ...d.cases].map((x) => x._t || 0), ...Object.values(d.tomb || {}));
+    let v = null;
+    try { v = parse(await idbGet(DATA_KEY)); } catch (e) { console.warn('IndexedDB', e); this.local = 'ls'; }
+    const oldRaw = this.local === 'idb' ? lsGet(LS_KEY) : null, old = oldRaw ? parse(oldRaw) : null;
+    if (old && (!v || stamp(old) > stamp(v))) {
+      // the copy an older version left in localStorage (or wrote there after the update, in another tab)
+      v = old;
+      try { await idbSet(DATA_KEY, oldRaw); } catch (e) { console.warn('IndexedDB', e); this.local = 'ls'; }
+    }
+    if (this.local === 'idb' && oldRaw) try { if (parse(await idbGet(DATA_KEY))) localStorage.removeItem(LS_KEY); } catch { /* stays there */ }
+    if (this.local === 'ls') v = v || parse(lsGet(LS_KEY));
+    window.addEventListener('pagehide', () => this.writeLocal(true));
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') this.writeLocal(); });
+    if (!v) return false;
+    S = v; S.ui = S.ui || {};
+    return true;
   },
   async connect(onReload) {
     this.onReload = onReload;
@@ -14365,17 +14423,7 @@ const Undo = {
 // again; that question needs a click. Only Edge and Chrome offer this (File System Access API); the page on
 // claude.ai runs in a sandboxed frame that may not touch files, so there the window only points to the
 // offline version.
-const idb = (mode, fn) => new Promise((res, rej) => {
-  const open = indexedDB.open('cachfinity', 1);
-  open.onupgradeneeded = () => open.result.createObjectStore('kv');
-  open.onerror = () => rej(open.error);
-  open.onsuccess = () => {
-    const tx = open.result.transaction('kv', mode), q = fn(tx.objectStore('kv'));
-    tx.oncomplete = () => { res(q && q.result); open.result.close(); };
-    tx.onerror = () => rej(tx.error);
-  };
-});
-const idbGet = (k) => idb('readonly', (s) => s.get(k)), idbSet = (k, v) => idb('readwrite', (s) => s.put(v, k)), idbDel = (k) => idb('readwrite', (s) => s.delete(k));
+// (the handle is kept with idbGet/idbSet from 00-core.js)
 // the data in a form that compares equal whatever order things were stored in
 function dataKey(d) {
   const by = (a) => (a || []).slice().sort((x, y) => (x.id < y.id ? -1 : 1));
@@ -14746,7 +14794,7 @@ const App = {
   renderAll() { LibUI.render(); BinUI.render(); CaseUI.render(); FotoUI.render(); },
   async boot() {
     // an offline file downloaded with data starts from that data rather than the examples
-    if (!Store.loadLocal()) { if (DataUI.hasStartData()) S = { cases: [], tools: [], bins: [], ui: { tab: 'foto', binId: null, caseId: null } }; else seedState(); }
+    if (!(await Store.loadLocal())) { if (DataUI.hasStartData()) S = { cases: [], tools: [], bins: [], ui: { tab: 'foto', binId: null, caseId: null } }; else seedState(); }
     S.ui = { tab: 'foto', ...S.ui };
     FotoUI.init(); TraceUI.init(); LibUI.init(); BinUI.init(); CaseUI.init(); Overview.init(); NewBin.init(); TestPrint.init(); DataUI.init(); Undo.init(); DataFolder.init(); GDrive.init();
     window.addEventListener('online', () => Store.sendAll());
@@ -14761,6 +14809,7 @@ const App = {
 // kernel are loaded and a bin is built; the result goes into the page title
 if (location.hash === '#selbsttest') setTimeout(async () => {
   try {
+    while (!S) await sleep(100); // (the data here are read asynchronously at the start)
     await loadThree(); const r = await loadCAD();
     const s = await buildBinSolid(S.bins[0] || newBin());
     document.title = 'SELBSTTEST OK ' + Math.round(r.measureVolume(s)) + ' mm3, Schrift ' + (document.fonts.check('600 14px Barlow') ? 'da' : 'fehlt');
