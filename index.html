@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '1e9198dfd0c3';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'f748fca440d7';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -427,13 +427,13 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
       <h1>Cachfinity</h1>
     </div>
     <nav class="tabs" role="tablist" aria-label="Arbeitsschritte">
-      <button class="tab" role="tab" id="tab-btn-foto" data-tab="foto"><span class="n">1</span>Fotos</button>
-      <button class="tab" role="tab" id="tab-btn-trace" data-tab="trace"><span class="n">2</span>Umrisse</button>
-      <button class="tab" role="tab" id="tab-btn-lib" data-tab="lib"><span class="n">3</span>Werkzeuge</button>
-      <button class="tab" role="tab" id="tab-btn-bins" data-tab="bins"><span class="n">4</span>Bins</button>
-      <button class="tab" role="tab" id="tab-btn-bin" data-tab="bin"><span class="n">5</span>Bin bearbeiten</button>
-      <button class="tab" role="tab" id="tab-btn-cases" data-tab="cases"><span class="n">6</span>Koffer</button>
-      <button class="tab" role="tab" id="tab-btn-case" data-tab="case"><span class="n">7</span>Koffer einrichten</button>
+      <button title="Fotos der Werkzeuge laden: auf einem weissen A4-Blatt, von oben fotografiert; das Blatt gibt den Massstab" class="tab" role="tab" id="tab-btn-foto" data-tab="foto"><span class="n">1</span>Fotos</button>
+      <button title="Umrisse erkennen und von Hand korrigieren: Punkte, Symmetrieachse, Testdruck" class="tab" role="tab" id="tab-btn-trace" data-tab="trace"><span class="n">2</span>Umrisse</button>
+      <button title="Alle Werkzeuge: Name, Höhe, Testdruck-Status, Umriss bearbeiten, in einen Bin legen" class="tab" role="tab" id="tab-btn-lib" data-tab="lib"><span class="n">3</span>Werkzeuge</button>
+      <button title="Übersicht aller Bins, Toleranz für neue Bins, neuer Bin" class="tab" role="tab" id="tab-btn-bins" data-tab="bins"><span class="n">4</span>Bins</button>
+      <button title="Einen Bin einrichten: Grösse, Taschen, Griffmulden, Formen, 3D, Export" class="tab" role="tab" id="tab-btn-bin" data-tab="bin"><span class="n">5</span>Bin bearbeiten</button>
+      <button title="Übersicht der Koffer; Bins einem Koffer zuweisen" class="tab" role="tab" id="tab-btn-cases" data-tab="cases"><span class="n">6</span>Koffer</button>
+      <button title="Bins im Koffer platzieren und stapeln, Grundplatte, Export" class="tab" role="tab" id="tab-btn-case" data-tab="case"><span class="n">7</span>Koffer einrichten</button>
     </nav>
     <div class="seg mode-switch" role="group" aria-label="Online oder offline arbeiten">
       <button type="button" id="mode-online" title="Mit deinem claude.ai-Konto arbeiten">Online</button><button type="button" id="mode-offline" title="Ohne Internet arbeiten, mit der Offline-Datei">Offline</button>
@@ -459,29 +459,29 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
         <h2>Fotos <span class="spacer"></span><span class="unit" id="foto-count"></span></h2>
         <div class="photostrip" id="foto-list"></div>
         <div class="row">
-          <label class="btn primary grow" for="foto-input">Foto hinzufügen</label>
+          <label title="Ein oder mehrere Fotos wählen: Werkzeuge auf weissem A4-Papier, von oben fotografiert" class="btn primary grow" for="foto-input">Foto hinzufügen</label>
           <input type="file" id="foto-input" accept="image/*" multiple hidden>
-          <button class="btn" type="button" id="foto-sample1">Beispiel</button>
-          <button class="btn" type="button" id="foto-sample3">Beispiel ×3</button>
+          <button title="Ein erzeugtes Beispielfoto laden, zum Ausprobieren" class="btn" type="button" id="foto-sample1">Beispiel</button>
+          <button title="Drei Beispielfotos derselben Teile aus verschiedenen Richtungen: die Umrisse werden geschnitten, das nimmt die Überhöhung hoher Teile weg" class="btn" type="button" id="foto-sample3">Beispiel ×3</button>
         </div>
       </div>
       <div class="card">
         <h2>Papier</h2>
         <div class="fields">
-          <label class="f"><span>Format</span>
-            <select id="paper-format">
+          <label class="f" title="Format des Blatts unter den Werkzeugen; es dient als Massstab"><span>Format</span>
+            <select title="Format des Blatts unter den Werkzeugen; es dient als Massstab" id="paper-format">
               <option value="A4">A4</option><option value="A3">A3</option><option value="Letter">Letter</option><option value="Legal">Legal</option><option value="custom">Eigenes</option>
             </select></label>
-          <label class="f"><span>Breite mm</span><input type="number" id="paper-w" min="50" max="1000" step="1"></label>
-          <label class="f"><span>Höhe mm</span><input type="number" id="paper-h" min="50" max="1000" step="1"></label>
+          <label title="Breite des Blatts in mm (bei eigenem Format)" class="f"><span>Breite mm</span><input type="number" id="paper-w" min="50" max="1000" step="1"></label>
+          <label title="Höhe des Blatts in mm (bei eigenem Format)" class="f"><span>Höhe mm</span><input type="number" id="paper-h" min="50" max="1000" step="1"></label>
         </div>
-        <div class="row"><button class="btn small" type="button" id="corners-auto">Ecken automatisch finden</button></div>
+        <div class="row"><button title="Die vier Ecken des Blatts im Foto neu suchen lassen" class="btn small" type="button" id="corners-auto">Ecken automatisch finden</button></div>
       </div>
       <div class="card" id="cam-card">
         <h2>Kamera</h2>
         <dl class="kv" id="cam-kv"></dl>
-        <label class="f"><span>Kamerahöhe über dem Papier (überschreiben)</span>
-          <div class="row"><input type="number" id="cam-h" min="10" max="300" step="0.5" placeholder="automatisch" class="grow"><span class="unit">cm</span></div></label>
+        <label class="f" title="Höhe der Kamera über dem Blatt; leer lassen, dann schätzt Cachfinity sie aus dem Foto"><span>Kamerahöhe über dem Papier (überschreiben)</span>
+          <div class="row"><input title="Höhe der Kamera über dem Blatt; leer lassen, dann schätzt Cachfinity sie aus dem Foto" type="number" id="cam-h" min="10" max="300" step="0.5" placeholder="automatisch" class="grow"><span class="unit">cm</span></div></label>
       </div>
       <div class="card">
         <h2>So wird das Foto gut</h2>
@@ -494,7 +494,7 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
           <li><strong>Mehrere Fotos mit verschiedenen Teilen</strong> lassen sich zusammen laden. Cachfinity erkennt, welche Fotos dieselben Teile zeigen, und wertet jedes Motiv für sich aus.</li>
         </ul>
       </div>
-      <button class="btn primary block" type="button" id="foto-next">Weiter: Umrisse erkennen</button>
+      <button title="Weiter zur Erkennung der Umrisse" class="btn primary block" type="button" id="foto-next">Weiter: Umrisse erkennen</button>
     </div>
   </section>
 
@@ -508,7 +508,7 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
       <div class="stage-bar"><span class="hint" id="trace-hint">Teil anklicken zum Bearbeiten. Punkte ziehen, Doppelklick auf eine Kante fügt einen Punkt ein, Rechtsklick löscht ihn.</span>
         <div class="seg" role="group" aria-label="Werkzeug"><button type="button" id="trace-tool-edit" aria-pressed="true" title="Punkte ziehen, in der Linienmitte neue einfügen">Bearbeiten</button><button type="button" id="trace-tool-del" aria-pressed="false" title="Angetippte Punkte löschen">Löschen</button></div>
         <button class="btn small ghost" type="button" id="trace-undo" title="Rückgängig (Strg+Z)" aria-label="Rückgängig">↶</button><button class="btn small ghost" type="button" id="trace-redo" title="Wiederholen (Strg+Y)" aria-label="Wiederholen">↷</button>
-        <div class="seg" role="group" aria-label="Ansicht"><button type="button" id="trace-show-photo" aria-pressed="true">Foto</button><button type="button" id="trace-show-mask" aria-pressed="false" title="Zeigt orange über dem Foto, was die Erkennung als Teil gezählt hat">Maske</button></div>
+        <div class="seg" role="group" aria-label="Ansicht"><button type="button" id="trace-show-photo" aria-pressed="true" title="Das Foto unter den Umrissen zeigen">Foto</button><button type="button" id="trace-show-mask" aria-pressed="false" title="Zeigt orange über dem Foto, was die Erkennung als Teil gezählt hat">Maske</button></div>
         <button class="btn small ghost" type="button" id="trace-fit" title="Zoom so, dass alles zu sehen ist">Alles zeigen</button></div>
     </div>
     <div class="panel">
@@ -519,35 +519,35 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
       </div>
       <div class="card" id="trace-detect-card">
         <h2>Erkennung</h2>
-        <label class="check"><input type="checkbox" id="snap" checked> Kanten nachführen</label>
-        <label class="check"><input type="checkbox" id="shadow" checked> Schatten entfernen <span class="unit">(bei mattgrauen Teilen, die angeschnitten wirken, ausschalten)</span></label>
-        <label class="f"><span>Empfindlichkeit <span class="mono" id="sens-val"></span></span><input type="range" id="sens" min="-0.3" max="0.3" step="0.01" value="0"></label>
+        <label title="Die Umrisse an den echten Kanten im Foto ausrichten" class="check"><input type="checkbox" id="snap" checked> Kanten nachführen</label>
+        <label title="Schatten neben den Teilen erkennen und abziehen" class="check"><input type="checkbox" id="shadow" checked> Schatten entfernen <span class="unit">(bei mattgrauen Teilen, die angeschnitten wirken, ausschalten)</span></label>
+        <label title="Wie dunkel etwas sein muss, um als Teil zu zählen: nach rechts zählt mehr dazu, nach links weniger" class="f"><span>Empfindlichkeit <span class="mono" id="sens-val"></span></span><input type="range" id="sens" min="-0.3" max="0.3" step="0.01" value="0"></label>
         <div class="fields two">
-          <label class="f"><span>Lücken schliessen mm</span><input type="number" id="gap" min="0" max="10" step="0.5" value="2"></label>
-          <label class="f"><span>Min. Grösse mm</span><input type="number" id="min-size" min="2" max="100" step="1" value="8"></label>
-          <label class="f"><span>Randzone mm</span><input type="number" id="border" min="0" max="15" step="0.5" value="1.5"></label>
+          <label title="Lücken bis zu dieser Breite innerhalb eines Teils schliessen, etwa zwischen Zangenbacken" class="f"><span>Lücken schliessen mm</span><input type="number" id="gap" min="0" max="10" step="0.5" value="2"></label>
+          <label title="Kleinere Flecken gelten nicht als Teil" class="f"><span>Min. Grösse mm</span><input type="number" id="min-size" min="2" max="100" step="1" value="8"></label>
+          <label title="Streifen am Papierrand, der nicht als Teil zählt" class="f"><span>Randzone mm</span><input type="number" id="border" min="0" max="15" step="0.5" value="1.5"></label>
         </div>
         <p id="trace-info"></p>
       </div>
       <div class="card">
         <h2><span id="trace-parts-title">Gefundene Teile</span> <span class="spacer"></span><span class="unit" id="trace-count"></span></h2>
         <div id="trace-detail-wrap">
-          <label class="f"><span>Vereinfachung <span class="mono" id="detail-val"></span></span><input type="range" id="detail" min="0.2" max="3" step="0.1" value="1"></label>
+          <label title="Wie stark die Umrisse vereinfacht werden: links mehr Punkte, rechts mehr Geraden" class="f"><span>Vereinfachung <span class="mono" id="detail-val"></span></span><input type="range" id="detail" min="0.2" max="3" step="0.1" value="1"></label>
           <div class="range-ends"><span>mehr Punkte</span><span>mehr Geraden</span></div>
         </div>
         <div class="list" id="trace-list"></div>
         <div class="row" id="trace-edit-tools" hidden>
-          <button class="btn small" type="button" id="trace-merge">Mit Teil verbinden</button>
-          <button class="btn small" type="button" id="trace-del-pt">Punkt löschen</button>
-          <button class="btn small" type="button" id="trace-reset">Umriss zurücksetzen</button>
-          <button class="btn small danger" type="button" id="trace-del">Teil verwerfen</button>
+          <button title="Das gewählte Teil mit einem zweiten verbinden: danach das zweite Teil anklicken" class="btn small" type="button" id="trace-merge">Mit Teil verbinden</button>
+          <button title="Den gewählten Punkt löschen (auch mit Rechtsklick oder Entf)" class="btn small" type="button" id="trace-del-pt">Punkt löschen</button>
+          <button title="Den Umriss wieder so, wie er erkannt wurde" class="btn small" type="button" id="trace-reset">Umriss zurücksetzen</button>
+          <button title="Dieses Teil nicht übernehmen" class="btn small danger" type="button" id="trace-del">Teil verwerfen</button>
         </div>
         <div class="row" id="trace-sym-tools" style="flex-wrap: wrap; row-gap: 6px" hidden>
           <button class="btn small" type="button" id="trace-axis" aria-pressed="false" title="Spiegelachse für das gewählte Teil: gezogene Punkte rasten auf den Spiegelbildern der Punkte gegenüber ein, eine Seite lässt sich auf die andere spiegeln">Symmetrieachse</button>
-          <button class="btn small" type="button" id="trace-mirror-1" hidden>Links auf rechts spiegeln</button>
-          <button class="btn small" type="button" id="trace-mirror-2" hidden>Rechts auf links spiegeln</button>
+          <button title="Diese Seite auf die andere Seite der Achse spiegeln: der Umriss wird genau symmetrisch" class="btn small" type="button" id="trace-mirror-1" hidden>Links auf rechts spiegeln</button>
+          <button title="Diese Seite auf die andere Seite der Achse spiegeln: der Umriss wird genau symmetrisch" class="btn small" type="button" id="trace-mirror-2" hidden>Rechts auf links spiegeln</button>
           <button class="btn small ghost" type="button" id="trace-axis-reset" hidden title="Die Achse neu bestimmen lassen">Achse neu</button>
-          <label class="check" id="trace-mirror-edit-wrap" hidden><input type="checkbox" id="trace-mirror-edit"> Gespiegelt bearbeiten <span class="unit">(jede Änderung auch auf der anderen Seite)</span></label>
+          <label title="Jede Änderung auf einer Seite der Achse wird auf die andere Seite übertragen" class="check" id="trace-mirror-edit-wrap" hidden><input type="checkbox" id="trace-mirror-edit"> Gespiegelt bearbeiten <span class="unit">(jede Änderung auch auf der anderen Seite)</span></label>
         </div>
         <div class="row" id="trace-print-row" hidden>
           <button class="btn small" type="button" id="trace-testprint" title="Den Umriss zum Anprobieren drucken: als dünnen Rahmen (3D) oder 1:1 auf Papier">Testdruck…</button>
@@ -557,8 +557,8 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
         <h2>Höhenkorrektur</h2>
         <p id="parallax-text"></p>
       </div>
-      <button class="btn primary block" type="button" id="trace-commit">In Werkzeuge übernehmen</button>
-      <button class="btn block" type="button" id="trace-cancel" hidden>Abbrechen</button>
+      <button title="Die angehakten Teile als Werkzeuge in die Sammlung übernehmen" class="btn primary block" type="button" id="trace-commit">In Werkzeuge übernehmen</button>
+      <button title="Nichts ändern und zurück" class="btn block" type="button" id="trace-cancel" hidden>Abbrechen</button>
     </div>
   </section>
 
@@ -567,7 +567,7 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
     <div class="lib-wrap">
       <div class="lib-bar">
         <p>Deine Werkzeugsammlung. Jeder Umriss ist um die Höhenüberhöhung korrigiert und in Millimetern gespeichert. Die Höhe bestimmt die Taschentiefe im Bin.</p>
-        <button class="btn" type="button" id="lib-clear-ex" hidden>Beispiele entfernen</button>
+        <button title="Die Beispiel-Werkzeuge und Beispiel-Bins löschen" class="btn" type="button" id="lib-clear-ex" hidden>Beispiele entfernen</button>
       </div>
       <div class="lib-pick" id="lib-pick" hidden></div>
       <div class="lib" id="lib-grid"></div>
@@ -579,9 +579,9 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
     <div class="lib-wrap" id="bin-all">
       <div class="lib-bar">
         <p id="bin-all-count"></p>
-        <label class="f inline-f"><span>Toleranz für neue Bins</span><input type="number" id="bin-all-tol" min="0" max="5" step="0.1" style="width: 72px"><span class="unit">mm</span></label>
+        <label title="Spiel rundum zwischen Werkzeug und Tasche für neu angelegte Bins (Standard 0.5 mm)" class="f inline-f"><span>Toleranz für neue Bins</span><input type="number" id="bin-all-tol" min="0" max="5" step="0.1" style="width: 72px"><span class="unit">mm</span></label>
         <button class="btn small" type="button" id="bin-all-tol-apply" title="Diese Toleranz in alle bestehenden Bins übernehmen">Auf alle Bins anwenden</button>
-        <button class="btn" type="button" id="bin-all-new">Neuer Bin</button>
+        <button title="Einen neuen Bin anlegen: leer, mit einem Fach, mit Fächern oder mit Kugelmulde" class="btn" type="button" id="bin-all-new">Neuer Bin</button>
       </div>
       <div class="lib" id="bin-all-grid"></div>
     </div>
@@ -591,13 +591,13 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
   <section class="pane" id="pane-bin" role="tabpanel" aria-labelledby="tab-btn-bin">
     <div class="stage-wrap">
       <div class="stage-bar">
-        <select id="bin-select" style="max-width: 260px"></select>
-        <button class="btn small" type="button" id="bin-new">Neuer Bin</button>
+        <select title="Welchen Bin du bearbeitest" id="bin-select" style="max-width: 260px"></select>
+        <button title="Einen neuen Bin anlegen" class="btn small" type="button" id="bin-new">Neuer Bin</button>
         <button class="btn small ghost" type="button" id="bin-undo" title="Rückgängig (Strg+Z)" aria-label="Rückgängig">↶</button><button class="btn small ghost" type="button" id="bin-redo" title="Wiederholen (Strg+Y)" aria-label="Wiederholen">↷</button>
-        <button class="btn small" type="button" id="bin-dup">Duplizieren</button>
-        <span id="bin-del-wrap" class="confirm"><button class="btn small danger" type="button" id="bin-del">Löschen</button></span>
+        <button title="Eine Kopie dieses Bins anlegen" class="btn small" type="button" id="bin-dup">Duplizieren</button>
+        <span id="bin-del-wrap" class="confirm"><button title="Diesen Bin löschen (mit Rückfrage)" class="btn small danger" type="button" id="bin-del">Löschen</button></span>
         <span class="hint"></span>
-        <div class="seg" role="group" aria-label="Ansicht"><button type="button" id="bin-view-2d" aria-pressed="true">Draufsicht</button><button type="button" id="bin-view-3d" aria-pressed="false">3D</button></div>
+        <div class="seg" role="group" aria-label="Ansicht"><button title="Draufsicht: Werkzeuge und Formen anordnen" type="button" id="bin-view-2d" aria-pressed="true">Draufsicht</button><button title="3D-Ansicht; die exakte Form wird nach einem Moment berechnet. Werkzeuge mit Haken «3D» in der Liste erscheinen darin" type="button" id="bin-view-3d" aria-pressed="false">3D</button></div>
       </div>
       <div class="stage" id="stage-bin"><canvas id="cv-bin"></canvas><div class="three-host" id="bin-3d" hidden></div>
         <div class="stage-empty" id="bin-empty" hidden><div><strong>Noch kein Bin</strong>Lege mit «Neuer Bin» einen an oder ziehe im Koffer ein Rechteck auf.</div></div>
@@ -610,34 +610,34 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
     <div class="panel" id="bin-panel">
       <div class="card">
         <h2>Bin</h2>
-        <label class="f"><span>Name</span><input type="text" id="bin-name" maxlength="60"></label>
+        <label title="Name des Bins" class="f"><span>Name</span><input type="text" id="bin-name" maxlength="60"></label>
         <div class="fields">
-          <label class="f"><span>Breite Felder</span><input type="number" id="bin-gx" min="1" max="12" step="1"></label>
-          <label class="f"><span>Tiefe Felder</span><input type="number" id="bin-gy" min="1" max="12" step="1"></label>
-          <label class="f"><span>Höhe u (7 mm)</span><input type="number" id="bin-hu" min="2" max="30" step="1"></label>
+          <label title="Breite in Gridfinity-Feldern zu 42 mm" class="f"><span>Breite Felder</span><input type="number" id="bin-gx" min="1" max="12" step="1"></label>
+          <label title="Tiefe in Gridfinity-Feldern zu 42 mm" class="f"><span>Tiefe Felder</span><input type="number" id="bin-gy" min="1" max="12" step="1"></label>
+          <label title="Höhe in Einheiten zu 7 mm, ohne Stapelrand; die Taschen werden höchstens so tief, wie diese Höhe erlaubt" class="f"><span>Höhe u (7 mm)</span><input type="number" id="bin-hu" min="2" max="30" step="1"></label>
         </div>
         <p id="bin-dims" class="mono"></p>
         <!-- settings that change every pocket and are rarely touched: a line with the values, opened on purpose -->
         <details class="adv" id="bin-adv">
           <summary><span id="bin-adv-sum"></span><span class="unit adv-open">ändern</span></summary>
-          <label class="f"><span>Toleranz zum Werkzeug mm <span class="unit">(Abstand rundum zwischen Werkzeug und Taschenwand; Standard 0.5)</span></span><input type="number" id="bin-clear" min="0" max="5" step="0.1"></label>
+          <label title="Spiel rundum zwischen Werkzeug und Taschenwand" class="f"><span>Toleranz zum Werkzeug mm <span class="unit">(Abstand rundum zwischen Werkzeug und Taschenwand; Standard 0.5)</span></span><input type="number" id="bin-clear" min="0" max="5" step="0.1"></label>
           <div class="fields">
-            <label class="f"><span>Mindestrand mm</span><input type="number" id="bin-wall" min="1.2" max="10" step="0.1"></label>
-            <label class="f"><span>Boden mm</span><input type="number" id="bin-floor" min="0.8" max="10" step="0.1"></label>
+            <label title="So viel Wand bleibt mindestens zwischen den Taschen und dem Rand des Bins" class="f"><span>Mindestrand mm</span><input type="number" id="bin-wall" min="1.2" max="10" step="0.1"></label>
+            <label title="Material unter der tiefsten Tasche" class="f"><span>Boden mm</span><input type="number" id="bin-floor" min="0.8" max="10" step="0.1"></label>
           </div>
         </details>
-        <label class="check"><input type="checkbox" id="bin-autofit" checked> Grösse passt sich dem Inhalt an <span class="unit">(aus, sobald du Felder oder Höhe selbst einstellst)</span></label>
-        <label class="check"><input type="checkbox" id="bin-lip"> Stapelrand</label>
+        <label title="Breite, Tiefe und Höhe folgen dem Inhalt; die Werkzeuge liegen ganz in ihren Taschen (1 mm Reserve nach oben)" class="check"><input type="checkbox" id="bin-autofit" checked> Grösse passt sich dem Inhalt an <span class="unit">(aus, sobald du Felder oder Höhe selbst einstellst)</span></label>
+        <label title="Stapelrand oben, damit ein weiterer Bin auf diesem stehen kann" class="check"><input type="checkbox" id="bin-lip"> Stapelrand</label>
         <label class="f inline-f" style="padding-left: 26px" title="Hebt den Stapelrand um ganze Einheiten an. Werkzeuge, die aus ihrer Tasche ragen, haben dann Platz unter dem Bin darüber."><span>Rand erhöhen</span><input type="number" id="bin-lift" min="0" max="10" step="1" style="width: 64px"><span class="unit">u (je 7 mm)</span></label>
-        <label class="check"><input type="checkbox" id="bin-mag"> Magnetlöcher 6 × 2 mm</label>
-        <div class="row"><button class="btn small" type="button" id="bin-autosize" title="Breite, Länge und Höhe nach dem Inhalt; die Werkzeuge liegen danach ganz in ihren Taschen">Grösse anpassen</button><button class="btn small" type="button" id="bin-arrange">Teile anordnen</button></div>
+        <label title="Löcher für Magnete 6 × 2 mm unter jedem Feld" class="check"><input type="checkbox" id="bin-mag"> Magnetlöcher 6 × 2 mm</label>
+        <div class="row"><button class="btn small" type="button" id="bin-autosize" title="Breite, Länge und Höhe nach dem Inhalt; die Werkzeuge liegen danach ganz in ihren Taschen">Grösse anpassen</button><button class="btn small" type="button" id="bin-arrange" title="Die Werkzeuge neu und platzsparend anordnen">Teile anordnen</button></div>
       </div>
       <div class="card">
         <h2>Inhalt</h2>
         <div class="list" id="bin-items"></div>
-        <div class="row"><select id="bin-add-tool" class="grow"></select><button class="btn small" type="button" id="bin-add">Hinzufügen</button></div>
-        <div class="row" style="flex-wrap: wrap; row-gap: 6px"><span class="unit">Form dazu:</span><button class="btn small" type="button" id="bin-add-circle">Kreis</button><button class="btn small" type="button" id="bin-add-ball" title="Runde Mulde, eine halbe Kugel">Kugel</button><button class="btn small" type="button" id="bin-add-slot">Langloch</button><button class="btn small" type="button" id="bin-add-rect">Rechteck</button></div>
-        <label class="check"><input type="checkbox" id="bin-autofinger"> Griffmulde an jedes Werkzeug <span class="unit">(rundes Langloch quer über das Werkzeug, wandert mit ihm)</span></label>
+        <div class="row"><select title="Ein Werkzeug aus der Sammlung wählen" id="bin-add-tool" class="grow"></select><button title="Das gewählte Werkzeug in den Bin legen" class="btn small" type="button" id="bin-add">Hinzufügen</button></div>
+        <div class="row" style="flex-wrap: wrap; row-gap: 6px"><span class="unit">Form dazu:</span><button class="btn small" type="button" id="bin-add-circle" title="Eine runde Vertiefung dazu: Griffmulde, Loch oder Kugelmulde">Kreis</button><button class="btn small" type="button" id="bin-add-ball" title="Runde Mulde, eine halbe Kugel">Kugel</button><button class="btn small" type="button" id="bin-add-slot" title="Ein Langloch dazu, etwa eine lange Griffmulde quer über mehrere Werkzeuge">Langloch</button><button class="btn small" type="button" id="bin-add-rect" title="Ein Rechteck dazu: Fach mit runden Ecken">Rechteck</button></div>
+        <label title="Jedes Werkzeug bekommt eine runde Griffmulde quer darüber; eine gelöschte bleibt weg" class="check"><input type="checkbox" id="bin-autofinger"> Griffmulde an jedes Werkzeug <span class="unit">(rundes Langloch quer über das Werkzeug, wandert mit ihm)</span></label>
       </div>
       <div class="card" id="bin-sel-card" hidden>
         <h2 id="bin-sel-title">Auswahl</h2>
@@ -652,7 +652,7 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
         <p>ZIP mit <strong>STEP</strong> (exakte CAD-Geometrie) und <strong>STL</strong> für den Slicer.</p>
         <div class="bed-ctl"></div>
         <p id="bin-split-info"></p>
-        <button class="btn primary block" type="button" id="bin-export">STEP + STL herunterladen</button>
+        <button title="Den Bin als STEP und STL herunterladen; was grösser ist als das Druckbett, wird an Feldgrenzen geteilt" class="btn primary block" type="button" id="bin-export">STEP + STL herunterladen</button>
         <p id="bin-export-status"></p>
         <button class="btn block" type="button" id="bin-testprint" title="Alle Werkzeuge dieses Bins zum Anprobieren: dünne Rahmen (STL) oder 1:1 auf Papier (PDF), mit der Toleranz dieses Bins">Testdruck aller Werkzeuge…</button>
       </div>
@@ -664,7 +664,7 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
     <div class="lib-wrap" id="case-all">
       <div class="lib-bar">
         <p>Bins auf einen Koffer ziehen oder dort auswählen; sie landen auf dem ersten freien Platz. Ein Klick auf die Draufsicht öffnet den Koffer zum Einrichten.</p>
-        <button class="btn" type="button" id="case-all-new">Neuer Koffer</button>
+        <button title="Einen neuen Koffer anlegen" class="btn" type="button" id="case-all-new">Neuer Koffer</button>
       </div>
       <div class="case-board" id="case-all-grid"></div>
     </div>
@@ -674,12 +674,12 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
   <section class="pane" id="pane-case" role="tabpanel" aria-labelledby="tab-btn-case">
     <div class="stage-wrap">
       <div class="stage-bar">
-        <select id="case-select" style="max-width: 260px"></select>
-        <button class="btn small" type="button" id="case-new">Neuer Koffer</button>
+        <select title="Welchen Koffer du einrichtest" id="case-select" style="max-width: 260px"></select>
+        <button title="Einen neuen Koffer anlegen" class="btn small" type="button" id="case-new">Neuer Koffer</button>
         <button class="btn small ghost" type="button" id="case-undo" title="Rückgängig (Strg+Z)" aria-label="Rückgängig">↶</button><button class="btn small ghost" type="button" id="case-redo" title="Wiederholen (Strg+Y)" aria-label="Wiederholen">↷</button>
-        <span id="case-del-wrap" class="confirm"><button class="btn small danger" type="button" id="case-del">Löschen</button></span>
+        <span id="case-del-wrap" class="confirm"><button title="Diesen Koffer löschen; seine Bins bleiben erhalten (mit Rückfrage)" class="btn small danger" type="button" id="case-del">Löschen</button></span>
         <span class="hint"></span>
-        <div class="seg" role="group" aria-label="Ansicht"><button type="button" id="case-view-2d" aria-pressed="true">Draufsicht</button><button type="button" id="case-view-3d" aria-pressed="false">3D</button></div>
+        <div class="seg" role="group" aria-label="Ansicht"><button title="Draufsicht: Bins platzieren, verschieben, stapeln" type="button" id="case-view-2d" aria-pressed="true">Draufsicht</button><button title="3D-Ansicht mit Grundplatte; Werkzeuge mit Haken «3D» im Bin erscheinen darin" type="button" id="case-view-3d" aria-pressed="false">3D</button></div>
       </div>
       <div class="stage" id="stage-case"><canvas id="cv-case"></canvas><div class="three-host" id="case-3d" hidden></div>
         <div class="stage-overlay" id="case-overlay"></div>
@@ -690,26 +690,26 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
     <div class="panel">
       <div class="card">
         <h2>Koffer</h2>
-        <label class="f"><span>Name</span><input type="text" id="case-name" maxlength="60"></label>
+        <label title="Name des Koffers" class="f"><span>Name</span><input type="text" id="case-name" maxlength="60"></label>
         <div class="fields">
-          <label class="f"><span>Breite Felder</span><input type="number" id="case-gx" min="1" max="20" step="1"></label>
-          <label class="f"><span>Länge Felder</span><input type="number" id="case-gy" min="1" max="20" step="1"></label>
-          <label class="f"><span>Höhe u</span><input type="number" id="case-hu" min="1" max="40" step="1"></label>
+          <label title="Innenbreite des Koffers in Feldern zu 42 mm" class="f"><span>Breite Felder</span><input type="number" id="case-gx" min="1" max="20" step="1"></label>
+          <label title="Innenlänge des Koffers in Feldern zu 42 mm" class="f"><span>Länge Felder</span><input type="number" id="case-gy" min="1" max="20" step="1"></label>
+          <label title="Innenhöhe des Koffers in Einheiten zu 7 mm; die Prüfung rechnet den Boden der Grundplatte mit" class="f"><span>Höhe u</span><input type="number" id="case-hu" min="1" max="40" step="1"></label>
         </div>
         <p id="case-stats"></p>
         <div class="row"><button class="btn small" type="button" id="case-rotate" title="Breite und Länge tauschen; die Bins drehen mit">Koffer um 90° drehen</button></div>
       </div>
       <div class="card" id="plate-card">
         <h2>Grundplatte (Grid)</h2>
-        <label class="f"><span>Art</span>
-          <select id="plate-type">
+        <label class="f" title="Grundplatte: mit 3 mm Boden und Klammern zwischen den Druckteilen, oder leicht ohne Boden"><span>Art</span>
+          <select title="Grundplatte: mit 3 mm Boden und Klammern zwischen den Druckteilen, oder leicht ohne Boden" id="plate-type">
             <option value="clip">Mit 3 mm Boden, Teile mit Klammern verbunden</option>
             <option value="light">Leicht und offen, 4.65 mm (ohne Verbinder)</option>
           </select></label>
-        <label class="check"><input type="checkbox" id="plate-mag"> Magnetlöcher 6 × 2 mm (nur mit Boden)</label>
+        <label title="Magnetlöcher in der Grundplatte (nur mit Boden)" class="check"><input type="checkbox" id="plate-mag"> Magnetlöcher 6 × 2 mm (nur mit Boden)</label>
         <div class="bed-ctl"></div>
         <p id="plate-info"></p>
-        <button class="btn block" type="button" id="plate-export">Grundplatte exportieren (ZIP)</button>
+        <button title="Die Grundplatte als STEP und STL herunterladen, geteilt fürs Druckbett, mit den Klammern" class="btn block" type="button" id="plate-export">Grundplatte exportieren (ZIP)</button>
       </div>
       <div class="card">
         <h2>Bins in diesem Koffer</h2>
@@ -719,7 +719,7 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
         <h2>Noch nicht platziert</h2>
         <div class="list" id="case-free"></div>
       </div>
-      <button class="btn primary block" type="button" id="case-export">Alle Bins exportieren (ZIP)</button>
+      <button title="Alle Bins dieses Koffers als STEP und STL herunterladen" class="btn primary block" type="button" id="case-export">Alle Bins exportieren (ZIP)</button>
     </div>
   </section>
 </div>
@@ -727,40 +727,40 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
   <form method="dialog" class="dlg-body">
     <h2 id="nb-title">Neuer Bin</h2>
     <div class="fields">
-      <label class="f"><span>Breite Felder</span><input type="number" id="nb-gx" min="1" max="12" step="1" value="2"></label>
-      <label class="f"><span>Tiefe Felder</span><input type="number" id="nb-gy" min="1" max="12" step="1" value="2"></label>
-      <label class="f"><span>Höhe u (7 mm)</span><input type="number" id="nb-hu" min="2" max="30" step="1" value="6"></label>
+      <label title="Breite in Gridfinity-Feldern zu 42 mm" class="f"><span>Breite Felder</span><input type="number" id="nb-gx" min="1" max="12" step="1" value="2"></label>
+      <label title="Tiefe in Gridfinity-Feldern zu 42 mm" class="f"><span>Tiefe Felder</span><input type="number" id="nb-gy" min="1" max="12" step="1" value="2"></label>
+      <label title="Höhe in Einheiten zu 7 mm" class="f"><span>Höhe u (7 mm)</span><input type="number" id="nb-hu" min="2" max="30" step="1" value="6"></label>
     </div>
     <div class="f"><span>Inhalt zum Start</span>
       <div class="seg" id="nb-kind" role="group" aria-label="Inhalt zum Start">
-        <button type="button" data-k="empty">Leer</button><button type="button" data-k="one">Ein Fach</button><button type="button" data-k="grid">Fächer</button><button type="button" data-k="ball">Kugelmulde</button>
+        <button type="button" data-k="empty" title="Ein leerer Bin; Werkzeuge und Formen kommen danach dazu">Leer</button><button type="button" data-k="one" title="Ein grosses Fach über die ganze Fläche">Ein Fach</button><button type="button" data-k="grid" title="Gleich grosse Fächer in Spalten und Reihen">Fächer</button><button type="button" data-k="ball" title="Eine runde Mulde">Kugelmulde</button>
       </div>
     </div>
     <div class="fields" id="nb-grid-fields" hidden>
-      <label class="f"><span>Spalten</span><input type="number" id="nb-cols" min="1" max="12" step="1" value="2"></label>
-      <label class="f"><span>Reihen</span><input type="number" id="nb-rows" min="1" max="12" step="1" value="2"></label>
-      <label class="f"><span>Trennwand mm</span><input type="number" id="nb-wall" min="0.8" max="10" step="0.2" value="1.2"></label>
+      <label title="Anzahl Fächer nebeneinander" class="f"><span>Spalten</span><input type="number" id="nb-cols" min="1" max="12" step="1" value="2"></label>
+      <label title="Anzahl Fächer hintereinander" class="f"><span>Reihen</span><input type="number" id="nb-rows" min="1" max="12" step="1" value="2"></label>
+      <label title="Wandstärke zwischen den Fächern" class="f"><span>Trennwand mm</span><input type="number" id="nb-wall" min="0.8" max="10" step="0.2" value="1.2"></label>
     </div>
     <div class="nb-preview" id="nb-preview"></div>
     <p class="unit" id="nb-info"></p>
-    <div class="row" style="justify-content: flex-end"><button class="btn" type="button" id="nb-cancel">Abbrechen</button><button class="btn primary" type="submit" id="nb-create">Anlegen</button></div>
+    <div class="row" style="justify-content: flex-end"><button class="btn" type="button" id="nb-cancel">Abbrechen</button><button title="Den Bin so anlegen" class="btn primary" type="submit" id="nb-create">Anlegen</button></div>
   </form>
 </dialog>
 <dialog class="dlg" id="tp-dlg" aria-labelledby="tp-title">
   <div class="dlg-body">
     <h2 id="tp-title">Testdruck</h2>
     <p>Prüfen, ob das Werkzeug passt, bevor der ganze Bin gedruckt wird. Der Rahmen hat innen genau die Tasche, die der Bin bekommt; auf Papier sind Tasche und Umriss als dünne Linien 1:1 gedruckt.</p>
-    <label class="check" id="tp-all-wrap" hidden><input type="checkbox" id="tp-all"> <span id="tp-all-text">Alle Teile</span></label>
+    <label title="Alle Teile statt nur des gewählten drucken" class="check" id="tp-all-wrap" hidden><input type="checkbox" id="tp-all"> <span id="tp-all-text">Alle Teile</span></label>
     <div class="fields">
-      <label class="f"><span>Spiel zum Werkzeug mm</span><input type="number" id="tp-tol" min="0" max="5" step="0.1" value="0.5"></label>
-      <label class="f"><span>Rahmen hoch mm</span><input type="number" id="tp-h" min="0.4" max="10" step="0.2" value="2"></label>
-      <label class="f"><span>Rahmen breit mm</span><input type="number" id="tp-wall" min="0.4" max="5" step="0.1" value="2"></label>
+      <label title="Spiel rundum, wie es die Tasche im Bin bekommt" class="f"><span>Spiel zum Werkzeug mm</span><input type="number" id="tp-tol" min="0" max="5" step="0.1" value="0.5"></label>
+      <label title="Höhe des Testrahmens" class="f"><span>Rahmen hoch mm</span><input type="number" id="tp-h" min="0.4" max="10" step="0.2" value="2"></label>
+      <label title="Breite des Testrahmens" class="f"><span>Rahmen breit mm</span><input type="number" id="tp-wall" min="0.4" max="5" step="0.1" value="2"></label>
     </div>
     <p class="unit" id="tp-info"></p>
     <div class="row" style="flex-wrap: wrap; row-gap: 6px; justify-content: flex-end">
       <button class="btn" type="button" id="tp-cancel">Schliessen</button>
-      <button class="btn" type="button" id="tp-pdf">Auf Papier, 1:1 (PDF)</button>
-      <button class="btn primary" type="button" id="tp-stl">3D-Rahmen (STL)</button>
+      <button title="Tasche (Linie) und Umriss (gestrichelt) 1:1 auf A4, mit Massstab zum Nachmessen" class="btn" type="button" id="tp-pdf">Auf Papier, 1:1 (PDF)</button>
+      <button title="Dünne Rahmen, innen genau die Tasche: drucken und das Werkzeug hineinlegen" class="btn primary" type="button" id="tp-stl">3D-Rahmen (STL)</button>
     </div>
   </div>
 </dialog>
@@ -770,8 +770,8 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
     <p id="data-where"></p>
     <p class="unit" id="data-count"></p>
     <div class="row" style="flex-wrap: wrap; row-gap: 6px">
-      <button class="btn" type="button" id="data-backup">Daten sichern (Datei)</button>
-      <button class="btn" type="button" id="data-load">Sicherung laden…</button>
+      <button title="Alle Werkzeuge, Bins und Koffer als Datei speichern" class="btn" type="button" id="data-backup">Daten sichern (Datei)</button>
+      <button title="Eine Sicherung laden; Neueres ersetzt Älteres, nichts wird gelöscht" class="btn" type="button" id="data-load">Sicherung laden…</button>
       <input type="file" id="data-file" accept=".json,application/json" hidden>
     </div>
     <p class="unit">Laden führt zusammen: Neueres ersetzt Älteres, Neues kommt dazu.</p>
@@ -779,8 +779,8 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
       <h2>Google Drive</h2>
       <p id="gd-status"></p>
       <div class="row" style="flex-wrap: wrap; row-gap: 6px">
-        <button class="btn primary" type="button" id="gd-connect">Mit Google verbinden</button>
-        <button class="btn ghost" type="button" id="gd-off" hidden>Trennen</button>
+        <button title="Die Daten mit einer Datei in deinem Google Drive abgleichen, auch zwischen mehreren Laptops" class="btn primary" type="button" id="gd-connect">Mit Google verbinden</button>
+        <button title="Den Abgleich mit Google Drive beenden; die Datei im Drive bleibt" class="btn ghost" type="button" id="gd-off" hidden>Trennen</button>
       </div>
       <p class="unit" id="gd-help">Die App legt in deinem Google Drive die Datei «Cachfinity_Daten.json» an. Jede Änderung geht hinein, und was ein anderer Laptop dort neuer gespeichert hat, kommt hierher. Die App sieht nur diese Datei, nicht den Rest deines Drives. Google gibt den Zugriff jeweils für eine Stunde. Nach dem Start und wenn die Stunde um ist, erneuert ihn dein nächster Klick irgendwo in der App: Googles Fenster blitzt kurz auf und schliesst sich wieder. Blockiert der Browser es, gleicht der Knopf «Mit Google abgleichen» oben ab.</p>
     </div>
@@ -788,17 +788,17 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
       <h2>Datenordner auf diesem Laptop (OneDrive, Google-Drive-Ordner)</h2>
       <p id="df-status"></p>
       <div class="row" style="flex-wrap: wrap; row-gap: 6px">
-        <button class="btn" type="button" id="df-open">Vorhandene Datendatei öffnen…</button>
-        <button class="btn" type="button" id="df-new">Neue Datendatei anlegen…</button>
-        <button class="btn primary" type="button" id="df-grant" hidden>Freigeben</button>
-        <button class="btn ghost" type="button" id="df-off" hidden>Trennen</button>
+        <button title="Eine vorhandene Datendatei in einem synchronisierten Ordner verbinden (etwa OneDrive)" class="btn" type="button" id="df-open">Vorhandene Datendatei öffnen…</button>
+        <button title="Eine neue Datendatei in einem synchronisierten Ordner anlegen" class="btn" type="button" id="df-new">Neue Datendatei anlegen…</button>
+        <button title="Dem Browser erlauben, die Datendatei zu benutzen (nach jedem Start einmal)" class="btn primary" type="button" id="df-grant" hidden>Freigeben</button>
+        <button title="Die Datendatei trennen; die Daten bleiben in diesem Browser" class="btn ghost" type="button" id="df-off" hidden>Trennen</button>
       </div>
       <p class="unit">Lege die Datei in deinen Google-Drive- oder OneDrive-Ordner. Die App schreibt jede Änderung hinein und übernimmt, was ein anderer Laptop dort neuer gespeichert hat. Auf dem zweiten Laptop: «Vorhandene Datendatei öffnen…» und dieselbe Datei wählen.</p>
     </div>
     <div id="data-offline-row">
       <h2>Offline arbeiten</h2>
       <p>Eine einzelne HTML-Datei mit allem darin, auch dem CAD-Kern und deinen jetzigen Werkzeugen, Bins und Koffern. Per Doppelklick im Browser öffnen, sie braucht kein Internet und übernimmt deine Daten beim ersten Öffnen. Was du danach offline änderst, liegt in jenem Browser; mit «Daten sichern» und «Sicherung laden» bringst du es zurück.</p>
-      <button class="btn primary" type="button" id="data-offline">Offline-Version herunterladen (etwa 6 MB)</button>
+      <button title="Eine einzelne Datei mit der App und allen Daten herunterladen, die ohne Internet läuft" class="btn primary" type="button" id="data-offline">Offline-Version herunterladen (etwa 6 MB)</button>
     </div>
     <div class="row" style="justify-content: flex-end"><button class="btn" type="button" id="data-close">Schliessen</button></div>
   </div>
@@ -11078,12 +11078,16 @@ function fitBin(b) {
 // are FINGER_DEEPER deeper.
 const fullRoom = (b) => 30 * GF.unit - GF.base - b.floor - FINGER_DEEPER;
 const depthRoom = (b) => (b.autoFit !== false ? fullRoom(b) : maxDepth(b));
+// A pocket is this much deeper than its tool is high: the tool lies safely below the top edge even when its
+// measured height is a little short, and a bin stacked on top does not touch it (Camille's choice, instead
+// of raising the stacking rim).
+const DEPTH_EXTRA = 1;
 // «Grösse anpassen» on any bin: the pockets get their tools' full height (a depth set by hand stays), so the
 // size worked out afterwards (autoSize) is high enough for the tools to lie fully in them
-function fullDepths(b) { for (const it of b.items) { const t = toolById(it.toolId); if (t && !it.depthSet) it.depth = Math.floor(Math.min(t.height, fullRoom(b)) * 10 + 1e-6) / 10; } }
+function fullDepths(b) { for (const it of b.items) { const t = toolById(it.toolId); if (t && !it.depthSet) it.depth = Math.floor(Math.min(t.height + DEPTH_EXTRA, fullRoom(b)) * 10 + 1e-6) / 10; } }
 // a pocket's depth from its tool's height (rounded down to 0.1 mm: rounded up it could pass the bin's
 // deepest pocket, 15.05 mm in a 3 u bin)
-function defaultDepth(b, tool) { return Math.floor(Math.min(tool.height, depthRoom(b)) * 10 + 1e-6) / 10; }
+function defaultDepth(b, tool) { return Math.floor(Math.min(tool.height + DEPTH_EXTRA, depthRoom(b)) * 10 + 1e-6) / 10; }
 // A tool's height was changed in the library: its pockets take the depth from the new height (as when it is
 // put into a bin), and their bins adapt. A depth set by hand in the bin (it.depthSet) stays. Returns the
 // bins changed.
@@ -11469,7 +11473,7 @@ const partLetter = (k) => String.fromCharCode(65 + (k % 26)) + (k >= 26 ? Math.f
 const BedUI = {
   render(el) {
     const b = bed(); el.replaceChildren();
-    const sel = h('select', { 'aria-label': 'Drucker', onchange: (e) => { const id = e.target.value; S.ui.bed = id === 'custom' ? { id, x: b.x, y: b.y } : { id }; Store.saveUi(); this.changed(); } },
+    const sel = h('select', { 'aria-label': 'Drucker', title: 'Dein Drucker: was grösser ist als sein Druckbett, wird beim Export in Teile geteilt', onchange: (e) => { const id = e.target.value; S.ui.bed = id === 'custom' ? { id, x: b.x, y: b.y } : { id }; Store.saveUi(); this.changed(); } },
       ...BED_PRESETS.map((p) => h('option', { value: p.id, text: `${p.name} (${p.x} × ${p.y} mm)` })), h('option', { value: 'custom', text: 'Eigenes Druckbett' }));
     sel.value = b.id;
     el.append(h('label', { class: 'f' }, h('span', { text: 'Drucker' }), sel));
@@ -12189,7 +12193,7 @@ const FotoUI = {
         h('div', { style: { display: 'flex', flexDirection: 'column', gap: '3px', minWidth: 0 } },
           h('div', { class: 't', text: `${i + 1}. ${ph.name}` }),
           h('div', { class: 's', text: [many ? `Motiv ${k + 1}` : '', role, cam].filter(Boolean).join(' · ') }), pick),
-        h('button', { class: 'btn small ghost', type: 'button', 'aria-label': 'Foto entfernen', onclick: (e) => { e.stopPropagation(); this.removePhoto(i); } }, '✕')));
+        h('button', { class: 'btn small ghost', type: 'button', 'aria-label': 'Foto entfernen', title: 'Dieses Foto entfernen', onclick: (e) => { e.stopPropagation(); this.removePhoto(i); } }, '✕')));
     });
     const np = T.photos.length, ns = T.scenes.length;
     $('#foto-count').textContent = !np ? '' : `${np} Foto${np > 1 ? 's' : ''}` + (np > 1 ? ` · ${ns} Motiv${ns > 1 ? 'e' : ''}` : '');
@@ -12845,16 +12849,16 @@ const TraceUI = {
     const list = $('#trace-list'); list.replaceChildren();
     for (const it of T.items) {
       const out = correctedOutline(it), bb = polyBBox([out]);
-      const nameIn = h('input', { type: 'text', value: it.name, 'aria-label': 'Name', onclick: (e) => e.stopPropagation(), oninput: (e) => { it.name = e.target.value; } });
-      const hIn = h('input', { type: 'number', value: it.height > 0 ? it.height : '', placeholder: '–', min: 0, max: 300, step: 0.5, 'aria-label': 'Höhe in mm', style: { width: '64px' }, onclick: (e) => e.stopPropagation(), onchange: (e) => { it.height = clamp(num(e.target, 0), 0, 300); this.render(); } });
+      const nameIn = h('input', { type: 'text', value: it.name, 'aria-label': 'Name', title: 'Name, unter dem das Teil in die Werkzeuge kommt', onclick: (e) => e.stopPropagation(), oninput: (e) => { it.name = e.target.value; } });
+      const hIn = h('input', { type: 'number', value: it.height > 0 ? it.height : '', placeholder: '–', min: 0, max: 300, step: 0.5, 'aria-label': 'Höhe in mm', title: 'Höhe des Teils: korrigiert die Überhöhung im Foto und wird die Taschentiefe', style: { width: '64px' }, onclick: (e) => e.stopPropagation(), onchange: (e) => { it.height = clamp(num(e.target, 0), 0, 300); this.render(); } });
       const row = h('div', { class: 'item' + (it === T.selItem ? ' sel' : ''), onclick: () => { T.selItem = it; T.selVertex = -1; this.render(); } },
-        h('input', { type: 'checkbox', checked: it.keep, 'aria-label': 'übernehmen', onclick: (e) => e.stopPropagation(), onchange: (e) => { it.keep = e.target.checked; this.stage.redraw(); } }),
+        h('input', { type: 'checkbox', checked: it.keep, 'aria-label': 'übernehmen', title: 'Dieses Teil in die Werkzeuge übernehmen', onclick: (e) => e.stopPropagation(), onchange: (e) => { it.keep = e.target.checked; this.stage.redraw(); } }),
         h('div', { style: { display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 } }, nameIn,
           h('div', { class: 's' }, h('span', { class: 'swatch', style: { background: it.color, display: 'inline-block', verticalAlign: '-2px', marginRight: '6px', width: '10px', height: '10px' } }), `${nf(bb.w, 1)} × ${nf(bb.h, 1)} mm · ${it.raw.length} Punkte${it.edited ? ' · bearbeitet' : ''}`),
           touchesBorder(it) ? h('span', { class: 'pill warn', text: 'berührt den Papierrand' }) : null,
           it.symPreview || it.symOn ? h('div', { style: { display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' } },
             h('span', { class: it.symOn ? 'pill ok' : 'pill mute', text: it.symOn ? 'gespiegelt' : 'symmetrisch erkannt' }),
-            h('button', { class: 'btn small', type: 'button', text: it.symOn ? 'Spiegelung aufheben' : 'Spiegeln', onclick: (e) => { e.stopPropagation(); toggleMirror(it); this.render(); } })) : null),
+            h('button', { class: 'btn small', type: 'button', title: it.symOn ? 'Zurück zum Umriss vor dem Spiegeln' : 'Den Umriss an der erkannten Achse spiegeln (die breitere Seite gilt)', text: it.symOn ? 'Spiegelung aufheben' : 'Spiegeln', onclick: (e) => { e.stopPropagation(); toggleMirror(it); this.render(); } })) : null),
         h('label', { class: 'f', style: { alignItems: 'flex-end' } }, h('span', { text: 'Höhe mm' }), hIn));
       list.append(row);
     }
@@ -13035,33 +13039,34 @@ const LibUI = {
         ? h('span', { class: 'confirm' }, uses ? `Auch aus ${uses} Bin${uses > 1 ? 's' : ''} entfernen?` : 'Wirklich löschen?',
           h('button', { class: 'btn small danger', type: 'button', onclick: () => this.remove(t) }, 'Löschen'),
           h('button', { class: 'btn small', type: 'button', onclick: () => { this.confirmId = null; this.render(); } }, 'Abbrechen'))
-        : h('button', { class: 'btn small ghost danger', type: 'button', onclick: () => { this.confirmId = t.id; this.render(); } }, 'Löschen');
+        : h('button', { class: 'btn small ghost danger', type: 'button', title: 'Dieses Werkzeug aus der Sammlung löschen (mit Rückfrage; auch aus den Bins)', onclick: () => { this.confirmId = t.id; this.render(); } }, 'Löschen');
       const picked = this.picked.has(t.id);
       const toggle = () => { if (this.picked.has(t.id)) this.picked.delete(t.id); else this.picked.add(t.id); this.render(); };
       const thumb = thumbOf(t.outline, 300, 188, ITEM_COLORS[i % ITEM_COLORS.length]);
       thumb.style.cursor = 'pointer'; thumb.title = 'Antippen wählt das Werkzeug für einen gemeinsamen Bin aus'; thumb.addEventListener('click', toggle);
       // whether the test print fitted (t.fit 'ok' | 'bad', absent: not tried yet); set by hand here
-      const fitBtn = (val, label) => h('button', { type: 'button', 'aria-pressed': String((t.fit || '') === val), onclick: () => { if (val) { t.fit = val; t.fitAt = Date.now(); } else { delete t.fit; delete t.fitAt; } Store.save('tool', t); this.render(); } }, label);
+      const fitTip = { '': 'Noch nicht getestet', ok: 'Der Testdruck hat gepasst', bad: 'Der Testdruck hat nicht gepasst: Umriss oder Spiel anpassen' };
+      const fitBtn = (val, label) => h('button', { type: 'button', title: fitTip[val], 'aria-pressed': String((t.fit || '') === val), onclick: () => { if (val) { t.fit = val; t.fitAt = Date.now(); } else { delete t.fit; delete t.fitAt; } Store.save('tool', t); this.render(); } }, label);
       grid.append(h('article', { class: 'tool' + (picked ? ' picked' : '') },
-        h('label', { class: 'pick' }, h('input', { type: 'checkbox', checked: picked, onchange: toggle, 'aria-label': 'Auswählen' }), picked ? 'Ausgewählt' : 'Auswählen'),
+        h('label', { class: 'pick', title: 'Werkzeuge auswählen, um sie zusammen in einen Bin zu legen oder einen Testdruck zu machen' }, h('input', { type: 'checkbox', checked: picked, onchange: toggle, 'aria-label': 'Auswählen' }), picked ? 'Ausgewählt' : 'Auswählen'),
         t.fit ? h('span', { class: 'fit ' + t.fit, title: FIT_TEXT[t.fit] + (t.fitAt ? ', gesetzt am ' + new Date(t.fitAt).toLocaleDateString('de-CH') : ''), text: FIT_MARK[t.fit] }) : null,
         thumb,
         h('div', { class: 'body' },
           t.example ? h('div', { class: 'ex', text: 'Beispiel' }) : null,
-          h('input', { type: 'text', value: t.name, 'aria-label': 'Name', onchange: (e) => { t.name = e.target.value.trim() || t.name; Store.save('tool', t); } }),
+          h('input', { type: 'text', value: t.name, 'aria-label': 'Name', title: 'Name des Werkzeugs', onchange: (e) => { t.name = e.target.value.trim() || t.name; Store.save('tool', t); } }),
           h('div', { class: 'row', style: { flexWrap: 'wrap', rowGap: '4px' } },
             h('span', { class: 'dims', text: `${nf(bb.w, 1)} × ${nf(bb.h, 1)} mm`, style: { whiteSpace: 'nowrap' } }),
-            h('label', { class: 'f', style: { flexDirection: 'row', alignItems: 'center', gap: '6px', marginLeft: 'auto' } }, h('span', { text: 'Höhe' }),
+            h('label', { class: 'f', title: 'Höhe des Werkzeugs, wie es im Bin liegt: daraus wird die Taschentiefe (1 mm Reserve); die Taschen in den Bins folgen', style: { flexDirection: 'row', alignItems: 'center', gap: '6px', marginLeft: 'auto' } }, h('span', { text: 'Höhe' }),
               h('input', { type: 'number', value: t.height, min: 1, max: 300, step: 0.5, style: { width: '70px' }, onchange: (e) => {
                 t.height = clamp(num(e.target, t.height), 1, 300); Store.save('tool', t);
                 // the pockets of this tool follow (see toolHeightChanged)
                 const bins = toolHeightChanged(t);
                 if (bins.length) toast(`Taschentiefe von «${t.name}» in ${bins.length === 1 ? `«${bins[0].name}»` : `${bins.length} Bins`} angepasst.`);
               } }), h('span', { class: 'unit', text: 'mm' }))),
-          h('div', { class: 'row fit-row' }, h('span', { class: 'unit', text: 'Testdruck' }),
+          h('div', { class: 'row fit-row', title: 'Ob der Testdruck dieses Werkzeugs gepasst hat; wird wieder «offen», wenn sich der Umriss ändert' }, h('span', { class: 'unit', text: 'Testdruck' }),
             h('div', { class: 'seg', role: 'group', 'aria-label': 'Testdruck' }, fitBtn('', 'offen'), fitBtn('ok', 'passt'), fitBtn('bad', 'passt nicht'))),
           h('div', { class: 'row' },
-            h('button', { class: 'btn small primary', type: 'button', onclick: () => this.toBin(t) }, 'In Bin legen'),
+            h('button', { class: 'btn small primary', type: 'button', title: 'Das Werkzeug in den Bin legen, den du gerade bearbeitest (oder in einen neuen)', onclick: () => this.toBin(t) }, 'In Bin legen'),
             h('button', { class: 'btn small', type: 'button', title: 'Umriss mit dem Punkte-Editor korrigieren, ohne Foto', onclick: () => TraceUI.editTool(t) }, 'Umriss bearbeiten'), del))));
     });
   },
@@ -13071,11 +13076,11 @@ const LibUI = {
     if (!n) return;
     const cur = curBin();
     bar.append(h('strong', { text: `${n} Werkzeug${n === 1 ? '' : 'e'} ausgewählt` }),
-      h('button', { class: 'btn small primary', type: 'button', onclick: () => this.binFromPicked() }, 'Neuer Bin daraus'),
-      cur ? h('button', { class: 'btn small', type: 'button', onclick: () => this.addPickedTo(cur) }, `In «${cur.name}» legen`) : null,
+      h('button', { class: 'btn small primary', type: 'button', title: 'Einen neuen Bin mit den ausgewählten Werkzeugen anlegen', onclick: () => this.binFromPicked() }, 'Neuer Bin daraus'),
+      cur ? h('button', { class: 'btn small', type: 'button', title: 'Die ausgewählten Werkzeuge in den Bin legen, den du gerade bearbeitest', onclick: () => this.addPickedTo(cur) }, `In «${cur.name}» legen`) : null,
       // the ticked tools together, to try them before a bin is printed
       h('button', { class: 'btn small', type: 'button', title: 'Die ausgewählten Werkzeuge zum Anprobieren: dünne Rahmen (STL) oder 1:1 auf Papier (PDF)', onclick: () => TestPrint.open({ sel: null, all: S.tools.filter((t) => this.picked.has(t.id)).map((t) => ({ name: t.name, poly: t.outline })) }, { title: `Testdruck: ${n} Werkzeug${n === 1 ? '' : 'e'}` }) }, 'Testdruck…'),
-      h('button', { class: 'btn small ghost', type: 'button', onclick: () => { this.picked.clear(); this.render(); } }, 'Auswahl aufheben'));
+      h('button', { class: 'btn small ghost', type: 'button', title: 'Keines mehr auswählen', onclick: () => { this.picked.clear(); this.render(); } }, 'Auswahl aufheben'));
   },
   binFromPicked() {
     const tools = S.tools.filter((t) => this.picked.has(t.id)); if (!tools.length) return;
@@ -13364,7 +13369,7 @@ const BinUI = {
     if (this.confirmDel && b) wrap.append('Bin löschen?', h('button', { class: 'btn small danger', type: 'button', onclick: () => {
       this.removeBin(b); this.confirmDel = false; this.sel = null; this.stage.fitted = false; this.render(); this.stage.fit();
     } }, 'Ja'), h('button', { class: 'btn small', type: 'button', onclick: () => { this.confirmDel = false; this.renderTop(); } }, 'Nein'));
-    else wrap.append(h('button', { class: 'btn small danger', type: 'button', disabled: !b, onclick: () => { this.confirmDel = true; this.renderTop(); } }, 'Löschen'));
+    else wrap.append(h('button', { class: 'btn small danger', type: 'button', title: 'Diesen Bin löschen (mit Rückfrage)', disabled: !b, onclick: () => { this.confirmDel = true; this.renderTop(); } }, 'Löschen'));
   },
   // a tool or shape sticking out of the bin or into its wall: a red notice on the bin itself
   renderAlert(b, over) {
@@ -13437,21 +13442,22 @@ const BinUI = {
       const rotIn = h('input', { type: 'number', value: ref.rot, step: 1, onchange: (e) => { ref.rot = ((num(e.target, 0) % 360) + 360) % 360; this.changed(); } });
       body.append(
         h('div', { class: 'row' },
-          h('button', { class: 'btn small', type: 'button', onclick: () => { ref.rot = (ref.rot + 270) % 360; this.changed(); } }, '⟲ 90°'),
-          h('button', { class: 'btn small', type: 'button', onclick: () => { ref.rot = (ref.rot + 90) % 360; this.changed(); } }, '⟳ 90°'),
-          h('label', { class: 'f grow' }, h('span', { text: 'Winkel °' }), rotIn)),
-        h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: ref.mirror, onchange: (e) => { ref.mirror = e.target.checked; this.changed(); } }), 'Spiegeln (Teil liegt umgedreht)'),
-        h('label', { class: 'f' }, h('span', { text: `Taschentiefe mm (Teil ${t ? nf(t.height, 1) : '?'} mm hoch, max ${nf(maxDepth(b), 1)})` }),
+          h('button', { class: 'btn small', type: 'button', title: 'Um 90° gegen den Uhrzeigersinn drehen', onclick: () => { ref.rot = (ref.rot + 270) % 360; this.changed(); } }, '⟲ 90°'),
+          h('button', { class: 'btn small', type: 'button', title: 'Um 90° im Uhrzeigersinn drehen (auch Taste R)', onclick: () => { ref.rot = (ref.rot + 90) % 360; this.changed(); } }, '⟳ 90°'),
+          h('label', { class: 'f grow', title: 'Drehwinkel des Werkzeugs im Bin in Grad' }, h('span', { text: 'Winkel °' }), rotIn)),
+        h('label', { class: 'check', title: 'Das Werkzeug liegt umgedreht im Bin: die Tasche wird gespiegelt' }, h('input', { type: 'checkbox', checked: ref.mirror, onchange: (e) => { ref.mirror = e.target.checked; this.changed(); } }), 'Spiegeln (Teil liegt umgedreht)'),
+        h('label', { class: 'f', title: 'Tiefe dieser Tasche; eine hier eingetragene Tiefe bleibt, auch wenn sich die Werkzeughöhe ändert' }, h('span', { text: `Taschentiefe mm (Teil ${t ? nf(t.height, 1) : '?'} mm hoch, max ${nf(maxDepth(b), 1)})` }),
           h('input', { type: 'number', value: ref.depth, min: 1, max: 200, step: 0.5, onchange: (e) => { ref.depth = clamp(num(e.target, ref.depth), 0.5, 200); ref.depthSet = true; this.changed(); } })),
         ...(ref.noFinger && !b.fingers.some((f) => f.itemId === ref.id) ? [h('p', { class: 'unit', text: 'Ohne Griffmulde: von Hand entfernt. «Griffmulde dazu» setzt wieder eine.' })] : []),
         h('div', { class: 'row' },
-          h('button', { class: 'btn small', type: 'button', onclick: () => this.addFinger(ref) }, 'Griffmulde dazu'),
+          h('button', { class: 'btn small', type: 'button', title: 'Eine weitere runde Griffmulde quer über dieses Werkzeug, an der besten freien Stelle', onclick: () => this.addFinger(ref) }, 'Griffmulde dazu'),
           t ? h('button', { class: 'btn small', type: 'button', title: 'Umriss des Werkzeugs korrigieren; gilt in allen Bins', onclick: () => TraceUI.editTool(t) }, 'Umriss bearbeiten') : null,
-          h('button', { class: 'btn small danger', type: 'button', onclick: () => this.removeSel() }, 'Entfernen')));
+          h('button', { class: 'btn small danger', type: 'button', title: 'Aus dem Bin nehmen (auch Entf); Rückgängig mit Strg+Z', onclick: () => this.removeSel() }, 'Entfernen')));
     } else if (ref) {
       const k = shapeKind(ref);
       $('#bin-sel-title').textContent = shapeLabel(ref).name;
-      const field = (label, key, lo, hi, step, after) => h('label', { class: 'f' }, h('span', { text: label }), h('input', { type: 'number', value: ref[key], min: lo, max: hi, step, onchange: (e) => { ref[key] = clamp(num(e.target, ref[key]), lo, hi); if (after) after(); this.changed(); } }));
+      const tips = { w: 'Breite (beim Kreis der Durchmesser) der Form; das Maximum ist das Innere des Bins', l: 'Länge der Form; das Maximum ist das Innere des Bins', depth: 'Wie tief die Form in den Bin geht', r: 'Radius der Ecken des Rechtecks', rot: 'Drehwinkel der Form in Grad' };
+      const field = (label, key, lo, hi, step, after) => h('label', { class: 'f', title: tips[key] || '' }, h('span', { text: label }), h('input', { type: 'number', value: ref[key], min: lo, max: hi, step, onchange: (e) => { ref[key] = clamp(num(e.target, ref[key]), lo, hi); if (after) after(); this.changed(); } }));
       const kindSel = h('select', { onchange: (e) => {
         const nk = e.target.value; ref.shape = nk;
         if (nk === 'circle') ref.l = ref.w; else if (ref.l <= ref.w) ref.l = Math.round(ref.w * 2);
@@ -13460,7 +13466,7 @@ const BinUI = {
       } }, ...[['circle', 'Kreis'], ['slot', 'Langloch'], ['rect', 'Rechteck']].map(([v, t]) => h('option', { value: v, text: t, selected: v === k })));
       const depthField = field(`Tiefe mm (max ${nf(maxDepth(b), 1)})`, 'depth', 0.5, 200, 0.5);
       const scoop = isScoop(ref);
-      const profSel = k === 'rect' ? null : h('label', { class: 'f' }, h('span', { text: 'Profil' }), h('select', { onchange: (e) => { ref.profile = e.target.value; this.changed(); } },
+      const profSel = k === 'rect' ? null : h('label', { class: 'f', title: 'Mulde: rund ausgeformt wie eine Griffmulde; Loch: senkrechte Wand und flacher Boden' }, h('span', { text: 'Profil' }), h('select', { onchange: (e) => { ref.profile = e.target.value; this.changed(); } },
         h('option', { value: 'round', text: 'Mulde (Halbkreis)', selected: scoop }), h('option', { value: 'flat', text: 'Loch (senkrechte Wand)', selected: !scoop })));
       // the most the shape can measure: the bin's inside, the shape centred; turned by 90° the sides swap
       // (shown for straight angles only)
@@ -13482,7 +13488,7 @@ const BinUI = {
       };
       body.append(...[
         ref.itemId && toolById((b.items.find((x) => x.id === ref.itemId) || {}).toolId) ? h('p', { class: 'unit', text: `Gehört zu «${toolById(b.items.find((x) => x.id === ref.itemId).toolId).name}» und wandert mit dem Werkzeug. Verschiebst du sie, bleibt sie an der neuen Stelle am Werkzeug.` + (ref.dplus != null ? ` Sie ist ${nf(ref.dplus, 1)} mm tiefer als die Tasche des Werkzeugs und folgt deren Tiefe.` : '') }) : null,
-        h('div', { class: 'fields two' }, h('label', { class: 'f' }, h('span', { text: 'Form' }), kindSel), profSel),
+        h('div', { class: 'fields two' }, h('label', { class: 'f', title: 'Kreis, Langloch oder Rechteck' }, h('span', { text: 'Form' }), kindSel), profSel),
         h('div', { class: 'fields two' }, ...fields),
         h('p', { text: scoop
           ? `Runde Mulde: ein Kreis aus dem Material genommen, oben so breit wie ${k === 'circle' ? 'der Durchmesser' : 'die Breite'} und so tief wie angegeben. Mit Tiefe ${nf(half, 1)} mm ist es ein genauer Halbkreis. Flacher wird es ein flacher Kreisbogen, tiefer ein Halbkreis unten mit senkrechten Wänden darüber. Am Rand einer Tasche greift der Finger darunter.`
@@ -13490,9 +13496,9 @@ const BinUI = {
         h('div', { class: 'row', style: { flexWrap: 'wrap', rowGap: '6px' } },
           ...(scoop && Math.abs(ref.depth - half) > 0.05 ? [h('button', { class: 'btn small', type: 'button', title: 'Tiefe auf den halben Durchmesser setzen', onclick: () => { ref.depth = half; this.changed(); } }, `Halbkreis (${nf(half, 1)} mm tief)`)] : []),
           ...(ref.itemId ? [] : [h('button', { class: 'btn small', type: 'button', title: `Mittig und so gross wie das Innere: ${nf(IW, 1)} × ${nf(ID, 1)} mm`, onclick: fillInside }, 'Ganze Innenfläche')]),
-          ...(k !== 'circle' ? [h('button', { class: 'btn small', type: 'button', onclick: () => { ref.rot = ((ref.rot || 0) + 90) % 360; this.changed(); } }, '⟳ 90°')] : []),
-          h('button', { class: 'btn small', type: 'button', onclick: () => { const c = { ...ref, id: uid(), x: ref.x + 5, y: ref.y + 5 }; if (c.itemId) attachLocal(b, c); b.fingers.push(c); this.sel = { kind: 'finger', id: c.id }; this.changed(); } }, 'Duplizieren'),
-          h('button', { class: 'btn small danger', type: 'button', onclick: () => this.removeSel() }, 'Entfernen'))].filter(Boolean));
+          ...(k !== 'circle' ? [h('button', { class: 'btn small', type: 'button', title: 'Um 90° drehen', onclick: () => { ref.rot = ((ref.rot || 0) + 90) % 360; this.changed(); } }, '⟳ 90°')] : []),
+          h('button', { class: 'btn small', type: 'button', title: 'Eine Kopie dieser Form daneben legen', onclick: () => { const c = { ...ref, id: uid(), x: ref.x + 5, y: ref.y + 5 }; if (c.itemId) attachLocal(b, c); b.fingers.push(c); this.sel = { kind: 'finger', id: c.id }; this.changed(); } }, 'Duplizieren'),
+          h('button', { class: 'btn small danger', type: 'button', title: 'Aus dem Bin nehmen (auch Entf); Rückgängig mit Strg+Z', onclick: () => this.removeSel() }, 'Entfernen'))].filter(Boolean));
     }
     for (const el of $$('#bin-panel .bed-ctl')) BedUI.render(el);
     { const plan = splitPlan(b.gx, b.gy), bd = bed();
@@ -13751,7 +13757,7 @@ const CaseUI = {
       for (const b of placedIn(cs)) { b.place = null; Store.save('bin', b); }
       S.cases = S.cases.filter((c) => c !== cs); Store.remove('case', cs.id); S.ui.caseId = S.cases[0] ? S.cases[0].id : null; this.confirmDel = false; this.render();
     } }, 'Ja'), h('button', { class: 'btn small', type: 'button', onclick: () => { this.confirmDel = false; this.render(); } }, 'Nein'));
-    else wrap.append(h('button', { class: 'btn small danger', type: 'button', disabled: !cs || S.cases.length < 2, onclick: () => { this.confirmDel = true; this.render(); } }, 'Löschen'));
+    else wrap.append(h('button', { class: 'btn small danger', type: 'button', title: 'Diesen Koffer löschen; seine Bins bleiben (mit Rückfrage; der letzte Koffer bleibt)', disabled: !cs || S.cases.length < 2, onclick: () => { this.confirmDel = true; this.render(); } }, 'Löschen'));
     if (!cs) return;
     $('#case-name').value = cs.name; $('#case-gx').value = cs.gx; $('#case-gy').value = cs.gy; $('#case-hu').value = cs.hu;
     this.renderPlate(cs);
@@ -13785,9 +13791,9 @@ const CaseUI = {
           h('button', { class: 'btn small', type: 'button', title: 'Eine Einheit höher (Bild ↑ oder +)', onclick: () => this.moveZ(b, 1) }, '▲ 1 u'),
           h('button', { class: 'btn small', type: 'button', title: 'Eine Einheit tiefer (Bild ↓ oder −)', disabled: b.place.z <= 0, onclick: () => this.moveZ(b, -1) }, '▼ 1 u'),
           parked ? h('button', { class: 'btn small', type: 'button', title: 'Auf den ersten freien Platz im Koffer', onclick: () => { const ok = freePlace(cs, b); Store.save('bin', b); this.render(); if (!ok) toast('Im Koffer ist kein freier Platz. Der Bin liegt jetzt oben links, verschiebe ihn.', 'bad'); } }, 'In den Koffer')
-            : h('button', { class: 'btn small', type: 'button', onclick: () => { settle(b); Store.save('bin', b); this.render(); } }, 'Absenken'),
-          h('button', { class: 'btn small', type: 'button', onclick: () => this.open(b) }, 'Öffnen'),
-          h('button', { class: 'btn small ghost danger', type: 'button', onclick: () => { b.place = null; this.sel = null; Store.save('bin', b); this.render(); } }, 'Herausnehmen')));
+            : h('button', { class: 'btn small', type: 'button', title: 'Den Bin so tief setzen, wie es geht (auf den Boden oder einen Bin darunter)', onclick: () => { settle(b); Store.save('bin', b); this.render(); } }, 'Absenken'),
+          h('button', { class: 'btn small', type: 'button', title: 'Diesen Bin bearbeiten', onclick: () => this.open(b) }, 'Öffnen'),
+          h('button', { class: 'btn small ghost danger', type: 'button', title: 'Den Bin aus dem Koffer nehmen; er bleibt erhalten', onclick: () => { b.place = null; this.sel = null; Store.save('bin', b); this.render(); } }, 'Herausnehmen')));
         if (checks.length > 1) row.append(h('ul', { class: 'warnlist', style: { gridColumn: '1 / -1' } }, ...checks.map((c) => h('li', { class: c.level, text: c.text }))));
       }
       list.append(row);
@@ -13800,7 +13806,7 @@ const CaseUI = {
       ondragend: () => { this.dnd = null; if (this.ghost) { this.ghost = null; this.stage.redraw(); } } },
       h('span', { class: 'swatch', style: { background: b.color } }),
       h('div', null, h('div', { class: 't', text: b.name }), h('div', { class: 's', text: `${b.gx}×${b.gy}×${b.hu}u` })),
-      h('button', { class: 'btn small', type: 'button', onclick: () => { const ok = freePlace(cs, b); Store.save('bin', b); this.sel = b.id; this.render(); if (!ok) toast('Kein freier, abgestützter Platz gefunden. Der Bin liegt jetzt oben links, verschiebe ihn.'); } }, 'Platzieren')));
+      h('button', { class: 'btn small', type: 'button', title: 'An den ersten freien, abgestützten Platz im Koffer setzen', onclick: () => { const ok = freePlace(cs, b); Store.save('bin', b); this.sel = b.id; this.render(); if (!ok) toast('Kein freier, abgestützter Platz gefunden. Der Bin liegt jetzt oben links, verschiebe ihn.'); } }, 'Platzieren')));
     const others = S.bins.filter((b) => b.place && caseById(b.place.caseId) && b.place.caseId !== cs.id);
     if (!unplaced.length) free.append(h('p', { text: others.length ? `Alle Bins sind platziert, ${others.length} davon in anderen Koffern.` : 'Alle Bins sind platziert.' }));
     // level filter chips on the stage
@@ -13808,7 +13814,7 @@ const CaseUI = {
     const lv = this.levels(cs);
     if (this.level !== 'all' && !lv.includes(this.level)) this.level = 'all';
     if (lv.length > 1 && this.view === '2d') {
-      const chip = (label, val) => h('button', { class: 'chip-on-mat', type: 'button', style: { border: this.level === val ? '1px solid #fff' : '1px solid transparent', cursor: 'pointer' }, onclick: () => { this.level = val; this.render(); } }, label);
+      const chip = (label, val) => h('button', { class: 'chip-on-mat', type: 'button', title: 'Nur die Bins dieser Ebene zeigen', style: { border: this.level === val ? '1px solid #fff' : '1px solid transparent', cursor: 'pointer' }, onclick: () => { this.level = val; this.render(); } }, label);
       ov.append(chip('Alle Ebenen', 'all'), ...lv.map((z) => chip(z === 0 ? 'Boden' : `ab ${z} u`, z)));
     }    Undo.syncCase();
     this.stage.redraw(); if (this.view === '3d') this.update3d();
@@ -14004,24 +14010,24 @@ const Overview = {
     for (const b of S.bins) {
       const tools = b.items.length, shapes = b.fingers.length;
       const bad = binChecks(b).filter((x) => x.level === 'bad');
-      const caseSel = h('select', { 'aria-label': 'Koffer', onchange: (e) => { assignBin(b, caseById(e.target.value) || null); this.renderBins(); } },
+      const caseSel = h('select', { 'aria-label': 'Koffer', title: 'In welchem Koffer dieser Bin liegt', onchange: (e) => { assignBin(b, caseById(e.target.value) || null); this.renderBins(); } },
         h('option', { value: '', text: 'Kein Koffer' }), ...S.cases.map((cs) => h('option', { value: cs.id, text: cs.name })));
       caseSel.value = b.place && caseById(b.place.caseId) ? b.place.caseId : '';
       const del = this.confirm === b.id
         ? h('span', { class: 'confirm' }, 'Wirklich löschen?',
           h('button', { class: 'btn small danger', type: 'button', onclick: () => { BinUI.removeBin(b); this.confirm = null; this.renderBins(); } }, 'Löschen'),
           h('button', { class: 'btn small', type: 'button', onclick: () => { this.confirm = null; this.renderBins(); } }, 'Abbrechen'))
-        : h('button', { class: 'btn small ghost danger', type: 'button', onclick: () => { this.confirm = b.id; this.renderBins(); } }, 'Löschen');
+        : h('button', { class: 'btn small ghost danger', type: 'button', title: 'Diesen Bin löschen (mit Rückfrage)', onclick: () => { this.confirm = b.id; this.renderBins(); } }, 'Löschen');
       const thumb = binThumb(b, 300, 188); thumb.style.cursor = 'pointer'; thumb.title = 'Öffnen'; thumb.addEventListener('click', () => this.open(b));
       grid.append(h('article', { class: 'tool' }, thumb,
         h('div', { class: 'body' },
-          h('input', { type: 'text', value: b.name, 'aria-label': 'Name', onchange: (e) => { b.name = e.target.value.trim() || b.name; Store.save('bin', b); } }),
+          h('input', { type: 'text', value: b.name, 'aria-label': 'Name', title: 'Name des Bins', onchange: (e) => { b.name = e.target.value.trim() || b.name; Store.save('bin', b); } }),
           h('div', { class: 'dims', text: `${b.gx} × ${b.gy} Felder · ${b.hu} u · Toleranz ${nf(b.clearance, 1)} mm · ` + [tools ? `${tools} Werkzeug${tools === 1 ? '' : 'e'}` : 'leer', shapes ? `${shapes} Form${shapes === 1 ? '' : 'en'}` : ''].filter(Boolean).join(', ') }),
           bad.length ? h('span', { class: 'pill bad', style: { whiteSpace: 'normal', alignSelf: 'flex-start' }, text: bad[0].text + (bad.length > 1 ? ` (+${bad.length - 1} weitere)` : '') }) : null,
           h('label', { class: 'f' }, h('span', { text: 'Koffer' }), caseSel),
           h('div', { class: 'row', style: { flexWrap: 'wrap', rowGap: '6px' } },
-            h('button', { class: 'btn small primary', type: 'button', onclick: () => this.open(b) }, 'Öffnen'),
-            h('button', { class: 'btn small', type: 'button', onclick: () => { BinUI.duplicate(b); this.renderBins(); } }, 'Duplizieren'), del))));
+            h('button', { class: 'btn small primary', type: 'button', title: 'Diesen Bin bearbeiten', onclick: () => this.open(b) }, 'Öffnen'),
+            h('button', { class: 'btn small', type: 'button', title: 'Eine Kopie dieses Bins anlegen', onclick: () => { BinUI.duplicate(b); this.renderBins(); } }, 'Duplizieren'), del))));
     }
   },
   // ---------- cases ----------
@@ -14063,25 +14069,25 @@ const Overview = {
       const floor = new Set(); for (const b of bins) if (b.place.z === 0 && !isParked(b, cs)) { const fp = footprint(b); for (let i = 0; i < fp.w; i++) for (let j = 0; j < fp.h; j++) floor.add((b.place.x + i) + ',' + (b.place.y + j)); }
       const problems = bins.reduce((n, b) => n + caseChecks(cs, b).filter((x) => x.level === 'bad').length, 0);
       const others = S.bins.filter((b) => !(b.place && b.place.caseId === cs.id));
-      const add = h('select', { 'aria-label': `Bin in ${cs.name} legen`, onchange: (e) => { const b = binById(e.target.value); if (b) assignBin(b, cs); this.renderCases(); } },
+      const add = h('select', { 'aria-label': `Bin in ${cs.name} legen`, title: 'Einen Bin in diesen Koffer legen', onchange: (e) => { const b = binById(e.target.value); if (b) assignBin(b, cs); this.renderCases(); } },
         h('option', { value: '', text: others.length ? 'Bin hinzufügen…' : 'Alle Bins sind schon hier' }), ...others.map((b) => h('option', { value: b.id, text: `${b.name} (${binWhere(b)})` })));
       add.disabled = !others.length;
       const del = this.confirm === cs.id
         ? h('span', { class: 'confirm' }, 'Koffer löschen? Die Bins bleiben.',
           h('button', { class: 'btn small danger', type: 'button', onclick: () => { this.removeCase(cs); this.confirm = null; this.renderCases(); } }, 'Löschen'),
           h('button', { class: 'btn small', type: 'button', onclick: () => { this.confirm = null; this.renderCases(); } }, 'Abbrechen'))
-        : h('button', { class: 'btn small ghost danger', type: 'button', disabled: S.cases.length < 2, onclick: () => { this.confirm = cs.id; this.renderCases(); } }, 'Löschen');
+        : h('button', { class: 'btn small ghost danger', type: 'button', title: 'Diesen Koffer löschen; seine Bins bleiben (mit Rückfrage; der letzte Koffer bleibt)', disabled: S.cases.length < 2, onclick: () => { this.confirm = cs.id; this.renderCases(); } }, 'Löschen');
       const thumb = caseThumb(cs, 320, 210); thumb.style.cursor = 'pointer'; thumb.title = 'Einrichten';
       thumb.addEventListener('click', () => { S.ui.caseId = cs.id; CaseUI.sel = null; this.setCaseView('edit'); });
       board.append(this.dropTarget(h('article', { class: 'case-card' }, thumb,
         h('div', { class: 'body' },
-          h('input', { type: 'text', value: cs.name, 'aria-label': 'Name', onchange: (e) => { cs.name = e.target.value.trim() || cs.name; Store.save('case', cs); this.renderCases(); } }),
+          h('input', { type: 'text', value: cs.name, 'aria-label': 'Name', title: 'Name des Koffers', onchange: (e) => { cs.name = e.target.value.trim() || cs.name; Store.save('case', cs); this.renderCases(); } }),
           h('div', { class: 'dims', text: `${cs.gx} × ${cs.gy} Felder · ${cs.hu} u · ${bins.length} Bin${bins.length === 1 ? '' : 's'} · ${floor.size} von ${cs.gx * cs.gy} Feldern am Boden belegt · Grundplatte ${splitPlan(cs.gx, cs.gy).parts === 1 ? 'in einem Stück' : `in ${splitPlan(cs.gx, cs.gy).parts} Teilen`}` }),
           problems ? h('span', { class: 'pill bad', text: `${problems} Problem${problems === 1 ? '' : 'e'}, siehe «Einrichten»` }) : null,
           h('div', { class: 'chips' }, ...(bins.length ? bins.map((b) => this.chip(b, true)) : [h('span', { class: 'unit', text: 'Leer. Bins hierher ziehen oder unten auswählen.' })])),
           add,
           h('div', { class: 'row', style: { flexWrap: 'wrap', rowGap: '6px' } },
-            h('button', { class: 'btn small primary', type: 'button', onclick: () => { S.ui.caseId = cs.id; CaseUI.sel = null; this.setCaseView('edit'); } }, 'Einrichten'), del))), cs));
+            h('button', { class: 'btn small primary', type: 'button', title: 'Bins in diesem Koffer platzieren und stapeln', onclick: () => { S.ui.caseId = cs.id; CaseUI.sel = null; this.setCaseView('edit'); } }, 'Einrichten'), del))), cs));
     }
     const free = S.bins.filter((b) => !(b.place && caseById(b.place.caseId)));
     board.append(this.dropTarget(h('article', { class: 'case-card free' },
@@ -15004,6 +15010,17 @@ const App = {
       }
       S.ui.depthV = 2;
     }
+    // pockets 1 mm deeper than their tools (DEPTH_EXTRA, since 2026-10-20): the ones from before take it once,
+    // as far as the bin allows (a bin that fits its content grows for it); a depth set by hand stays
+    let deeper = 0;
+    if (S.ui.depthV < 3) {
+      for (const b of S.bins) {
+        let n = 0;
+        for (const it of b.items) { const t = toolById(it.toolId); if (!t || it.depthSet) continue; const want = defaultDepth(b, t); if (Math.abs(it.depth - want) > 0.05) { it.depth = want; n++; } }
+        if (n) { fitBin(b); b._rev = (b._rev || 0) + 1; Store.save('bin', b); deeper++; }
+      }
+      S.ui.depthV = 3;
+    }
     FotoUI.init(); TraceUI.init(); LibUI.init(); BinUI.init(); CaseUI.init(); Overview.init(); NewBin.init(); TestPrint.init(); DataUI.init(); Undo.init(); DataFolder.init(); GDrive.init();
     window.addEventListener('online', () => Store.sendAll());
     DataUI.takeStartData();
@@ -15014,6 +15031,7 @@ const App = {
     if (retoled) news.push(`Toleranz in ${retoled === 1 ? 'einem Bin' : retoled + ' Bins'} von 0.8 auf ${nf(TOL_DEFAULT, 1)} mm umgestellt (der neue Standard).`);
     if (redepth) news.push(`Taschentiefen in ${redepth === 1 ? 'einem Bin' : redepth + ' Bins'} an die Werkzeughöhen angepasst, so tief, wie der Bin es zulässt.`);
     if (grown.length) news.push(`${grown.length === 1 ? `«${grown[0]}» ist` : `${grown.length} Bins sind`} jetzt so hoch, dass die Werkzeuge ganz in ihren Taschen liegen.`);
+    if (deeper) news.push(`Taschen in ${deeper === 1 ? 'einem Bin' : deeper + ' Bins'} jetzt ${nf(DEPTH_EXTRA, 0)} mm tiefer als die Werkzeuge hoch sind (Reserve nach oben).`);
     if (news.length) toast(news.join(' '));
     Store.connect(() => { this.renderAll(); this.show(this.tab); });
   },
