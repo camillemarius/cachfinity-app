@@ -14445,7 +14445,9 @@ const DataFolder = {
   },
   // before writing, take over what another laptop wrote meanwhile
   async sync(force = false) {
-    if (this.state !== 'on' || this.busy) return;
+    if (this.state !== 'on') return;
+    // a change made while the file is being read or written is written after that, not with the next change
+    if (this.busy) { clearTimeout(this.timer); this.timer = setTimeout(() => this.sync(force), 1000); return; }
     this.busy = true;
     try { const f = await this.handle.getFile(); if (f.lastModified > this.lastSeen) await this.pull(); if (this.state === 'on') await this.push(force); } catch (e) { this.fail(e); } finally { this.busy = false; this.render(); }
   },
@@ -14658,6 +14660,8 @@ const GDrive = {
       if (this.state === 'on' && dataKey(DataUI.snapshot()) !== this.fileKey) { this.state = 'needs'; this.render(); }
       return;
     }
+    // a change made while a sync is still running is written after it, not with the next change only
+    if (this.busy) { clearTimeout(this.timer); this.timer = setTimeout(() => this.sync(), 1000); return; }
     await this.check(true);
   },
   // on focus, back online, every 30 s, and after changes: fetch what is new in the file, write what is new here
