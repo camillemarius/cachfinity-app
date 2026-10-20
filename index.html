@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '031406f084cc';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '66453e8cd160';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -710,7 +710,7 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
             <option value="light">Offen (ohne Boden), 4.65 mm, Klammern an den Ecken</option>
             <option value="clip">Mit 3 mm Boden, Klammern in jedem Feld der Stossstellen</option>
           </select></label>
-        <label title="Magnetlöcher in der Grundplatte (nur mit Boden)" class="check"><input type="checkbox" id="plate-mag"> Magnetlöcher 6 × 2 mm (nur mit Boden)</label>
+        <label title="Magnetlöcher 6 × 2 mm unter den Magneten der Bins, 4 je Feld. Die offene Platte steht dafür auf 3 mm hohen Inseln in den Ecken der Felder (die Mitte bleibt offen) und wird 3 mm höher" class="check"><input type="checkbox" id="plate-mag"> Magnetlöcher 6 × 2 mm <span class="unit">(offen: auf Inseln in den Ecken, 3 mm höher)</span></label>
         <div class="bed-ctl"></div>
         <p id="plate-info"></p>
         <button title="Die Grundplatte als STEP und STL herunterladen, geteilt fürs Druckbett, mit den Klammern" class="btn block" type="button" id="plate-export">Grundplatte exportieren (ZIP)</button>
@@ -11179,7 +11179,7 @@ function supportOf(b) {
 const stackTopMm = (b) => (b.place.z + stackU(b)) * GF.unit + (b.lip ? GF.lip : 0);
 // what the baseplate adds under every bin: its floor (the bins' feet sit in its sockets, on that floor);
 // the light plate has none
-const plateFloor = (cs) => (plateOpts(cs).type === 'light' ? 0 : PLATE.floor);
+const plateFloor = (cs) => plateFloorOf(plateOpts(cs));
 // whether a bin at level z stays inside the case's height (its stacking lip not counted, as on the plan)
 const fitsHeight = (cs, b, z) => plateFloor(cs) + (z + stackU(b)) * GF.unit <= cs.hu * GF.unit + 0.01;
 function caseChecks(cs, b) {
@@ -11707,11 +11707,24 @@ async function exportBins(bins) {
 // clips pressed into dogbone pockets from below hold them together (the clip 0.15 mm smaller all round).
 // «light» (the default): open below; the clips sit at the grid corners on a seam, where the ridges between
 // the sockets cross, a small dogbone along the ridge across the seam (1.6 mm heads 10 mm apart, 2.2 mm bar,
-// 2 mm deep, in the ridge that is 4.3 mm wide there). «clip»: a 3 mm floor below (magnet holes possible), per
-// field on a seam a dogbone in the floor (two 6 mm circles 14 mm apart, a 3.5 mm bar, 2 mm deep).
+// 2 mm deep, in the ridge that is 4.3 mm wide there). With magnets the open plate stands on a 3 mm layer of
+// pads: in every corner of a socket a square block with the magnet hole under a bin's magnet, the middle of the
+// field open (like the open magnet baseplates on MakerWorld); its clips at the corners are full size, as the
+// pads give them room. «clip»: a 3 mm floor below (magnet holes possible), per field on a seam a dogbone in the
+// floor (two 6 mm circles 14 mm apart, a 3.5 mm bar, 2 mm deep).
 const PLATE = { h: 4.65, floor: 3, r: 4, dogR: 3, dogOff: 7, dogBar: 3.5, dogDepth: 2, clipGap: 0.15, clipH: 1.8 };
 const CLIP_OPEN = { dogR: 1.6, dogOff: 5, dogBar: 2.2, dogDepth: 2, clipGap: 0.15, clipH: 1.8 };
-const clipDims = (opt) => (opt.type === 'light' ? CLIP_OPEN : PLATE);
+const clipDims = (opt) => (opt.type === 'light' && !opt.magnets ? CLIP_OPEN : PLATE);
+// what the plate puts under the sockets: the floor, or the layer of magnet pads; nothing for the open plate
+const plateFloorOf = (opt) => (opt.type === 'light' && !opt.magnets ? 0 : PLATE.floor);
+// The open middle of a field in the pad layer (y down, field's middle at cx, cy): the socket's opening less a
+// pad in each corner; the pads reach PAD_IN mm from the middle, so a magnet 13 mm from it has 1.25 mm of wall.
+const PAD_IN = 8.5;
+function padCross(cx, cy) {
+  const open = roundRectPoly(36.3, 36.3, 1.15, 4).map(([x, y]) => [x + cx, y + cy]);
+  const pads = [[1, 1], [1, -1], [-1, 1], [-1, -1]].map(([sx, sy]) => roundRectPoly(16, 16, 2, 4).map(([x, y]) => [cx + sx * (PAD_IN + 8) + x, cy + sy * (PAD_IN + 8) + y]));
+  return largestRing(clipBool('diff', [open], pads));
+}
 function dogbonePoly(cx, cy, alongX, shrink = 0, dims = PLATE) {
   const { dogR: r, dogOff: o, dogBar: w } = dims, ax = alongX ? 1 : 0, ay = alongX ? 0 : 1;
   const bar = alongX ? [[cx - o, cy - w / 2], [cx + o, cy - w / 2], [cx + o, cy + w / 2], [cx - o, cy + w / 2]] : [[cx - w / 2, cy - o], [cx + w / 2, cy - o], [cx + w / 2, cy + o], [cx - w / 2, cy + o]];
@@ -11721,7 +11734,7 @@ function dogbonePoly(cx, cy, alongX, shrink = 0, dims = PLATE) {
 // one part of nx × ny fields; spots: the clips that reach into it (plateClipSpots, in the part's coordinates
 // from its middle, y down as seen from above)
 async function buildPlatePart(r, nx, ny, opt, spots = []) {
-  const F = opt.type === 'light' ? 0 : PLATE.floor, W = nx * GF.pitch, D = ny * GF.pitch;
+  const F = plateFloorOf(opt), W = nx * GF.pitch, D = ny * GF.pitch;
   let solid = r.drawRoundedRectangle(W, D, PLATE.r).sketchOnPlane('XY', 0).extrude(F + PLATE.h);
   const sec = (cx, cy, w, rad, z) => r.drawRoundedRectangle(w, w, rad).translate(cx, cy).sketchOnPlane('XY', z);
   // Neighbouring sockets touch along the top ridge, and OpenCascade fails on one cut with touching tools
@@ -11736,6 +11749,11 @@ async function buildPlatePart(r, nx, ny, opt, spots = []) {
     cells[(i + j) % 2].push(first.loftWith(rest, { ruled: true }));
   }
   for (const pass of cells) if (pass.length) { solid = solid.cut(r.makeCompound(pass)); await frame(); }
+  // the open plate on its pads: the middle of every field open down to the bed (crosses that do not touch)
+  if (opt.type === 'light' && F > 0) {
+    solid = solid.cut(r.makeCompound(centres.map(([cx, cy]) => cadPolyDrawing(r, padCross(cx, cy)).sketchOnPlane('XY', -1).extrude(F + 1.01))));
+    await frame();
+  }
   if (F > 0 && opt.magnets) {
     const holes = [];
     for (const [cx, cy] of centres) for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) holes.push(r.drawCircle(GF.magnetR).translate(cx + sx * GF.magnetOff, -(cy + sy * GF.magnetOff)).sketchOnPlane('XY', F - GF.magnetD).extrude(GF.magnetD + 0.5));
@@ -11793,7 +11811,7 @@ async function exportPlate(cs) {
   const clips = spots.length;
   if (clips) files.push({ name: `${name}_Klammer_${clips}x_drucken.stl`, data: new Uint8Array(await clipSolid(r, clipDims(opt)).blobSTL({ tolerance: 0.01, angularTolerance: 0.1, binary: true }).arrayBuffer()) });
   const txt = [
-    `Grundplatte für «${cs.name}»: ${cs.gx} x ${cs.gy} Felder (${cs.gx * GF.pitch} x ${cs.gy * GF.pitch} mm), ${opt.type === 'light' ? 'offen (ohne Boden), 4.65 mm hoch' : `mit ${PLATE.floor} mm Boden, ${PLATE.floor + PLATE.h} mm hoch`}${opt.magnets && opt.type !== 'light' ? ', mit Magnetlöchern 6 x 2 mm' : ''}.`,
+    `Grundplatte für «${cs.name}»: ${cs.gx} x ${cs.gy} Felder (${cs.gx * GF.pitch} x ${cs.gy * GF.pitch} mm), ${opt.type !== 'light' ? `mit ${PLATE.floor} mm Boden, ${PLATE.floor + PLATE.h} mm hoch` : opt.magnets ? `offen, auf ${PLATE.floor} mm hohen Inseln in den Ecken der Felder, ${PLATE.floor + PLATE.h} mm hoch` : `offen (ohne Boden), ${PLATE.h} mm hoch`}${opt.magnets ? ', mit Magnetlöchern 6 x 2 mm (4 je Feld)' : ''}.`,
     `Drucker: ${b.name}, Bett ${b.x} x ${b.y} mm.`,
     '',
     plan.parts > 1 ? `In ${plan.parts} Teile geteilt, so angeordnet (von oben gesehen, oben = hinten im Koffer):` : 'Passt in einem Stück aufs Druckbett.',
@@ -11986,12 +12004,19 @@ function plateGroup(THREE, cs) {
     return out;
   };
   const spots = plateClipSpots(cs), dogs = spots.map((s) => dogbonePoly(s.x, s.y, s.alongX, 0, dims));
-  // layers from the bottom: the floor (if any), then 0.7 mm at 45° (36.3 → 37.7), 1.8 mm straight, 2.15 mm
-  // at 45° up to 42 mm (in 3 steps); split where the clip pockets end, which are holes below that
+  const cells = []; for (let i = 0; i < cs.gx; i++) for (let j = 0; j < cs.gy; j++) cells.push([(i + 0.5) * GF.pitch, (j + 0.5) * GF.pitch]);
+  // below the sockets: the open plate on magnet pads has the middle of every field open; magnet holes from above
+  const crosses = opt.type === 'light' && F > 0 ? cells.map(([cx, cy]) => padCross(cx, cy)) : [];
+  const magnets = opt.magnets && F > 0 ? cells.flatMap(([cx, cy]) => [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([sx, sy]) => circlePoly(cx + sx * GF.magnetOff, cy + sy * GF.magnetOff, GF.magnetR, 24))) : [];
+  // layers from the bottom: the floor or pads (if any), then 0.7 mm at 45° (36.3 → 37.7), 1.8 mm straight,
+  // 2.15 mm at 45° up to 42 mm (in 3 steps); split where the clip pockets end and the magnet holes begin
   const raw = [...(F > 0 ? [[0, F, 0, 0]] : []), ...[[0, 0.7, 37, 1.5], [0.7, 2.5, 37.7, 1.85], [2.5, 3.22, 38.4, 2.2], [3.22, 3.93, 39.8, 3], [3.93, PLATE.h, 41.3, 3.7]].map(([a, b, w, r]) => [F + a, F + b, w, r])];
-  const layers = raw.flatMap((L) => (dogs.length && L[0] < dims.dogDepth && L[1] > dims.dogDepth ? [[L[0], dims.dogDepth, L[2], L[3]], [dims.dogDepth, L[1], L[2], L[3]]] : [L]));
+  const cuts = [...(dogs.length ? [dims.dogDepth] : []), ...(magnets.length ? [F - GF.magnetD] : [])];
+  let layers = raw;
+  for (const c of cuts) layers = layers.flatMap(([a, b, w, r]) => (a < c - 1e-6 && b > c + 1e-6 ? [[a, c, w, r], [c, b, w, r]] : [[a, b, w, r]]));
   for (const [z0, z1, w, rad] of layers) {
-    const holes = [...(w ? sockets(w, rad) : []), ...(z1 <= dims.dogDepth + 1e-6 ? dogs : [])];
+    const below = z1 <= F + 1e-6;
+    const holes = [...(w ? sockets(w, rad) : []), ...(below ? crosses : []), ...(z1 <= dims.dogDepth + 1e-6 ? dogs : []), ...(below && z0 >= F - GF.magnetD - 1e-6 ? magnets : [])];
     const m = slab(THREE, [threeShape(THREE, outer, holes)], z0, z1, mat); if (m) grp.add(m);
   }
   // the clips, pressed in from below
@@ -13787,7 +13812,7 @@ const CaseUI = {
   },
   renderPlate(cs) {
     const opt = plateOpts(cs), plan = splitPlan(cs.gx, cs.gy), b = bed(), clips = plateClips(cs);
-    $('#plate-type').value = opt.type; $('#plate-mag').checked = !!opt.magnets; $('#plate-mag').disabled = opt.type === 'light';
+    $('#plate-type').value = opt.type; $('#plate-mag').checked = !!opt.magnets;
     for (const el of $$('#plate-card .bed-ctl')) BedUI.render(el);
     const sizes = [];
     for (const ny of plan.rows) for (const nx of plan.cols) sizes.push(`${nx}×${ny}`);
@@ -15098,7 +15123,7 @@ if (location.hash === '#selbsttest') setTimeout(async () => {
     document.title = 'SELBSTTEST OK ' + Math.round(r.measureVolume(s)) + ' mm3, Schrift ' + (document.fonts.check('600 14px Barlow') ? 'da' : 'fehlt');
   } catch (e) { document.title = 'SELBSTTEST FEHLER ' + (e && (e.message || e)); }
 }, 800);
-window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts };
+window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross };
 // The mouse wheel over a number field that has the focus changes its value: easily by accident while
 // scrolling the panel (a bin's tolerance, wall, floor). The field gives up the focus instead, and the page
 // scrolls on.
