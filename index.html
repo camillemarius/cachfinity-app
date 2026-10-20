@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'f748fca440d7';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '031406f084cc';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -374,6 +374,10 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
 .tool .fit { position: absolute; top: 8px; right: 8px; z-index: 1; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; color: #fff; }
 .tool .fit.ok { background: var(--ok); }
 .tool .fit.bad { background: var(--bad); }
+.tool .fit.lock { border: 0; cursor: pointer; font-family: inherit; }
+.tool .fit.lock:hover { filter: brightness(1.1); }
+/* what a lock holds: visibly off */
+.tool .seg button:disabled, .tool input:disabled, #bin-sel-body input:disabled { opacity: 0.5; cursor: not-allowed; }
 .tool .fit-row { align-items: center; gap: 8px; }
 .tool .fit-row .seg button { font-size: 12px; padding-block: 3px; }
 
@@ -701,10 +705,10 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
       </div>
       <div class="card" id="plate-card">
         <h2>Grundplatte (Grid)</h2>
-        <label class="f" title="Grundplatte: mit 3 mm Boden und Klammern zwischen den Druckteilen, oder leicht ohne Boden"><span>Art</span>
-          <select title="Grundplatte: mit 3 mm Boden und Klammern zwischen den Druckteilen, oder leicht ohne Boden" id="plate-type">
-            <option value="clip">Mit 3 mm Boden, Teile mit Klammern verbunden</option>
-            <option value="light">Leicht und offen, 4.65 mm (ohne Verbinder)</option>
+        <label class="f" title="Grundplatte: offen (ohne Boden) oder mit 3 mm Boden; beide Male halten Klammern die Druckteile zusammen"><span>Art</span>
+          <select title="Grundplatte: offen (ohne Boden) oder mit 3 mm Boden; beide Male halten Klammern die Druckteile zusammen" id="plate-type">
+            <option value="light">Offen (ohne Boden), 4.65 mm, Klammern an den Ecken</option>
+            <option value="clip">Mit 3 mm Boden, Klammern in jedem Feld der Stossstellen</option>
           </select></label>
         <label title="Magnetlöcher in der Grundplatte (nur mit Boden)" class="check"><input type="checkbox" id="plate-mag"> Magnetlöcher 6 × 2 mm (nur mit Boden)</label>
         <div class="bed-ctl"></div>
@@ -11065,7 +11069,7 @@ function packBin(b) {
 // packer while nobody moved anything by hand; otherwise only its size follows what is there.
 function fitBin(b) {
   // a bin that fits its content gives every tool its full height as pocket (it grows for it, see depthRoom)
-  if (b.autoFit !== false) for (const it of b.items) { const t = toolById(it.toolId); if (t && !it.depthSet) it.depth = defaultDepth(b, t); }
+  if (b.autoFit !== false) for (const it of b.items) { const t = toolById(it.toolId); if (t && followsHeight(it)) it.depth = defaultDepth(b, t); }
   ensureFingers(b);
   if (b.autoFit !== false) {
     // the packer may lay out the tools as long as no shape stands on its own (troughs of a tool move with it)
@@ -11073,6 +11077,11 @@ function fitBin(b) {
   }
   if (relocateFingers(b, b.autoFit !== false) && b.autoFit !== false) autoSize(b);
 }
+// A tool whose test print fits is locked (t.fit 'ok'): its height, status and outline, and the depth of its
+// pockets, stay as they are until it is unlocked on its card (LibUI.unlocked, for this visit only).
+const toolLocked = (t) => !!t && t.fit === 'ok' && !(typeof LibUI !== 'undefined' && LibUI.unlocked.has(t.id));
+// whether a pocket takes its depth from its tool's height: not when set by hand, not while its tool is locked
+const followsHeight = (it) => !it.depthSet && !toolLocked(toolById(it.toolId));
 // How deep a pocket may be: in a bin of fixed size as its height allows; a bin that fits its content grows
 // until its tools lie fully in their pockets (Camille's choice), up to 30 u with room for the troughs, which
 // are FINGER_DEEPER deeper.
@@ -11084,7 +11093,7 @@ const depthRoom = (b) => (b.autoFit !== false ? fullRoom(b) : maxDepth(b));
 const DEPTH_EXTRA = 1;
 // «Grösse anpassen» on any bin: the pockets get their tools' full height (a depth set by hand stays), so the
 // size worked out afterwards (autoSize) is high enough for the tools to lie fully in them
-function fullDepths(b) { for (const it of b.items) { const t = toolById(it.toolId); if (t && !it.depthSet) it.depth = Math.floor(Math.min(t.height + DEPTH_EXTRA, fullRoom(b)) * 10 + 1e-6) / 10; } }
+function fullDepths(b) { for (const it of b.items) { const t = toolById(it.toolId); if (t && followsHeight(it)) it.depth = Math.floor(Math.min(t.height + DEPTH_EXTRA, fullRoom(b)) * 10 + 1e-6) / 10; } }
 // a pocket's depth from its tool's height (rounded down to 0.1 mm: rounded up it could pass the bin's
 // deepest pocket, 15.05 mm in a 3 u bin)
 function defaultDepth(b, tool) { return Math.floor(Math.min(tool.height + DEPTH_EXTRA, depthRoom(b)) * 10 + 1e-6) / 10; }
@@ -11096,7 +11105,7 @@ function toolHeightChanged(t) {
   for (const b of S.bins) {
     let n = 0;
     for (const it of b.items) {
-      if (it.toolId !== t.id || it.depthSet) continue;
+      if (it.toolId !== t.id || !followsHeight(it)) continue;
       const want = defaultDepth(b, t);
       if (Math.abs(it.depth - want) < 0.05) continue;
       it.depth = want; n++;
@@ -11107,7 +11116,7 @@ function toolHeightChanged(t) {
 }
 // pockets whose depth is not the one their tool's height gives (heights changed before the pockets
 // followed them, say); a depth set by hand in the bin does not count
-const depthsOff = (b) => b.items.filter((it) => { const t = toolById(it.toolId); return t && !it.depthSet && Math.abs(it.depth - defaultDepth(b, t)) > 0.05; });
+const depthsOff = (b) => b.items.filter((it) => { const t = toolById(it.toolId); return t && followsHeight(it) && Math.abs(it.depth - defaultDepth(b, t)) > 0.05; });
 
 // ---------- case placement (cells, levels in u) ----------
 function footprint(b) { const r = b.place && b.place.rot === 90; return { w: r ? b.gy : b.gx, h: r ? b.gx : b.gy }; }
@@ -11694,19 +11703,24 @@ async function exportBins(bins) {
 
 // ---------- baseplate (grid) ----------
 // Gridfinity baseplate: per field a socket for a bin's foot, 42 mm at the top (corner radius 4), 2.15 mm
-// at 45°, 1.8 mm straight, 0.7 mm at 45° down to 36.3 mm; 4.65 mm high. «light»: open below. «clip»: a 3 mm
-// floor below (magnet holes possible), and where two parts meet, per field a dogbone pocket from below for
-// a printed clip that holds them together (dogbone: two 6 mm circles 14 mm apart, joined by a 3.5 mm bar,
-// 2 mm deep; the clip 0.15 mm smaller all round and 1.8 mm high).
+// at 45°, 1.8 mm straight, 0.7 mm at 45° down to 36.3 mm; 4.65 mm high. Where two printed parts meet, printed
+// clips pressed into dogbone pockets from below hold them together (the clip 0.15 mm smaller all round).
+// «light» (the default): open below; the clips sit at the grid corners on a seam, where the ridges between
+// the sockets cross, a small dogbone along the ridge across the seam (1.6 mm heads 10 mm apart, 2.2 mm bar,
+// 2 mm deep, in the ridge that is 4.3 mm wide there). «clip»: a 3 mm floor below (magnet holes possible), per
+// field on a seam a dogbone in the floor (two 6 mm circles 14 mm apart, a 3.5 mm bar, 2 mm deep).
 const PLATE = { h: 4.65, floor: 3, r: 4, dogR: 3, dogOff: 7, dogBar: 3.5, dogDepth: 2, clipGap: 0.15, clipH: 1.8 };
-function dogbonePoly(cx, cy, alongX, shrink = 0) {
-  const { dogR: r, dogOff: o, dogBar: w } = PLATE, ax = alongX ? 1 : 0, ay = alongX ? 0 : 1;
+const CLIP_OPEN = { dogR: 1.6, dogOff: 5, dogBar: 2.2, dogDepth: 2, clipGap: 0.15, clipH: 1.8 };
+const clipDims = (opt) => (opt.type === 'light' ? CLIP_OPEN : PLATE);
+function dogbonePoly(cx, cy, alongX, shrink = 0, dims = PLATE) {
+  const { dogR: r, dogOff: o, dogBar: w } = dims, ax = alongX ? 1 : 0, ay = alongX ? 0 : 1;
   const bar = alongX ? [[cx - o, cy - w / 2], [cx + o, cy - w / 2], [cx + o, cy + w / 2], [cx - o, cy + w / 2]] : [[cx - w / 2, cy - o], [cx + w / 2, cy - o], [cx + w / 2, cy + o], [cx - w / 2, cy + o]];
   const shape = clipBool('union', [circlePoly(cx - ax * o, cy - ay * o, r, 40), circlePoly(cx + ax * o, cy + ay * o, r, 40), bar]);
   return largestRing(shrink ? offsetPolys(shape, -shrink) : shape);
 }
-// one part of nx × ny fields; seams: the sides (as seen from above, y down) where another part joins
-async function buildPlatePart(r, nx, ny, opt, seams) {
+// one part of nx × ny fields; spots: the clips that reach into it (plateClipSpots, in the part's coordinates
+// from its middle, y down as seen from above)
+async function buildPlatePart(r, nx, ny, opt, spots = []) {
   const F = opt.type === 'light' ? 0 : PLATE.floor, W = nx * GF.pitch, D = ny * GF.pitch;
   let solid = r.drawRoundedRectangle(W, D, PLATE.r).sketchOnPlane('XY', 0).extrude(F + PLATE.h);
   const sec = (cx, cy, w, rad, z) => r.drawRoundedRectangle(w, w, rad).translate(cx, cy).sketchOnPlane('XY', z);
@@ -11727,34 +11741,46 @@ async function buildPlatePart(r, nx, ny, opt, seams) {
     for (const [cx, cy] of centres) for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) holes.push(r.drawCircle(GF.magnetR).translate(cx + sx * GF.magnetOff, -(cy + sy * GF.magnetOff)).sketchOnPlane('XY', F - GF.magnetD).extrude(GF.magnetD + 0.5));
     solid = solid.cut(r.makeCompound(holes));
   }
-  if (F > 0) {
-    const dogs = [];
-    const add = (poly) => dogs.push(cadPolyDrawing(r, poly).sketchOnPlane('XY', -1).extrude(PLATE.dogDepth + 1));
-    for (let j = 0; j < ny; j++) { const cy = (j - (ny - 1) / 2) * GF.pitch; if (seams.left) add(dogbonePoly(-W / 2, cy, true)); if (seams.right) add(dogbonePoly(W / 2, cy, true)); }
-    for (let i = 0; i < nx; i++) { const cx = (i - (nx - 1) / 2) * GF.pitch; if (seams.top) add(dogbonePoly(cx, -D / 2, false)); if (seams.bottom) add(dogbonePoly(cx, D / 2, false)); }
-    if (dogs.length) solid = solid.cut(r.makeCompound(dogs));
+  if (spots.length) {
+    const dims = clipDims(opt);
+    const dogs = spots.map((s) => cadPolyDrawing(r, dogbonePoly(s.x, s.y, s.alongX, 0, dims)).sketchOnPlane('XY', -1).extrude(dims.dogDepth + 1));
+    solid = solid.cut(r.makeCompound(dogs));
   }
   return solid;
 }
-function clipSolid(r) { return cadPolyDrawing(r, dogbonePoly(0, 0, true, PLATE.clipGap)).sketchOnPlane('XY', 0).extrude(PLATE.clipH); }
-const plateOpts = (cs) => ({ type: 'clip', magnets: false, ...(cs.plate || {}) });
-// how many clips a case's baseplate needs: one per field along every seam between parts
-function plateClips(cs) {
-  const opt = plateOpts(cs), plan = splitPlan(cs.gx, cs.gy);
-  if (opt.type === 'light') return 0;
-  return (plan.cols.length - 1) * cs.gy + (plan.rows.length - 1) * cs.gx;
+function clipSolid(r, dims = PLATE) { return cadPolyDrawing(r, dogbonePoly(0, 0, true, dims.clipGap, dims)).sketchOnPlane('XY', 0).extrude(dims.clipH); }
+const plateOpts = (cs) => ({ type: 'light', magnets: false, ...(cs.plate || {}) });
+// Where the clips of a case's baseplate go, in the plate's coordinates (mm from its top left corner as seen
+// from above, y down); alongX: the clip lies across a seam that runs along y. With a floor: per field along
+// every seam. Open: at every grid corner inside a seam; where two seams cross only the one across the
+// vertical seam (two would sit in each other).
+function plateClipSpots(cs) {
+  const opt = plateOpts(cs), plan = splitPlan(cs.gx, cs.gy), p = GF.pitch, open = opt.type === 'light', out = [];
+  const cuts = (ns) => { const at = []; let a = 0; for (const n of ns.slice(0, -1)) { a += n; at.push(a); } return at; };
+  const xs = cuts(plan.cols), ys = cuts(plan.rows);
+  for (const x of xs) for (let j = open ? 1 : 0; j < cs.gy; j++) out.push({ x: x * p, y: (open ? j : j + 0.5) * p, alongX: true });
+  for (const y of ys) for (let i = open ? 1 : 0; i < cs.gx; i++) { if (open && xs.includes(i)) continue; out.push({ x: (open ? i : i + 0.5) * p, y: y * p, alongX: false }); }
+  return out;
 }
+// how many clips a case's baseplate needs
+const plateClips = (cs) => plateClipSpots(cs).length;
 async function exportPlate(cs) {
   const r = await loadCAD(), opt = plateOpts(cs), plan = splitPlan(cs.gx, cs.gy), b = bed();
   const files = [], enc = new TextEncoder(), name = safeName(cs.name), map = [];
   let k = 0;
+  const spots = plateClipSpots(cs), reach = clipDims(opt).dogOff + clipDims(opt).dogR + 1, p = GF.pitch;
+  let y0 = 0;
   for (let j = 0; j < plan.rows.length; j++) {
     const line = [];
+    let x0 = 0;
     for (let i = 0; i < plan.cols.length; i++) {
       const nx = plan.cols[i], ny = plan.rows[j], L = partLetter(k++);
-      const seams = { left: i > 0, right: i < plan.cols.length - 1, top: j > 0, bottom: j < plan.rows.length - 1 };
+      // the clips that reach into this part, from its middle
+      const X0 = x0 * p, Y0 = y0 * p, X1 = (x0 + nx) * p, Y1 = (y0 + ny) * p;
+      const mine = spots.filter((s) => s.x > X0 - reach && s.x < X1 + reach && s.y > Y0 - reach && s.y < Y1 + reach).map((s) => ({ ...s, x: s.x - (X0 + X1) / 2, y: s.y - (Y0 + Y1) / 2 }));
       setBusyText(`Grundplatte ${plan.parts > 1 ? `Teil ${L} von ${plan.parts}` : ''}…`); await frame();
-      const solid = await buildPlatePart(r, nx, ny, opt, seams);
+      const solid = await buildPlatePart(r, nx, ny, opt, mine);
+      x0 += nx;
       setBusyText(`Grundplatte ${plan.parts > 1 ? `Teil ${L}: ` : ''}STEP und STL schreiben…`); await frame();
       const tag = plan.parts > 1 ? `_${L}_${nx}x${ny}` : `_${nx}x${ny}`;
       files.push({ name: `${name}_Grundplatte${tag}.step`, data: new Uint8Array(await solid.blobSTEP().arrayBuffer()) },
@@ -11762,11 +11788,12 @@ async function exportPlate(cs) {
       line.push(`${L} (${nx} x ${ny})`);
     }
     map.push(line.join('   '));
+    y0 += plan.rows[j];
   }
-  const clips = plateClips(cs);
-  if (clips) files.push({ name: `${name}_Klammer_${clips}x_drucken.stl`, data: new Uint8Array(await clipSolid(r).blobSTL({ tolerance: 0.01, angularTolerance: 0.1, binary: true }).arrayBuffer()) });
+  const clips = spots.length;
+  if (clips) files.push({ name: `${name}_Klammer_${clips}x_drucken.stl`, data: new Uint8Array(await clipSolid(r, clipDims(opt)).blobSTL({ tolerance: 0.01, angularTolerance: 0.1, binary: true }).arrayBuffer()) });
   const txt = [
-    `Grundplatte für «${cs.name}»: ${cs.gx} x ${cs.gy} Felder (${cs.gx * GF.pitch} x ${cs.gy * GF.pitch} mm), ${opt.type === 'light' ? 'leicht und offen, 4.65 mm hoch' : `mit ${PLATE.floor} mm Boden, ${PLATE.floor + PLATE.h} mm hoch`}${opt.magnets && opt.type !== 'light' ? ', mit Magnetlöchern 6 x 2 mm' : ''}.`,
+    `Grundplatte für «${cs.name}»: ${cs.gx} x ${cs.gy} Felder (${cs.gx * GF.pitch} x ${cs.gy * GF.pitch} mm), ${opt.type === 'light' ? 'offen (ohne Boden), 4.65 mm hoch' : `mit ${PLATE.floor} mm Boden, ${PLATE.floor + PLATE.h} mm hoch`}${opt.magnets && opt.type !== 'light' ? ', mit Magnetlöchern 6 x 2 mm' : ''}.`,
     `Drucker: ${b.name}, Bett ${b.x} x ${b.y} mm.`,
     '',
     plan.parts > 1 ? `In ${plan.parts} Teile geteilt, so angeordnet (von oben gesehen, oben = hinten im Koffer):` : 'Passt in einem Stück aufs Druckbett.',
@@ -11776,8 +11803,8 @@ async function exportPlate(cs) {
     ...(clips ? [
       `Klammern: die Datei mit der Klammer ${clips} Mal drucken (flach, 100 % Füllung).`,
       'Zusammenbau: die Teile mit der Unterseite nach oben so hinlegen, wie oben gezeigt (dabei spiegelt sich die Anordnung links/rechts).',
-      'In jede Aussparung an den Stossstellen eine Klammer drücken, dann umdrehen.',
-    ] : plan.parts > 1 ? ['Die leichte Grundplatte hat keine Verbinder: die Teile nebeneinander in den Koffer legen, seine Wände halten sie zusammen.'] : []),
+      opt.type === 'light' ? 'In jede Aussparung an den Ecken der Stossstellen (unten in den Stegen) eine Klammer drücken, dann umdrehen.' : 'In jede Aussparung an den Stossstellen eine Klammer drücken, dann umdrehen.',
+    ] : plan.parts > 1 ? ['Diese Teilung hat keine inneren Ecken für Klammern: die Teile nebeneinander in den Koffer legen, seine Wände halten sie zusammen.'] : []),
   ];
   files.push({ name: 'LIESMICH.txt', data: enc.encode(txt.join('\r\n') + '\r\n') });
   return { zip: makeZip(files), files, plan, clips };
@@ -11945,21 +11972,33 @@ function meshGroup(THREE, mesh, color) {
 }
 // The case's baseplate (its «Grid», see buildPlatePart) as a fast stand-in: per field a socket whose 45°
 // chamfers are cut in steps, the 3 mm floor below for the «clip» type, the seams between the printed parts
-// as lines on top. In the case's frame: x to the right, y = -(down on the plan), the case floor at z = 0.
+// as lines on top, and the clips (orange) in their pockets from below (plateClipSpots), seen when the view is
+// turned to look from below. In the case's frame: x to the right, y = -(down on the plan), the case floor at
+// z = 0.
 function plateGroup(THREE, cs) {
-  const grp = new THREE.Group(), F = plateFloor(cs);
+  const grp = new THREE.Group(), F = plateFloor(cs), opt = plateOpts(cs), dims = clipDims(opt);
   const W = cs.gx * GF.pitch, D = cs.gy * GF.pitch;
-  const mat = new THREE.MeshStandardMaterial({ color: 0x9aa39e, roughness: 0.75, metalness: 0.02 });
+  const mat = new THREE.MeshStandardMaterial({ color: 0x9aa39e, roughness: 0.75, metalness: 0.02, side: THREE.DoubleSide });
   const outer = roundRectPoly(W, D, PLATE.r, 6).map(([x, y]) => [x + W / 2, y + D / 2]);
   const sockets = (w, rad) => {
     const out = [];
     for (let i = 0; i < cs.gx; i++) for (let j = 0; j < cs.gy; j++) out.push(roundRectPoly(w, w, rad, 4).map(([x, y]) => [x + (i + 0.5) * GF.pitch, y + (j + 0.5) * GF.pitch]));
     return out;
   };
-  if (F > 0) { const m = slab(THREE, [threeShape(THREE, outer)], 0, F, mat); if (m) grp.add(m); }
-  // from the bottom: 0.7 mm at 45° (36.3 → 37.7), 1.8 mm straight, 2.15 mm at 45° up to 42 mm (in 3 steps)
-  const layers = [[0, 0.7, 37, 1.5], [0.7, 2.5, 37.7, 1.85], [2.5, 3.22, 38.4, 2.2], [3.22, 3.93, 39.8, 3], [3.93, PLATE.h, 41.3, 3.7]];
-  for (const [z0, z1, w, rad] of layers) { const m = slab(THREE, [threeShape(THREE, outer, sockets(w, rad))], F + z0, F + z1, mat); if (m) grp.add(m); }
+  const spots = plateClipSpots(cs), dogs = spots.map((s) => dogbonePoly(s.x, s.y, s.alongX, 0, dims));
+  // layers from the bottom: the floor (if any), then 0.7 mm at 45° (36.3 → 37.7), 1.8 mm straight, 2.15 mm
+  // at 45° up to 42 mm (in 3 steps); split where the clip pockets end, which are holes below that
+  const raw = [...(F > 0 ? [[0, F, 0, 0]] : []), ...[[0, 0.7, 37, 1.5], [0.7, 2.5, 37.7, 1.85], [2.5, 3.22, 38.4, 2.2], [3.22, 3.93, 39.8, 3], [3.93, PLATE.h, 41.3, 3.7]].map(([a, b, w, r]) => [F + a, F + b, w, r])];
+  const layers = raw.flatMap((L) => (dogs.length && L[0] < dims.dogDepth && L[1] > dims.dogDepth ? [[L[0], dims.dogDepth, L[2], L[3]], [dims.dogDepth, L[1], L[2], L[3]]] : [L]));
+  for (const [z0, z1, w, rad] of layers) {
+    const holes = [...(w ? sockets(w, rad) : []), ...(z1 <= dims.dogDepth + 1e-6 ? dogs : [])];
+    const m = slab(THREE, [threeShape(THREE, outer, holes)], z0, z1, mat); if (m) grp.add(m);
+  }
+  // the clips, pressed in from below
+  if (spots.length) {
+    const clipMat = new THREE.MeshStandardMaterial({ color: 0xf0782e, roughness: 0.5, metalness: 0.05 });
+    for (const s of spots) { const m = slab(THREE, [threeShape(THREE, dogbonePoly(s.x, s.y, s.alongX, dims.clipGap, dims))], 0.02, dims.clipH, clipMat); if (m) grp.add(m); }
+  }
   // where the plate is cut into parts that fit the printer's bed
   const plan = splitPlan(cs.gx, cs.gy), seams = [], zt = F + PLATE.h + 0.05;
   let x = 0; for (const n of plan.cols.slice(0, -1)) { x += n * GF.pitch; seams.push(x, 0, zt, x, -D, zt); }
@@ -11973,9 +12012,8 @@ function plateGroup(THREE, cs) {
 function caseGroup(THREE, cs, focusId) {
   const grp = new THREE.Group();
   const W = cs.gx * GF.pitch, D = cs.gy * GF.pitch, H = cs.hu * GF.unit;
-  const floor = new THREE.Mesh(new THREE.BoxGeometry(W + 6, D + 6, 3), new THREE.MeshStandardMaterial({ color: 0x2b2f2c, roughness: 0.9 }));
-  floor.position.set(W / 2, -D / 2, -1.5); grp.add(floor);
-  // the baseplate on the case floor; the bins' feet sit in its sockets, on its floor
+  // the baseplate stands for the case's floor (no floor drawn under it, so turned to look from below one sees
+  // its clips); the bins' feet sit in its sockets, on its floor
   const plate = plateGroup(THREE, cs); grp.add(plate.grp);
   const box = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(W + 6, D + 6, H)), new THREE.LineBasicMaterial({ color: 0x9fb3a7 }));
   box.position.set(W / 2, -D / 2, H / 2); grp.add(box);
@@ -12719,6 +12757,7 @@ const TraceUI = {
   // Its outline goes into the same editor, on the piece of photo kept with the tool (if any). Saving keeps
   // the tool's coordinates, so its pockets stay where they are in every bin.
   async editTool(t, back = App.tab) {
+    if (toolLocked(t)) { toast(`«${t.name}» ist gesperrt, weil der Testdruck passt. Unter «Werkzeuge» das Schloss anklicken, um es zu ändern.`); return; }
     const bb = polyBBox([t.outline]), im = t.img, m = 15;
     const x0 = Math.min(bb.x0, im ? im.x0 : bb.x0) - m, y0 = Math.min(bb.y0, im ? im.y0 : bb.y0) - m;
     const x1 = Math.max(bb.x1, im ? im.x0 + im.w : bb.x1) + m, y1 = Math.max(bb.y1, im ? im.y0 + im.h : bb.y1) + m;
@@ -13010,7 +13049,8 @@ function hexA(hex, a) {
 // a tool's test print (t.fit), as shown on its card and in a bin's content list
 const FIT_TEXT = { ok: '✓ Testdruck passt', bad: '✗ Testdruck passt nicht' }, FIT_MARK = { ok: '✓ passt', bad: '✗ passt nicht' };
 const LibUI = {
-  confirmId: null, picked: new Set(),
+  // unlocked: tools whose lock (test print fits) was opened by a click on it, for this visit only
+  confirmId: null, picked: new Set(), unlocked: new Set(),
   init() {
     $('#lib-clear-ex').onclick = () => {
       const exTools = new Set(S.tools.filter((t) => t.example).map((t) => t.id));
@@ -13039,17 +13079,26 @@ const LibUI = {
         ? h('span', { class: 'confirm' }, uses ? `Auch aus ${uses} Bin${uses > 1 ? 's' : ''} entfernen?` : 'Wirklich löschen?',
           h('button', { class: 'btn small danger', type: 'button', onclick: () => this.remove(t) }, 'Löschen'),
           h('button', { class: 'btn small', type: 'button', onclick: () => { this.confirmId = null; this.render(); } }, 'Abbrechen'))
-        : h('button', { class: 'btn small ghost danger', type: 'button', title: 'Dieses Werkzeug aus der Sammlung löschen (mit Rückfrage; auch aus den Bins)', onclick: () => { this.confirmId = t.id; this.render(); } }, 'Löschen');
+        : h('button', { class: 'btn small ghost danger', type: 'button', disabled: toolLocked(t), title: 'Dieses Werkzeug aus der Sammlung löschen (mit Rückfrage; auch aus den Bins)' + (toolLocked(t) ? ' (gesperrt, weil der Testdruck passt: das Schloss oben rechts entsperrt)' : ''), onclick: () => { this.confirmId = t.id; this.render(); } }, 'Löschen');
       const picked = this.picked.has(t.id);
       const toggle = () => { if (this.picked.has(t.id)) this.picked.delete(t.id); else this.picked.add(t.id); this.render(); };
       const thumb = thumbOf(t.outline, 300, 188, ITEM_COLORS[i % ITEM_COLORS.length]);
       thumb.style.cursor = 'pointer'; thumb.title = 'Antippen wählt das Werkzeug für einen gemeinsamen Bin aus'; thumb.addEventListener('click', toggle);
       // whether the test print fitted (t.fit 'ok' | 'bad', absent: not tried yet); set by hand here
       const fitTip = { '': 'Noch nicht getestet', ok: 'Der Testdruck hat gepasst', bad: 'Der Testdruck hat nicht gepasst: Umriss oder Spiel anpassen' };
-      const fitBtn = (val, label) => h('button', { type: 'button', title: fitTip[val], 'aria-pressed': String((t.fit || '') === val), onclick: () => { if (val) { t.fit = val; t.fitAt = Date.now(); } else { delete t.fit; delete t.fitAt; } Store.save('tool', t); this.render(); } }, label);
+      const locked = toolLocked(t);
+      const fitBtn = (val, label) => h('button', { type: 'button', disabled: locked, title: fitTip[val] + (locked ? ' (gesperrt, weil der Testdruck passt: das Schloss oben rechts entsperrt)' : ''), 'aria-pressed': String((t.fit || '') === val), onclick: () => {
+        if (val) { t.fit = val; t.fitAt = Date.now(); } else { delete t.fit; delete t.fitAt; }
+        if (val === 'ok') this.unlocked.delete(t.id); // «passt» locks it at once
+        Store.save('tool', t); this.render();
+      } }, label);
+      // the mark on the picture; with «passt» a lock that opens and closes with a click
+      const mark = !t.fit ? null : t.fit !== 'ok' ? h('span', { class: 'fit bad', title: FIT_TEXT.bad + (t.fitAt ? ', gesetzt am ' + new Date(t.fitAt).toLocaleDateString('de-CH') : ''), text: FIT_MARK.bad })
+        : h('button', { type: 'button', class: 'fit ok lock', title: locked ? 'Gesperrt, weil der Testdruck passt: Höhe, Status, Umriss und die Taschentiefe in den Bins bleiben, wie sie sind. Klicken entsperrt.' : 'Entsperrt: Änderungen sind möglich. Klicken sperrt wieder.',
+          onclick: () => { if (locked) this.unlocked.add(t.id); else this.unlocked.delete(t.id); this.render(); } }, (locked ? '🔒 ' : '🔓 ') + FIT_MARK.ok);
       grid.append(h('article', { class: 'tool' + (picked ? ' picked' : '') },
         h('label', { class: 'pick', title: 'Werkzeuge auswählen, um sie zusammen in einen Bin zu legen oder einen Testdruck zu machen' }, h('input', { type: 'checkbox', checked: picked, onchange: toggle, 'aria-label': 'Auswählen' }), picked ? 'Ausgewählt' : 'Auswählen'),
-        t.fit ? h('span', { class: 'fit ' + t.fit, title: FIT_TEXT[t.fit] + (t.fitAt ? ', gesetzt am ' + new Date(t.fitAt).toLocaleDateString('de-CH') : ''), text: FIT_MARK[t.fit] }) : null,
+        mark,
         thumb,
         h('div', { class: 'body' },
           t.example ? h('div', { class: 'ex', text: 'Beispiel' }) : null,
@@ -13057,7 +13106,7 @@ const LibUI = {
           h('div', { class: 'row', style: { flexWrap: 'wrap', rowGap: '4px' } },
             h('span', { class: 'dims', text: `${nf(bb.w, 1)} × ${nf(bb.h, 1)} mm`, style: { whiteSpace: 'nowrap' } }),
             h('label', { class: 'f', title: 'Höhe des Werkzeugs, wie es im Bin liegt: daraus wird die Taschentiefe (1 mm Reserve); die Taschen in den Bins folgen', style: { flexDirection: 'row', alignItems: 'center', gap: '6px', marginLeft: 'auto' } }, h('span', { text: 'Höhe' }),
-              h('input', { type: 'number', value: t.height, min: 1, max: 300, step: 0.5, style: { width: '70px' }, onchange: (e) => {
+              h('input', { type: 'number', value: t.height, min: 1, max: 300, step: 0.5, disabled: locked, style: { width: '70px' }, onchange: (e) => {
                 t.height = clamp(num(e.target, t.height), 1, 300); Store.save('tool', t);
                 // the pockets of this tool follow (see toolHeightChanged)
                 const bins = toolHeightChanged(t);
@@ -13067,7 +13116,7 @@ const LibUI = {
             h('div', { class: 'seg', role: 'group', 'aria-label': 'Testdruck' }, fitBtn('', 'offen'), fitBtn('ok', 'passt'), fitBtn('bad', 'passt nicht'))),
           h('div', { class: 'row' },
             h('button', { class: 'btn small primary', type: 'button', title: 'Das Werkzeug in den Bin legen, den du gerade bearbeitest (oder in einen neuen)', onclick: () => this.toBin(t) }, 'In Bin legen'),
-            h('button', { class: 'btn small', type: 'button', title: 'Umriss mit dem Punkte-Editor korrigieren, ohne Foto', onclick: () => TraceUI.editTool(t) }, 'Umriss bearbeiten'), del))));
+            h('button', { class: 'btn small', type: 'button', disabled: locked, title: 'Umriss mit dem Punkte-Editor korrigieren, ohne Foto' + (locked ? ' (gesperrt, weil der Testdruck passt: das Schloss oben rechts entsperrt)' : ''), onclick: () => TraceUI.editTool(t) }, 'Umriss bearbeiten'), del))));
     });
   },
   // the action bar for the chosen tools
@@ -13166,7 +13215,7 @@ const BinUI = {
       const b = curBin(); if (!b) return; let v = clamp(num(e.target, b[key]), lo, hi); if (isInt) v = Math.round(v); b[key] = v; if (['gx', 'gy', 'hu'].includes(key)) b.autoFit = false;
       // a higher or lower bin (or floor): the pockets take their depth from the tool heights again, as deep as
       // the bin now allows; a depth set by hand stays
-      if (key === 'hu' || key === 'floor') for (const it of b.items) { const t = toolById(it.toolId); if (t && !it.depthSet) it.depth = defaultDepth(b, t); }
+      if (key === 'hu' || key === 'floor') for (const it of b.items) { const t = toolById(it.toolId); if (t && followsHeight(it)) it.depth = defaultDepth(b, t); }
       this.changed(true);
     }; };
     bindNum('#bin-gx', 'gx', 1, 12, true); bindNum('#bin-gy', 'gy', 1, 12, true); bindNum('#bin-hu', 'hu', 2, 30, true);
@@ -13413,7 +13462,7 @@ const BinUI = {
       const t = toolById(it.toolId);
       items.append(h('div', { class: 'item' + (this.sel && this.sel.id === it.id ? ' sel' : ''), onclick: () => { this.sel = { kind: 'item', id: it.id }; this.renderPanel(); this.stage.redraw(); } },
         h('span', { class: 'swatch', style: { background: b.color } }),
-        h('div', null, h('div', { class: 't', text: t ? t.name : 'fehlt' }), h('div', { class: 's', text: `Tiefe ${nf(Math.min(it.depth, maxDepth(b)), 1)} mm${t && t.height > Math.min(it.depth, maxDepth(b)) + 0.05 ? ` (Werkzeug ${nf(t.height, 1)} mm hoch)` : ''} · ${nf(it.rot, 0)}°${it.mirror ? ' · gespiegelt' : ''}${t && t.fit ? ' · ' + FIT_TEXT[t.fit] : ''}` })),
+        h('div', null, h('div', { class: 't', text: t ? t.name : 'fehlt' }), h('div', { class: 's', text: `Tiefe ${nf(Math.min(it.depth, maxDepth(b)), 1)} mm${t && t.height > Math.min(it.depth, maxDepth(b)) + 0.05 ? ` (Werkzeug ${nf(t.height, 1)} mm hoch)` : ''} · ${nf(it.rot, 0)}°${it.mirror ? ' · gespiegelt' : ''}${t && t.fit ? ' · ' + (toolLocked(t) ? '🔒 ' : '') + FIT_TEXT[t.fit] : ''}` })),
         // the tool as a body in the 3D view, to see how deep it sits (off unless ticked; a setting of this
         // browser, not of the bin)
         h('label', { class: 'check', title: 'Werkzeug in der 3D-Ansicht zeigen', style: { fontSize: '12px', gap: '4px' }, onclick: (e) => e.stopPropagation() },
@@ -13445,13 +13494,13 @@ const BinUI = {
           h('button', { class: 'btn small', type: 'button', title: 'Um 90° gegen den Uhrzeigersinn drehen', onclick: () => { ref.rot = (ref.rot + 270) % 360; this.changed(); } }, '⟲ 90°'),
           h('button', { class: 'btn small', type: 'button', title: 'Um 90° im Uhrzeigersinn drehen (auch Taste R)', onclick: () => { ref.rot = (ref.rot + 90) % 360; this.changed(); } }, '⟳ 90°'),
           h('label', { class: 'f grow', title: 'Drehwinkel des Werkzeugs im Bin in Grad' }, h('span', { text: 'Winkel °' }), rotIn)),
-        h('label', { class: 'check', title: 'Das Werkzeug liegt umgedreht im Bin: die Tasche wird gespiegelt' }, h('input', { type: 'checkbox', checked: ref.mirror, onchange: (e) => { ref.mirror = e.target.checked; this.changed(); } }), 'Spiegeln (Teil liegt umgedreht)'),
-        h('label', { class: 'f', title: 'Tiefe dieser Tasche; eine hier eingetragene Tiefe bleibt, auch wenn sich die Werkzeughöhe ändert' }, h('span', { text: `Taschentiefe mm (Teil ${t ? nf(t.height, 1) : '?'} mm hoch, max ${nf(maxDepth(b), 1)})` }),
-          h('input', { type: 'number', value: ref.depth, min: 1, max: 200, step: 0.5, onchange: (e) => { ref.depth = clamp(num(e.target, ref.depth), 0.5, 200); ref.depthSet = true; this.changed(); } })),
+        h('label', { class: 'check', title: 'Das Werkzeug liegt umgedreht im Bin: die Tasche wird gespiegelt' + (toolLocked(t) ? ' (gesperrt, weil der Testdruck passt: das Schloss oben rechts entsperrt)' : '') }, h('input', { type: 'checkbox', disabled: toolLocked(t), checked: ref.mirror, onchange: (e) => { ref.mirror = e.target.checked; this.changed(); } }), 'Spiegeln (Teil liegt umgedreht)'),
+        h('label', { class: 'f', title: 'Tiefe dieser Tasche; eine hier eingetragene Tiefe bleibt, auch wenn sich die Werkzeughöhe ändert' + (toolLocked(t) ? ' (gesperrt, weil der Testdruck passt: unter «Werkzeuge» das Schloss entsperrt)' : '') }, h('span', { text: `Taschentiefe mm (Teil ${t ? nf(t.height, 1) : '?'} mm hoch, max ${nf(maxDepth(b), 1)})` }),
+          h('input', { type: 'number', value: ref.depth, min: 1, max: 200, step: 0.5, disabled: toolLocked(t), onchange: (e) => { ref.depth = clamp(num(e.target, ref.depth), 0.5, 200); ref.depthSet = true; this.changed(); } })),
         ...(ref.noFinger && !b.fingers.some((f) => f.itemId === ref.id) ? [h('p', { class: 'unit', text: 'Ohne Griffmulde: von Hand entfernt. «Griffmulde dazu» setzt wieder eine.' })] : []),
         h('div', { class: 'row' },
           h('button', { class: 'btn small', type: 'button', title: 'Eine weitere runde Griffmulde quer über dieses Werkzeug, an der besten freien Stelle', onclick: () => this.addFinger(ref) }, 'Griffmulde dazu'),
-          t ? h('button', { class: 'btn small', type: 'button', title: 'Umriss des Werkzeugs korrigieren; gilt in allen Bins', onclick: () => TraceUI.editTool(t) }, 'Umriss bearbeiten') : null,
+          t ? h('button', { class: 'btn small', type: 'button', disabled: toolLocked(t), title: 'Umriss des Werkzeugs korrigieren; gilt in allen Bins' + (toolLocked(t) ? ' (gesperrt, weil der Testdruck passt: unter «Werkzeuge» das Schloss entsperrt)' : ''), onclick: () => TraceUI.editTool(t) }, 'Umriss bearbeiten') : null,
           h('button', { class: 'btn small danger', type: 'button', title: 'Aus dem Bin nehmen (auch Entf); Rückgängig mit Strg+Z', onclick: () => this.removeSel() }, 'Entfernen')));
     } else if (ref) {
       const k = shapeKind(ref);
@@ -13744,7 +13793,7 @@ const CaseUI = {
     for (const ny of plan.rows) for (const nx of plan.cols) sizes.push(`${nx}×${ny}`);
     $('#plate-info').textContent = plan.parts === 1
       ? `${cs.gx * GF.pitch} × ${cs.gy * GF.pitch} mm, passt in einem Stück auf das Bett (${b.x} × ${b.y} mm).`
-      : `Zu gross für das Bett (${b.x} × ${b.y} mm): ${plan.parts} Teile (${sizes.join(', ')}), in der Draufsicht gestrichelt. ` + (clips ? `Verbunden mit ${clips} Klammern, die von unten in Aussparungen an den Stossstellen gedrückt werden.` : 'Die leichte Platte hat keine Verbinder; die Kofferwände halten die Teile zusammen.');
+      : `Zu gross für das Bett (${b.x} × ${b.y} mm): ${plan.parts} Teile (${sizes.join(', ')}), in der Draufsicht gestrichelt. ` + (clips ? `Verbunden mit ${clips} Klammern, die von unten in Aussparungen an den Stossstellen gedrückt werden` + (opt.type === 'light' ? ', an den Ecken der Felder' : '') + '. In der 3D-Ansicht orange (von unten anschauen).' : 'Diese Teilung hat keine inneren Ecken für Klammern; die Kofferwände halten die Teile zusammen.');
   },
   levels(cs) { return [...new Set(placedIn(cs).map((b) => b.place.z))].sort((a, b) => a - b); },
   render() {
@@ -13816,7 +13865,10 @@ const CaseUI = {
     if (lv.length > 1 && this.view === '2d') {
       const chip = (label, val) => h('button', { class: 'chip-on-mat', type: 'button', title: 'Nur die Bins dieser Ebene zeigen', style: { border: this.level === val ? '1px solid #fff' : '1px solid transparent', cursor: 'pointer' }, onclick: () => { this.level = val; this.render(); } }, label);
       ov.append(chip('Alle Ebenen', 'all'), ...lv.map((z) => chip(z === 0 ? 'Boden' : `ab ${z} u`, z)));
-    }    Undo.syncCase();
+    }
+    // the baseplate's clips sit underneath: say where to look
+    const nClips = plateClips(cs);
+    if (this.view === '3d' && nClips) ov.append(h('span', { class: 'chip-on-mat', text: `${nClips} Klammern (orange) halten die Teile der Grundplatte zusammen: Ansicht nach unten drehen` }));    Undo.syncCase();
     this.stage.redraw(); if (this.view === '3d') this.update3d();
   },
   rotate(b) {
@@ -15016,7 +15068,7 @@ const App = {
     if (S.ui.depthV < 3) {
       for (const b of S.bins) {
         let n = 0;
-        for (const it of b.items) { const t = toolById(it.toolId); if (!t || it.depthSet) continue; const want = defaultDepth(b, t); if (Math.abs(it.depth - want) > 0.05) { it.depth = want; n++; } }
+        for (const it of b.items) { const t = toolById(it.toolId); if (!t || !followsHeight(it)) continue; const want = defaultDepth(b, t); if (Math.abs(it.depth - want) > 0.05) { it.depth = want; n++; } }
         if (n) { fitBin(b); b._rev = (b._rev || 0) + 1; Store.save('bin', b); deeper++; }
       }
       S.ui.depthV = 3;
@@ -15046,7 +15098,7 @@ if (location.hash === '#selbsttest') setTimeout(async () => {
     document.title = 'SELBSTTEST OK ' + Math.round(r.measureVolume(s)) + ' mm3, Schrift ' + (document.fonts.check('600 14px Barlow') ? 'da' : 'fehlt');
   } catch (e) { document.title = 'SELBSTTEST FEHLER ' + (e && (e.message || e)); }
 }, 800);
-window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged };
+window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts };
 // The mouse wheel over a number field that has the focus changes its value: easily by accident while
 // scrolling the panel (a bin's tolerance, wall, floor). The field gives up the focus instead, and the page
 // scrolls on.
