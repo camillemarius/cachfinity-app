@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'beaa374930bd';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '5664fa038b2f';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -11864,6 +11864,22 @@ function fastBinGroup(THREE, b, opts = {}) {
   }
   return grp;
 }
+// The tools ticked «3D» in a bin's content list, as plain bodies in their pockets: each outline raised to the
+// tool's height, standing on its pocket's floor, so one sees how deep it sits and how far it stands out. In
+// the bin's frame, like fastBinGroup (and the exact mesh); the bin view and the case view show the same.
+const shown3d = () => new Set((S.ui && S.ui.show3d) || []);
+function setShown3d(id, on) { const s = shown3d(); if (on) s.add(id); else s.delete(id); S.ui.show3d = [...s]; Store.saveUi(); }
+function toolsGroup(THREE, b) {
+  const grp = new THREE.Group(), zTop = binTop(b), show = shown3d();
+  const mat = new THREE.MeshStandardMaterial({ color: 0xc3ccd2, roughness: 0.38, metalness: 0.5 });
+  for (const it of b.items) {
+    if (!show.has(it.id)) continue;
+    const t = toolById(it.toolId), poly = itemPoly(it); if (!t || !poly) continue;
+    const z0 = zTop - Math.min(it.depth, maxDepth(b)) + 0.05; // (just above the floor, so the two do not flicker)
+    const m = slab(THREE, [threeShape(THREE, poly)], z0, z0 + t.height, mat); if (m) grp.add(m);
+  }
+  return grp;
+}
 // the inner surface of a round trough as a mesh: rings from the rim down to the bottom line, each the
 // trough's outline at that depth. Where another pocket is deeper the surface is air and left out.
 function scoopMesh(THREE, b, p, all, mat, usable) {
@@ -11943,6 +11959,7 @@ function caseGroup(THREE, cs, focusId) {
   box.position.set(W / 2, -D / 2, H / 2); grp.add(box);
   for (const b of placedIn(cs)) {
     const g = fastBinGroup(THREE, b, { ghost: focusId && focusId !== b.id });
+    g.add(toolsGroup(THREE, b)); // the tools ticked «3D» in the bin
     const fp = footprint(b);
     g.rotation.z = b.place.rot === 90 ? -Math.PI / 2 : 0; // clockwise seen from above, like the 2D plan
     // (bins in the storage area beside the case stand on the floor, not on the plate)
@@ -13108,7 +13125,13 @@ const BinUI = {
     $('#bin-del').onclick = () => { this.confirmDel = true; this.renderTop(); };
     $('#bin-view-2d').onclick = () => this.setView('2d');
     $('#bin-view-3d').onclick = () => this.setView('3d');
-    const bindNum = (id, key, lo, hi, isInt) => { $(id).onchange = (e) => { const b = curBin(); if (!b) return; let v = clamp(num(e.target, b[key]), lo, hi); if (isInt) v = Math.round(v); b[key] = v; if (['gx', 'gy', 'hu'].includes(key)) b.autoFit = false; this.changed(true); }; };
+    const bindNum = (id, key, lo, hi, isInt) => { $(id).onchange = (e) => {
+      const b = curBin(); if (!b) return; let v = clamp(num(e.target, b[key]), lo, hi); if (isInt) v = Math.round(v); b[key] = v; if (['gx', 'gy', 'hu'].includes(key)) b.autoFit = false;
+      // a higher or lower bin (or floor): the pockets take their depth from the tool heights again, as deep as
+      // the bin now allows; a depth set by hand stays
+      if (key === 'hu' || key === 'floor') for (const it of b.items) { const t = toolById(it.toolId); if (t && !it.depthSet) it.depth = defaultDepth(b, t); }
+      this.changed(true);
+    }; };
     bindNum('#bin-gx', 'gx', 1, 12, true); bindNum('#bin-gy', 'gy', 1, 12, true); bindNum('#bin-hu', 'hu', 2, 30, true);
     bindNum('#bin-wall', 'wall', 1.2, 10); bindNum('#bin-floor', 'floor', 0.8, 10);
     // the tolerance widens every tool pocket all round; a bin set to fit its content grows with it
@@ -13254,6 +13277,7 @@ const BinUI = {
       const { THREE } = await loadThree();
       const ex = self.exact.get(b.id);
       const grp = ex && ex.rev === (b._rev || 0) ? meshGroup(THREE, ex.mesh, b.color) : fastBinGroup(THREE, b);
+      grp.add(toolsGroup(THREE, b)); // the tools ticked «3D» in the content list
       self.viewer.set(grp, self.viewer.lastBin === b.id); self.viewer.lastBin = b.id;
       const exact = ex && ex.rev === (b._rev || 0);
       $('#bin-overlay').replaceChildren(...[h('span', { class: 'chip-on-mat', text: exact ? 'Exakte CAD-Geometrie' : 'Schnellvorschau' }),
@@ -13340,7 +13364,11 @@ const BinUI = {
       const t = toolById(it.toolId);
       items.append(h('div', { class: 'item' + (this.sel && this.sel.id === it.id ? ' sel' : ''), onclick: () => { this.sel = { kind: 'item', id: it.id }; this.renderPanel(); this.stage.redraw(); } },
         h('span', { class: 'swatch', style: { background: b.color } }),
-        h('div', null, h('div', { class: 't', text: t ? t.name : 'fehlt' }), h('div', { class: 's', text: `Tiefe ${nf(Math.min(it.depth, maxDepth(b)), 1)} mm${t && t.height > Math.min(it.depth, maxDepth(b)) + 0.05 ? ` (Werkzeug ${nf(t.height, 1)} mm hoch)` : ''} · ${nf(it.rot, 0)}°${it.mirror ? ' · gespiegelt' : ''}` })), h('span')));
+        h('div', null, h('div', { class: 't', text: t ? t.name : 'fehlt' }), h('div', { class: 's', text: `Tiefe ${nf(Math.min(it.depth, maxDepth(b)), 1)} mm${t && t.height > Math.min(it.depth, maxDepth(b)) + 0.05 ? ` (Werkzeug ${nf(t.height, 1)} mm hoch)` : ''} · ${nf(it.rot, 0)}°${it.mirror ? ' · gespiegelt' : ''}` })),
+        // the tool as a body in the 3D view, to see how deep it sits (off unless ticked; a setting of this
+        // browser, not of the bin)
+        h('label', { class: 'check', title: 'Werkzeug in der 3D-Ansicht zeigen', style: { fontSize: '12px', gap: '4px' }, onclick: (e) => e.stopPropagation() },
+          h('input', { type: 'checkbox', checked: shown3d().has(it.id), onchange: (e) => { setShown3d(it.id, e.target.checked); if (this.view === '3d') this.update3d(); } }), '3D')));
     }
     for (const f of b.fingers) {
       const lb = shapeLabel(f);
@@ -13738,8 +13766,7 @@ const CaseUI = {
     if (lv.length > 1 && this.view === '2d') {
       const chip = (label, val) => h('button', { class: 'chip-on-mat', type: 'button', style: { border: this.level === val ? '1px solid #fff' : '1px solid transparent', cursor: 'pointer' }, onclick: () => { this.level = val; this.render(); } }, label);
       ov.append(chip('Alle Ebenen', 'all'), ...lv.map((z) => chip(z === 0 ? 'Boden' : `ab ${z} u`, z)));
-    }
-    Undo.syncCase();
+    }    Undo.syncCase();
     this.stage.redraw(); if (this.view === '3d') this.update3d();
   },
   rotate(b) {
