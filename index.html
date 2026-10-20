@@ -234,6 +234,13 @@ button, input, select { font: inherit; color: inherit; }
 }
 /* over the outlines the notes let clicks through to the points below them */
 #trace-overlay .chip-on-mat { pointer-events: none; }
+/* settings opened on purpose (bin: tolerance, wall, floor): closed they show a line with the values */
+details.adv { border: 1px solid var(--line); border-radius: var(--r); padding: 7px 10px; }
+details.adv > summary { cursor: pointer; font-size: 13px; font-family: var(--font-mono); display: flex; gap: 8px; align-items: baseline; }
+details.adv > summary .adv-open { margin-left: auto; font-family: var(--font-body); color: var(--accent); }
+details.adv[open] > summary { margin-bottom: 10px; }
+details.adv[open] > summary .adv-open { color: var(--muted); }
+details.adv > .fields { margin-top: 8px; }
 .stage-empty {
   position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: var(--mat-ink);
   padding: 24px; pointer-events: none;
@@ -604,11 +611,15 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
           <label class="f"><span>Höhe u (7 mm)</span><input type="number" id="bin-hu" min="2" max="30" step="1"></label>
         </div>
         <p id="bin-dims" class="mono"></p>
-        <label class="f"><span>Toleranz zum Werkzeug mm <span class="unit">(Abstand rundum zwischen Werkzeug und Taschenwand, meist 0.5 bis 2)</span></span><input type="number" id="bin-clear" min="0" max="5" step="0.1"></label>
-        <div class="fields">
-          <label class="f"><span>Mindestrand mm</span><input type="number" id="bin-wall" min="1.2" max="10" step="0.1"></label>
-          <label class="f"><span>Boden mm</span><input type="number" id="bin-floor" min="0.8" max="10" step="0.1"></label>
-        </div>
+        <!-- settings that change every pocket and are rarely touched: a line with the values, opened on purpose -->
+        <details class="adv" id="bin-adv">
+          <summary><span id="bin-adv-sum"></span><span class="unit adv-open">ändern</span></summary>
+          <label class="f"><span>Toleranz zum Werkzeug mm <span class="unit">(Abstand rundum zwischen Werkzeug und Taschenwand; Standard 0.5)</span></span><input type="number" id="bin-clear" min="0" max="5" step="0.1"></label>
+          <div class="fields">
+            <label class="f"><span>Mindestrand mm</span><input type="number" id="bin-wall" min="1.2" max="10" step="0.1"></label>
+            <label class="f"><span>Boden mm</span><input type="number" id="bin-floor" min="0.8" max="10" step="0.1"></label>
+          </div>
+        </details>
         <label class="check"><input type="checkbox" id="bin-autofit" checked> Grösse passt sich dem Inhalt an <span class="unit">(aus, sobald du Felder oder Höhe selbst einstellst)</span></label>
         <label class="check"><input type="checkbox" id="bin-lip"> Stapelrand</label>
         <label class="f inline-f" style="padding-left: 26px" title="Hebt den Stapelrand um ganze Einheiten an. Werkzeuge, die aus ihrer Tasche ragen, haben dann Platz unter dem Bin darüber."><span>Rand erhöhen</span><input type="number" id="bin-lift" min="0" max="10" step="1" style="width: 64px"><span class="unit">u (je 7 mm)</span></label>
@@ -11052,6 +11063,26 @@ function fitBin(b) {
   if (relocateFingers(b, b.autoFit !== false) && b.autoFit !== false) autoSize(b);
 }
 function defaultDepth(b, tool) { return Math.round(Math.min(tool.height, maxDepth(b)) * 10) / 10; }
+// A tool's height was changed in the library: its pockets that still had the depth from the old height take
+// the one from the new height (as when it is put into a bin), and their bins adapt. A depth set by hand in
+// the bin (it.depthSet) stays. Returns the bins changed.
+function toolHeightChanged(t, old) {
+  const changed = [];
+  for (const b of S.bins) {
+    let n = 0;
+    for (const it of b.items) {
+      if (it.toolId !== t.id || it.depthSet) continue;
+      const was = Math.round(Math.min(old, maxDepth(b)) * 10) / 10, want = defaultDepth(b, t);
+      if (Math.abs(it.depth - was) > 0.05 || Math.abs(it.depth - want) < 0.05) continue;
+      it.depth = want; n++;
+    }
+    if (n) { fitBin(b); b._rev = (b._rev || 0) + 1; Store.save('bin', b); changed.push(b); }
+  }
+  return changed;
+}
+// pockets whose depth is not the one their tool's height gives (heights changed before the pockets
+// followed them, say); a depth set by hand in the bin does not count
+const depthsOff = (b) => b.items.filter((it) => { const t = toolById(it.toolId); return t && !it.depthSet && Math.abs(it.depth - defaultDepth(b, t)) > 0.05; });
 
 // ---------- case placement (cells, levels in u) ----------
 function footprint(b) { const r = b.place && b.place.rot === 90; return { w: r ? b.gy : b.gx, h: r ? b.gx : b.gy }; }
@@ -11866,23 +11897,48 @@ function meshGroup(THREE, mesh, color) {
   grp.add(new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.02 })));
   return grp;
 }
+// The case's baseplate (its «Grid», see buildPlatePart) as a fast stand-in: per field a socket whose 45°
+// chamfers are cut in steps, the 3 mm floor below for the «clip» type, the seams between the printed parts
+// as lines on top. In the case's frame: x to the right, y = -(down on the plan), the case floor at z = 0.
+function plateGroup(THREE, cs) {
+  const grp = new THREE.Group(), opt = plateOpts(cs), F = opt.type === 'light' ? 0 : PLATE.floor;
+  const W = cs.gx * GF.pitch, D = cs.gy * GF.pitch;
+  const mat = new THREE.MeshStandardMaterial({ color: 0x9aa39e, roughness: 0.75, metalness: 0.02 });
+  const outer = roundRectPoly(W, D, PLATE.r, 6).map(([x, y]) => [x + W / 2, y + D / 2]);
+  const sockets = (w, rad) => {
+    const out = [];
+    for (let i = 0; i < cs.gx; i++) for (let j = 0; j < cs.gy; j++) out.push(roundRectPoly(w, w, rad, 4).map(([x, y]) => [x + (i + 0.5) * GF.pitch, y + (j + 0.5) * GF.pitch]));
+    return out;
+  };
+  if (F > 0) { const m = slab(THREE, [threeShape(THREE, outer)], 0, F, mat); if (m) grp.add(m); }
+  // from the bottom: 0.7 mm at 45° (36.3 → 37.7), 1.8 mm straight, 2.15 mm at 45° up to 42 mm (in 3 steps)
+  const layers = [[0, 0.7, 37, 1.5], [0.7, 2.5, 37.7, 1.85], [2.5, 3.22, 38.4, 2.2], [3.22, 3.93, 39.8, 3], [3.93, PLATE.h, 41.3, 3.7]];
+  for (const [z0, z1, w, rad] of layers) { const m = slab(THREE, [threeShape(THREE, outer, sockets(w, rad))], F + z0, F + z1, mat); if (m) grp.add(m); }
+  // where the plate is cut into parts that fit the printer's bed
+  const plan = splitPlan(cs.gx, cs.gy), seams = [], zt = F + PLATE.h + 0.05;
+  let x = 0; for (const n of plan.cols.slice(0, -1)) { x += n * GF.pitch; seams.push(x, 0, zt, x, -D, zt); }
+  let y = 0; for (const n of plan.rows.slice(0, -1)) { y += n * GF.pitch; seams.push(0, -y, zt, W, -y, zt); }
+  if (seams.length) {
+    const lg = new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.Float32BufferAttribute(seams, 3));
+    grp.add(new THREE.LineSegments(lg, new THREE.LineBasicMaterial({ color: 0x1d2420 })));
+  }
+  return { grp, floor: F };
+}
 function caseGroup(THREE, cs, focusId) {
   const grp = new THREE.Group();
   const W = cs.gx * GF.pitch, D = cs.gy * GF.pitch, H = cs.hu * GF.unit;
   const floor = new THREE.Mesh(new THREE.BoxGeometry(W + 6, D + 6, 3), new THREE.MeshStandardMaterial({ color: 0x2b2f2c, roughness: 0.9 }));
   floor.position.set(W / 2, -D / 2, -1.5); grp.add(floor);
-  const lines = [];
-  for (let i = 0; i <= cs.gx; i++) lines.push(i * GF.pitch, 0, 0.2, i * GF.pitch, -D, 0.2);
-  for (let j = 0; j <= cs.gy; j++) lines.push(0, -j * GF.pitch, 0.2, W, -j * GF.pitch, 0.2);
-  const lg = new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.Float32BufferAttribute(lines, 3));
-  grp.add(new THREE.LineSegments(lg, new THREE.LineBasicMaterial({ color: 0x7f9a8a })));
+  // the baseplate on the case floor; the bins' feet sit in its sockets, on its floor
+  const plate = plateGroup(THREE, cs); grp.add(plate.grp);
   const box = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(W + 6, D + 6, H)), new THREE.LineBasicMaterial({ color: 0x9fb3a7 }));
   box.position.set(W / 2, -D / 2, H / 2); grp.add(box);
   for (const b of placedIn(cs)) {
     const g = fastBinGroup(THREE, b, { ghost: focusId && focusId !== b.id });
     const fp = footprint(b);
     g.rotation.z = b.place.rot === 90 ? -Math.PI / 2 : 0; // clockwise seen from above, like the 2D plan
-    g.position.set((b.place.x + fp.w / 2) * GF.pitch, -(b.place.y + fp.h / 2) * GF.pitch, b.place.z * GF.unit);
+    // (bins in the storage area beside the case stand on the floor, not on the plate)
+    g.position.set((b.place.x + fp.w / 2) * GF.pitch, -(b.place.y + fp.h / 2) * GF.pitch, (isParked(b, cs) ? 0 : plate.floor) + b.place.z * GF.unit);
     grp.add(g);
   }
   return grp;
@@ -12943,7 +12999,12 @@ const LibUI = {
           h('div', { class: 'row', style: { flexWrap: 'wrap', rowGap: '4px' } },
             h('span', { class: 'dims', text: `${nf(bb.w, 1)} × ${nf(bb.h, 1)} mm`, style: { whiteSpace: 'nowrap' } }),
             h('label', { class: 'f', style: { flexDirection: 'row', alignItems: 'center', gap: '6px', marginLeft: 'auto' } }, h('span', { text: 'Höhe' }),
-              h('input', { type: 'number', value: t.height, min: 1, max: 300, step: 0.5, style: { width: '70px' }, onchange: (e) => { t.height = clamp(num(e.target, t.height), 1, 300); Store.save('tool', t); } }), h('span', { class: 'unit', text: 'mm' }))),
+              h('input', { type: 'number', value: t.height, min: 1, max: 300, step: 0.5, style: { width: '70px' }, onchange: (e) => {
+                const old = t.height; t.height = clamp(num(e.target, t.height), 1, 300); Store.save('tool', t);
+                // the pockets of this tool follow (see toolHeightChanged)
+                const bins = toolHeightChanged(t, old);
+                if (bins.length) toast(`Taschentiefe von «${t.name}» in ${bins.length === 1 ? `«${bins[0].name}»` : `${bins.length} Bins`} angepasst.`);
+              } }), h('span', { class: 'unit', text: 'mm' }))),
           h('div', { class: 'row' },
             h('button', { class: 'btn small primary', type: 'button', onclick: () => this.toBin(t) }, 'In Bin legen'),
             h('button', { class: 'btn small', type: 'button', title: 'Umriss mit dem Punkte-Editor korrigieren, ohne Foto', onclick: () => TraceUI.editTool(t) }, 'Umriss bearbeiten'), del))));
@@ -13258,6 +13319,10 @@ const BinUI = {
     if (!b) { $('#bin-items').replaceChildren(); $('#bin-checks').replaceChildren(); $('#bin-sel-card').hidden = true; return; }
     $('#bin-name').value = b.name; $('#bin-gx').value = b.gx; $('#bin-gy').value = b.gy; $('#bin-hu').value = b.hu;
     $('#bin-clear').value = b.clearance; $('#bin-wall').value = b.wall; $('#bin-floor').value = b.floor;
+    // closed until opened on purpose, and closed again for another bin
+    const mm = (v) => nf(v, 1).replace(/\.0$/, '');
+    $('#bin-adv-sum').textContent = `Toleranz ${mm(b.clearance)} mm · Rand ${mm(b.wall)} mm · Boden ${mm(b.floor)} mm`;
+    if (this.advBin !== b.id) { $('#bin-adv').open = false; this.advBin = b.id; }
     $('#bin-lip').checked = b.lip; $('#bin-mag').checked = b.magnets; $('#bin-autofit').checked = b.autoFit !== false; $('#bin-autofinger').checked = !!b.autoFingers;
     $('#bin-lift').value = b.lift || 0; $('#bin-lift').disabled = !b.lip;
     $('#bin-dims').textContent = `${nf(binW(b), 1)} × ${nf(binD(b), 1)} × ${nf(binTop(b), 0)} mm${binLift(b) ? ` + ${binLift(b) * GF.unit} mm erhöhter Rand` : ''}${b.lip ? ' + 4.4 Stapelrand' : ''} · Taschen bis ${nf(maxDepth(b), 1)} mm tief`;
@@ -13276,6 +13341,14 @@ const BinUI = {
         h('div', null, h('div', { class: 't', text: lb.name }), h('div', { class: 's', text: `${lb.size} mm · Tiefe ${nf(Math.min(f.depth, maxDepth(b)), 1)} mm` })), h('span')));
     }
     if (!b.items.length && !b.fingers.length) items.append(h('p', { text: 'Noch leer.' }));
+    // tool heights changed before the pockets followed them: one click sets the depths from the heights
+    const off = depthsOff(b);
+    if (off.length) items.append(h('div', { class: 'row', style: { flexWrap: 'wrap', rowGap: '4px', alignItems: 'center' } },
+      h('span', { class: 'unit', text: `${off.length === 1 ? 'Eine Tasche ist' : off.length + ' Taschen sind'} nicht so tief, wie die Werkzeughöhe es ergibt.` }),
+      h('button', { class: 'btn small', type: 'button', onclick: () => {
+        for (const it of off) it.depth = defaultDepth(b, toolById(it.toolId));
+        fitBin(b); this.changed(true); toast(`${off.length === 1 ? 'Eine Tasche' : off.length + ' Taschen'} an die Werkzeughöhe angepasst.`);
+      } }, 'An Werkzeughöhen anpassen')));
     const card = $('#bin-sel-card'), body = $('#bin-sel-body'); body.replaceChildren();
     const ref = this.selRef(); card.hidden = !ref;
     if (ref && this.sel.kind === 'item') {
@@ -13289,7 +13362,7 @@ const BinUI = {
           h('label', { class: 'f grow' }, h('span', { text: 'Winkel °' }), rotIn)),
         h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: ref.mirror, onchange: (e) => { ref.mirror = e.target.checked; this.changed(); } }), 'Spiegeln (Teil liegt umgedreht)'),
         h('label', { class: 'f' }, h('span', { text: `Taschentiefe mm (Teil ${t ? nf(t.height, 1) : '?'} mm hoch, max ${nf(maxDepth(b), 1)})` }),
-          h('input', { type: 'number', value: ref.depth, min: 1, max: 200, step: 0.5, onchange: (e) => { ref.depth = clamp(num(e.target, ref.depth), 0.5, 200); this.changed(); } })),
+          h('input', { type: 'number', value: ref.depth, min: 1, max: 200, step: 0.5, onchange: (e) => { ref.depth = clamp(num(e.target, ref.depth), 0.5, 200); ref.depthSet = true; this.changed(); } })),
         ...(ref.noFinger && !b.fingers.some((f) => f.itemId === ref.id) ? [h('p', { class: 'unit', text: 'Ohne Griffmulde: von Hand entfernt. «Griffmulde dazu» setzt wieder eine.' })] : []),
         h('div', { class: 'row' },
           h('button', { class: 'btn small', type: 'button', onclick: () => this.addFinger(ref) }, 'Griffmulde dazu'),
@@ -14813,14 +14886,21 @@ const App = {
     if (!(await Store.loadLocal())) { if (DataUI.hasStartData()) S = { cases: [], tools: [], bins: [], ui: { tab: 'foto', binId: null, caseId: null } }; else seedState(); }
     S.ui = { tab: 'foto', ...S.ui };
     // the play around a tool was 0.8 mm by default until 2026-10-20 and is 0.5 now (TOL_DEFAULT): a 0.8 kept
-    // from then counts as the old default, once; a value chosen after this stays (tolV goes along with it)
+    // from then counts as the old default, once, for new bins (tolV 2) and in the bins themselves (tolV 3); a
+    // value chosen after this stays (tolV goes along with it)
     if (!S.ui.tolV) { if (S.ui.tol === 0.8) delete S.ui.tol; S.ui.tolV = 2; }
+    let retoled = 0;
+    if (S.ui.tolV < 3) {
+      for (const b of S.bins) if (b.clearance === 0.8) { b.clearance = TOL_DEFAULT; fitBin(b); b._rev = (b._rev || 0) + 1; Store.save('bin', b); retoled++; }
+      S.ui.tolV = 3;
+    }
     FotoUI.init(); TraceUI.init(); LibUI.init(); BinUI.init(); CaseUI.init(); Overview.init(); NewBin.init(); TestPrint.init(); DataUI.init(); Undo.init(); DataFolder.init(); GDrive.init();
     window.addEventListener('online', () => Store.sendAll());
     DataUI.takeStartData();
     for (const b of $$('.tab')) b.addEventListener('click', () => this.show(b.dataset.tab));
     setSaveState('saved');
     this.show(S.ui.tab || 'foto');
+    if (retoled) toast(`Toleranz in ${retoled === 1 ? 'einem Bin' : retoled + ' Bins'} von 0.8 auf ${nf(TOL_DEFAULT, 1)} mm umgestellt (der neue Standard).`);
     Store.connect(() => { this.renderAll(); this.show(this.tab); });
   },
 };
@@ -14835,6 +14915,10 @@ if (location.hash === '#selbsttest') setTimeout(async () => {
   } catch (e) { document.title = 'SELBSTTEST FEHLER ' + (e && (e.message || e)); }
 }, 800);
 window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf };
+// The mouse wheel over a number field that has the focus changes its value: easily by accident while
+// scrolling the panel (a bin's tolerance, wall, floor). The field gives up the focus instead, and the page
+// scrolls on.
+document.addEventListener('wheel', (e) => { const el = document.activeElement; if (el && el.type === 'number' && el === e.target) el.blur(); }, { passive: true });
 App.boot().catch((e) => { console.error(e); toast('Start fehlgeschlagen: ' + (e.message || e), 'bad'); });
 
 </script>
