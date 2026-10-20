@@ -4,7 +4,7 @@ Gridfinity-Bins aus Werkzeugfotos, ganz im Browser: Umrisse erkennen, Bins und K
 
 **App öffnen: https://camillemarius.github.io/cachfinity-app/**
 
-- Die App läuft vollständig im Browser. Fotos, Umrisse, Bins und Koffer bleiben in diesem Browser auf diesem Rechner. Unter «Daten» lassen sie sich sichern, laden oder mit einer Datendatei in einem eigenen Ordner abgleichen.
+- Die App läuft vollständig im Browser. Fotos, Umrisse, Bins und Koffer bleiben in diesem Browser auf diesem Rechner. Unter «Daten» lassen sie sich sichern, laden oder abgleichen: mit Google Drive («Mit Google verbinden», die App sieht dort nur ihre eigene Datei «Cachfinity_Daten.json») oder mit einer Datendatei in einem eigenen Ordner.
 - Nach dem ersten Öffnen startet die App auch ohne Internet.
 - Edge und Chrome können sie als App installieren (Symbol rechts in der Adresszeile).
 

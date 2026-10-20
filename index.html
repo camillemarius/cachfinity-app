@@ -425,6 +425,7 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
     </div>
     <div class="savestate local" id="savestate"><span class="dot"></span><span id="savestate-text">Nur in diesem Browser</span>
       <button class="btn small primary" type="button" id="df-grant-top" hidden title="Der Browser fragt nach jedem Start einmal, ob die App die Datendatei benutzen darf">Datendatei freigeben</button>
+      <button class="btn small primary" type="button" id="gd-sync-top" hidden title="Google gibt den Zugriff für eine Stunde; danach braucht der Abgleich einen Klick">Mit Google abgleichen</button>
       <button class="btn small ghost" type="button" id="data-open" title="Sichern, laden, Datenordner, Offline-Version">Daten</button></div>
   </header>
 
@@ -726,8 +727,17 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
       <input type="file" id="data-file" accept=".json,application/json" hidden>
     </div>
     <p class="unit">Laden führt zusammen: Neueres ersetzt Älteres, Neues kommt dazu.</p>
+    <div id="gd-row">
+      <h2>Google Drive</h2>
+      <p id="gd-status"></p>
+      <div class="row" style="flex-wrap: wrap; row-gap: 6px">
+        <button class="btn primary" type="button" id="gd-connect">Mit Google verbinden</button>
+        <button class="btn ghost" type="button" id="gd-off" hidden>Trennen</button>
+      </div>
+      <p class="unit" id="gd-help">Die App legt in deinem Google Drive die Datei «Cachfinity_Daten.json» an. Jede Änderung geht hinein, und was ein anderer Laptop dort neuer gespeichert hat, kommt hierher. Die App sieht nur diese Datei, nicht den Rest deines Drives. Google gibt den Zugriff jeweils für eine Stunde: nach dem Start und später nach Änderungen erscheint oben «Mit Google abgleichen», ein Klick genügt.</p>
+    </div>
     <div id="df-row">
-      <h2>Datenordner (Google Drive, OneDrive)</h2>
+      <h2>Datenordner auf diesem Laptop (OneDrive, Google-Drive-Ordner)</h2>
       <p id="df-status"></p>
       <div class="row" style="flex-wrap: wrap; row-gap: 6px">
         <button class="btn" type="button" id="df-open">Vorhandene Datendatei öffnen…</button>
@@ -11154,7 +11164,7 @@ const Store = {
       if (full && !Store.full && Store.mode !== 'db') toast('Der Speicher dieses Browsers ist voll (etwa 5 MB): neue Änderungen bleiben hier nicht mehr erhalten. Sichere unter «Daten» oder verbinde eine Datendatei.', 'bad');
       Store.full = full;
     }
-    DataFolder.changed();
+    DataFolder.changed(); GDrive.changed();
   }, 400),
   loadLocal() {
     const raw = lsGet(LS_KEY);
@@ -11266,8 +11276,10 @@ function setSaveState(st) {
   el.classList.toggle('pending', st === 'pending'); el.classList.toggle('local', Store.mode !== 'db');
   el.classList.toggle('offline', st === 'offline');
   const df = typeof DataFolder !== 'undefined' ? DataFolder.state : null; // (defined further down, read when called)
+  const gd = typeof GDrive !== 'undefined' ? GDrive.state : null;
   const where = window.CF_WEB ? '' : 'Offline: ';
-  tx.textContent = window.CF_OFFLINE ? (df === 'on' ? `${where}Datendatei «${DataFolder.handle.name}» verbunden` : df === 'needs' ? `${where}Datendatei braucht Freigabe` : window.CF_WEB ? 'In diesem Browser gespeichert' : 'Offline-Version: in diesem Browser')
+  tx.textContent = gd === 'on' ? 'Mit Google Drive abgeglichen' : gd === 'needs' ? 'Google Drive: Abgleich wartet auf Klick'
+    : window.CF_OFFLINE ? (df === 'on' ? `${where}Datendatei «${DataFolder.handle.name}» verbunden` : df === 'needs' ? `${where}Datendatei braucht Freigabe` : window.CF_WEB ? 'In diesem Browser gespeichert' : 'Offline-Version: in diesem Browser')
     : st === 'offline' ? 'Offline: Änderungen werden nachgeladen'
       : Store.mode !== 'db' ? 'Nur in diesem Browser' : st === 'pending' ? 'Speichert…' : 'In deinem Konto gespeichert';
 }
@@ -13682,10 +13694,12 @@ const DataUI = {
   open() {
     const off = !!window.CF_OFFLINE;
     $('#data-where').textContent = window.CF_WEB
-      ? 'Deine Daten liegen in diesem Browser auf diesem Rechner, auch ohne Internet. Damit sie auch auf einem anderen Laptop sind, verbinde unten eine Datendatei in einem synchronisierten Ordner, oder sichere ab und zu.'
+      ? 'Deine Daten liegen in diesem Browser auf diesem Rechner, auch ohne Internet. Damit sie auch auf einem anderen Laptop sind, verbinde unten Google Drive oder eine Datendatei in einem synchronisierten Ordner, oder sichere ab und zu.'
       : off ? 'Du arbeitest in der Offline-Version: alles liegt nur in diesem Browser auf diesem Rechner. Sichere ab und zu, und lade die Sicherung in der Version auf claude.ai, um die Daten dorthin mitzunehmen.'
       : Store.mode === 'db' ? 'Deine Daten liegen in deinem claude.ai-Konto und als Kopie in diesem Browser.' : 'Deine Daten liegen in diesem Browser.';
     $('#data-offline-row').hidden = off;
+    // ready before the click, so Google's window opens straight from it (browsers block it after a delay)
+    if (GDrive.usable() && navigator.onLine) GDrive.loadGis().catch(() => { /* tried again on the click */ });
     $('#data-count').textContent = `${S.tools.length} Werkzeuge, ${S.bins.length} Bins, ${S.cases.length} Koffer`;
     const d = $('#data-dlg'); if (d.showModal) d.showModal(); else d.setAttribute('open', '');
   },
@@ -13890,6 +13904,15 @@ function dataKey(d) {
   const tomb = Object.keys(d.tomb || {}).sort().map((k) => [k, d.tomb[k]]);
   return JSON.stringify([by(d.tools), by(d.bins), by(d.cases), tomb]);
 }
+// takes over what is newer in a data file (the data folder's or the one in Google Drive) and shows it;
+// returns the counts. A laptop that has only the untouched first-start case («Koffer 1», never saved) takes
+// the file's cases instead of adding that empty one to everybody's data.
+function takeOver(data) {
+  if (!S.tools.length && !S.bins.length && S.cases.length === 1 && !S.cases[0]._t && data.cases.length) { S.cases = []; S.ui.caseId = null; }
+  const n = DataUI.merge(data);
+  if (n.added || n.replaced || n.removed) { App.renderAll(); App.show(App.tab); }
+  return n;
+}
 const DataFolder = {
   handle: null, state: 'off', lastSeen: 0, fileKey: '', timer: null, busy: false,
   supported: () => 'showOpenFilePicker' in window && !!window.indexedDB,
@@ -13945,12 +13968,7 @@ const DataFolder = {
     let data; try { data = JSON.parse(text); } catch { toast(`«${this.handle.name}» ist keine Cachfinity-Datei, sie wird nicht verändert.`, 'bad'); this.state = 'error'; return null; }
     if (!DataUI.valid(data)) { toast(`«${this.handle.name}» ist keine Cachfinity-Datei, sie wird nicht verändert.`, 'bad'); this.state = 'error'; return null; }
     this.fileKey = dataKey(data);
-    // a laptop that has only the untouched first-start case («Koffer 1», never saved) takes the file's cases
-    // instead of adding that empty one to everybody's data
-    if (!S.tools.length && !S.bins.length && S.cases.length === 1 && !S.cases[0]._t && data.cases.length) { S.cases = []; S.ui.caseId = null; }
-    const n = DataUI.merge(data);
-    if (n.added || n.replaced || n.removed) { App.renderAll(); App.show(App.tab); }
-    return n;
+    return takeOver(data);
   },
   // writes the current data, but only when they differ from what the file holds (no ping-pong between laptops)
   async push(force) {
@@ -14000,6 +14018,214 @@ const DataFolder = {
   },
 };
 
+// ===== Google Drive: the web app keeps its data also in a file in the person's Google Drive =====
+// Only the web app on its own address can do this: the Google client of this app accepts sign-ins from
+// https://camillemarius.github.io only (the page on claude.ai and the offline file point to the web app).
+// «Mit Google verbinden» asks Google for access to the files this app creates (scope drive.file), nothing
+// else in the Drive. The app keeps one file, Cachfinity_Daten.json, in the Drive's top folder. It is a
+// normal backup (format 'cachfinity') like the data folder's file and is merged the same way: each tool, bin
+// and case keeps the newer copy (_t), deletions travel as tombstones (S.tomb). It is read when connecting,
+// when the window comes back and every 30 s, and written after every change.
+// Google gives access for an hour, and a new one needs a click (Google's small window may only open after a
+// click). So after a start, and when the hour is over and something changed, the header shows «Mit Google
+// abgleichen». Meanwhile the data stay in the browser and go to Drive with the next click. The access
+// itself is kept only in memory, never stored.
+const GOOGLE_CLIENT_ID = '189772997096-0k0lfdth8ea47jr91vijjqd6sendlk0l.apps.googleusercontent.com';
+const GOOGLE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+const DRIVE_NAME = 'Cachfinity_Daten.json';
+const GD_KEY = 'cf-gdrive'; // the connection ({email, fileId}) kept in the browser
+const WEB_URL = 'https://camillemarius.github.io/cachfinity-app/';
+const GDrive = {
+  // (a test points origin and base at a local stand-in for Google)
+  origin: 'https://camillemarius.github.io', base: 'https://www.googleapis.com',
+  state: 'off', token: '', expires: 0, email: '', fileId: '', version: '', fileKey: '', problem: '',
+  busy: false, timer: null, lastWrite: null, gis: null,
+  usable() { return !!window.CF_WEB && location.origin === this.origin; },
+  saved() { try { return JSON.parse(lsGet(GD_KEY) || 'null'); } catch { return null; } },
+  keep() { lsSet(GD_KEY, JSON.stringify({ email: this.email, fileId: this.fileId })); },
+  init() {
+    $('#gd-connect').onclick = () => this.connect();
+    $('#gd-sync-top').onclick = () => this.connect();
+    $('#gd-off').onclick = () => this.disconnect();
+    window.addEventListener('focus', () => this.check());
+    window.addEventListener('online', () => this.check());
+    setInterval(() => this.check(), 30000);
+    this.restore();
+  },
+  // a connection made earlier in this browser waits for the click (Google's access itself is not kept)
+  restore() {
+    const s = this.saved();
+    if (this.usable() && s && this.state === 'off') {
+      this.email = s.email || ''; this.fileId = s.fileId || ''; this.state = 'needs';
+      if (navigator.onLine) this.loadGis().catch(() => { /* tried again on the click */ });
+    }
+    this.render();
+  },
+  // Google's sign-in library, loaded only when Google is used
+  loadGis() {
+    if (window.google && google.accounts && google.accounts.oauth2) return Promise.resolve();
+    if (!this.gis) this.gis = new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://accounts.google.com/gsi/client'; s.async = true;
+      s.onload = () => res();
+      s.onerror = () => { this.gis = null; s.remove(); rej(new Error('Google ist nicht erreichbar')); };
+      document.head.append(s);
+    });
+    return this.gis;
+  },
+  // asks Google for access: its window opens (after the first time it closes again by itself)
+  async signIn() {
+    await this.loadGis();
+    const r = await new Promise((res, rej) => {
+      const fail = (msg, gd) => rej(Object.assign(new Error(msg), { gd }));
+      google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID, scope: GOOGLE_SCOPE, login_hint: this.email || undefined, prompt: this.email ? '' : 'select_account',
+        callback: (t) => (t && t.access_token ? res(t) : fail((t && (t.error_description || t.error)) || 'keine Antwort', t && t.error)),
+        error_callback: (e) => fail((e && (e.message || e.type)) || 'abgebrochen', e && e.type),
+      }).requestAccessToken();
+    });
+    if (!google.accounts.oauth2.hasGrantedAllScopes(r, GOOGLE_SCOPE)) throw Object.assign(new Error('Drive nicht erlaubt'), { gd: 'scope' });
+    this.token = r.access_token; this.expires = Date.now() + ((Number(r.expires_in) || 3600) - 60) * 1000;
+  },
+  valid() { return !!this.token && Date.now() < this.expires; },
+  // one request to Drive; a lost access (401) waits for the next click
+  async api(path, { method = 'GET', body, headers = {}, raw = false, upload = false } = {}) {
+    const url = /^https?:/.test(path) ? path : this.base + (upload ? '/upload/drive/v3/' : '/drive/v3/') + path;
+    const r = await fetch(url, { method, body, headers: { Authorization: 'Bearer ' + this.token, ...headers } });
+    if (r.status === 401) { this.token = ''; throw Object.assign(new Error('Anmeldung abgelaufen'), { gd: 'expired' }); }
+    if (!r.ok) throw Object.assign(new Error(`Google Drive antwortet mit ${r.status}`), { status: r.status });
+    return raw ? r : r.json();
+  },
+  // the data file: the one known here, else the newest the app created (on another laptop, say)
+  async locate() {
+    if (this.fileId) {
+      try { const m = await this.api(`files/${this.fileId}?fields=id,version,trashed`); if (!m.trashed) return m; } catch (e) { if (e.status !== 404) throw e; }
+      this.fileId = ''; this.version = '';
+    }
+    const q = encodeURIComponent(`name = '${DRIVE_NAME}' and trashed = false`);
+    const f = ((await this.api(`files?q=${q}&spaces=drive&orderBy=modifiedTime desc&pageSize=10&fields=files(id,version)`)).files || [])[0];
+    if (f) { this.fileId = f.id; this.version = ''; }
+    return f || null;
+  },
+  // writes the file (a new one when there is none). Drive takes up to 5 MB in one request; more goes as a
+  // resumable upload
+  async upload(text) {
+    const json = 'application/json; charset=UTF-8', meta = JSON.stringify({ name: DRIVE_NAME, mimeType: 'application/json' });
+    const path = this.fileId ? `files/${this.fileId}` : 'files', method = this.fileId ? 'PATCH' : 'POST', upload = true;
+    if (new Blob([text]).size < 4.5e6) {
+      if (this.fileId) return this.api(`${path}?uploadType=media&fields=id,version`, { method, body: text, headers: { 'Content-Type': json }, upload });
+      const b = 'cachfinity' + Math.random().toString(36).slice(2);
+      const body = `--${b}\r\nContent-Type: ${json}\r\n\r\n${meta}\r\n--${b}\r\nContent-Type: ${json}\r\n\r\n${text}\r\n--${b}--`;
+      return this.api(`${path}?uploadType=multipart&fields=id,version`, { method, body, headers: { 'Content-Type': `multipart/related; boundary=${b}` }, upload });
+    }
+    const start = await this.api(`${path}?uploadType=resumable&fields=id,version`, { method, body: this.fileId ? undefined : meta, headers: { 'Content-Type': json, 'X-Upload-Content-Type': 'application/json' }, upload, raw: true });
+    // the upload's address; when the browser may not read it, it is built from the upload id Google does show
+    const uid = start.headers.get('X-GUploader-UploadID');
+    const at = start.headers.get('Location') || (uid && `${this.base}/upload/drive/v3/${path}?uploadType=resumable&fields=id,version&upload_id=${encodeURIComponent(uid)}`);
+    if (!at) throw new Error('Google Drive nannte keine Adresse für das Hochladen');
+    return this.api(at, { method: 'PUT', body: text, headers: { 'Content-Type': json } });
+  },
+  // reads the file and takes over what is newer there; returns the counts (null for an empty file)
+  async pull(version) {
+    const text = (await (await this.api(`files/${this.fileId}?alt=media`, { raw: true })).text()).trim();
+    this.version = version; // (read before the content: a write in between is fetched next time)
+    if (!text) { this.fileKey = ''; return null; }
+    let data = null; try { data = JSON.parse(text); } catch { /* not a backup */ }
+    if (!DataUI.valid(data)) throw Object.assign(new Error(`«${DRIVE_NAME}» in deinem Google Drive ist keine Cachfinity-Datei; die App verändert sie nicht.`), { gd: 'foreign' });
+    this.fileKey = dataKey(data);
+    return takeOver(data);
+  },
+  // writes the data here, but only when they differ from what the file holds (no ping-pong between laptops)
+  async push(force) {
+    const data = DataUI.snapshot(), key = dataKey(data);
+    if (!force && key === this.fileKey) return;
+    const r = await this.upload(JSON.stringify(data));
+    if (r && r.id) this.fileId = r.id;
+    this.version = (r && r.version) || ''; this.fileKey = key; this.lastWrite = new Date(); this.keep();
+  },
+  // a click on «Mit Google verbinden» or «Mit Google abgleichen»
+  async connect() {
+    if (!this.usable()) return;
+    if (!navigator.onLine) { toast('Ohne Internet geht der Abgleich mit Google nicht. Die Daten bleiben solange in diesem Browser.'); return; }
+    try { await this.signIn(); } catch (e) { this.signInFailed(e); return; }
+    const first = !this.saved();
+    this.busy = true;
+    try {
+      if (!this.email) { const a = await this.api('about?fields=user(emailAddress)'); this.email = (a.user && a.user.emailAddress) || ''; }
+      const f = await this.locate();
+      const n = f ? await this.pull(f.version) : null;
+      await this.push(!f);
+      this.state = 'on'; this.problem = '';
+      const got = n && (n.added || n.replaced || n.removed) ? ` Übernommen: ${n.added} neu, ${n.replaced} aktualisiert, ${n.removed} entfernt.` : '';
+      toast(first ? `Mit Google Drive verbunden (${this.email}).` + (f ? got : ` Die Datei «${DRIVE_NAME}» ist angelegt; jede Änderung kommt jetzt hinein.`) : 'Mit Google Drive abgeglichen.' + got, 'ok');
+    } catch (e) { this.fail(e); } finally { this.busy = false; this.render(); }
+  },
+  // after a change here: write it, after taking over what another laptop wrote meanwhile
+  changed() {
+    if (this.state !== 'on' && this.state !== 'needs') return;
+    clearTimeout(this.timer); this.timer = setTimeout(() => this.sync(), 2000);
+  },
+  async sync() {
+    if (this.state !== 'on' && this.state !== 'needs') return;
+    if (!this.valid()) {
+      // the hour is over: the header asks for a click, but only when there is something to write
+      if (this.state === 'on' && dataKey(DataUI.snapshot()) !== this.fileKey) { this.state = 'needs'; this.render(); }
+      return;
+    }
+    await this.check(true);
+  },
+  // on focus, back online, every 30 s, and after changes: fetch what is new in the file, write what is new here
+  async check(write = false) {
+    if (this.state !== 'on' || this.busy || !this.valid() || !navigator.onLine) return;
+    this.busy = true;
+    try {
+      const f = await this.locate();
+      const fresh = f && f.version !== this.version;
+      const n = fresh ? await this.pull(f.version) : null;
+      if (n && (n.added || n.replaced || n.removed)) toast(`Aus Google Drive übernommen: ${n.added} neu, ${n.replaced} aktualisiert, ${n.removed} entfernt.`);
+      if (write || fresh || !f) await this.push(!f);
+    } catch (e) { this.fail(e); } finally { this.busy = false; this.render(); }
+  },
+  fail(e) {
+    console.warn('google drive', e);
+    if (e && e.gd === 'expired') this.state = 'needs';
+    else if (e instanceof TypeError) { /* no connection: tried again later */ }
+    else { this.state = 'error'; this.problem = (e && e.message) || String(e); }
+    this.render();
+  },
+  signInFailed(e) {
+    console.warn('google sign-in', e);
+    const why = e && e.gd;
+    toast(why === 'popup_closed' || why === 'access_denied' ? 'Anmeldung bei Google abgebrochen. Die Daten bleiben in diesem Browser.'
+      : why === 'popup_failed_to_open' ? 'Der Browser hat das Google-Fenster blockiert. Erlaube Pop-ups für diese Seite und klicke nochmals.'
+        : why === 'scope' ? 'Google Drive wurde nicht erlaubt. Setze beim Verbinden den Haken bei Google Drive.'
+          : 'Die Anmeldung bei Google ging nicht (' + ((e && e.message) || e) + ').', 'bad');
+  },
+  disconnect() {
+    clearTimeout(this.timer);
+    Object.assign(this, { state: 'off', token: '', expires: 0, email: '', fileId: '', version: '', fileKey: '', problem: '' });
+    try { localStorage.removeItem(GD_KEY); } catch { /* nothing kept */ }
+    this.render();
+    toast('Von Google Drive getrennt. Die Datei bleibt in deinem Drive, die Daten bleiben in diesem Browser.');
+  },
+  render() {
+    const ok = this.usable(), st = this.state;
+    const when = this.lastWrite ? `, zuletzt geschrieben ${this.lastWrite.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' })}` : '';
+    $('#gd-status').textContent = !ok ? `Den Abgleich mit Google Drive gibt es in der Web-App: ${WEB_URL}`
+      : st === 'on' ? `Verbunden mit ${this.email || 'Google'}${when}.`
+        : st === 'needs' ? `Verbunden mit ${this.email || 'Google'}. Google möchte für den Abgleich einen Klick.`
+          : st === 'error' ? this.problem
+            : 'Nicht verbunden: die Daten liegen nur in diesem Browser.';
+    $('#gd-help').hidden = !ok;
+    const btn = $('#gd-connect');
+    btn.hidden = !ok || st === 'on';
+    btn.textContent = st === 'off' ? 'Mit Google verbinden' : st === 'error' ? 'Erneut versuchen' : 'Mit Google abgleichen';
+    $('#gd-off').hidden = !ok || st === 'off';
+    $('#gd-sync-top').hidden = !ok || st !== 'needs';
+    if (window.CF_OFFLINE) setSaveState('saved');
+  },
+};
+
 // ===== app shell =====
 const App = {
   tab: 'foto',
@@ -14020,7 +14246,7 @@ const App = {
     // an offline file downloaded with data starts from that data rather than the examples
     if (!Store.loadLocal()) { if (DataUI.hasStartData()) S = { cases: [], tools: [], bins: [], ui: { tab: 'foto', binId: null, caseId: null } }; else seedState(); }
     S.ui = { tab: 'foto', ...S.ui };
-    FotoUI.init(); TraceUI.init(); LibUI.init(); BinUI.init(); CaseUI.init(); Overview.init(); NewBin.init(); DataUI.init(); Undo.init(); DataFolder.init();
+    FotoUI.init(); TraceUI.init(); LibUI.init(); BinUI.init(); CaseUI.init(); Overview.init(); NewBin.init(); DataUI.init(); Undo.init(); DataFolder.init(); GDrive.init();
     window.addEventListener('online', () => Store.sendAll());
     DataUI.takeStartData();
     for (const b of $$('.tab')) b.addEventListener('click', () => this.show(b.dataset.tab));
@@ -14038,7 +14264,7 @@ if (location.hash === '#selbsttest') setTimeout(async () => {
     document.title = 'SELBSTTEST OK ' + Math.round(r.measureVolume(s)) + ' mm3, Schrift ' + (document.fonts.check('600 14px Barlow') ? 'da' : 'fehlt');
   } catch (e) { document.title = 'SELBSTTEST FEHLER ' + (e && (e.message || e)); }
 }, 800);
-window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets };
+window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets };
 App.boot().catch((e) => { console.error(e); toast('Start fehlgeschlagen: ' + (e.message || e), 'bad'); });
 
 </script>
