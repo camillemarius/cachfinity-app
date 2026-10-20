@@ -10965,7 +10965,9 @@ function binChecks(b) {
     const t = toolById(p.ref.toolId); if (!t) continue;
     if (t.height > p.depth + 3) {
       const out = t.height - p.depth, room = binLift(b) * GF.unit, need = Math.ceil(out / GF.unit);
-      res.push({ level: 'ok', text: `${t.name} steht ${nf(out, 0)} mm vor, gut zum Greifen.` + (b.lip && out > room + 0.5 ? ` Zum Stapeln «Rand erhöhen» auf ${need} u stellen, sonst stösst der Bin darüber an.` : '') });
+      // limited by the bin's height rather than chosen: say which height would take the whole tool
+      const capped = p.ref.depth >= maxDepth(b) - 0.05, huFull = Math.ceil((t.height + GF.base + b.floor) / GF.unit - 1e-6);
+      res.push({ level: 'ok', text: `${t.name} steht ${nf(out, 0)} mm vor, gut zum Greifen.` + (capped && huFull <= 30 ? ` Tiefer geht die Tasche erst mit einem höheren Bin: Höhe ${huFull} u für das ganze Werkzeug.` : '') + (b.lip && out > room + 0.5 ? ` Zum Stapeln «Rand erhöhen» auf ${need} u stellen, sonst stösst der Bin darüber an.` : '') });
     }
   }
   if (!b.items.length && !b.fingers.length) res.push({ level: 'warn', text: 'Der Bin ist leer. Füge unter «Inhalt» Werkzeuge oder Formen hinzu.' });
@@ -11062,7 +11064,8 @@ function fitBin(b) {
   }
   if (relocateFingers(b, b.autoFit !== false) && b.autoFit !== false) autoSize(b);
 }
-function defaultDepth(b, tool) { return Math.round(Math.min(tool.height, maxDepth(b)) * 10) / 10; }
+// (rounded down to 0.1 mm: rounded up it could pass the bin's deepest pocket, 15.05 mm in a 3 u bin)
+function defaultDepth(b, tool) { return Math.floor(Math.min(tool.height, maxDepth(b)) * 10 + 1e-6) / 10; }
 // A tool's height was changed in the library: its pockets that still had the depth from the old height take
 // the one from the new height (as when it is put into a bin), and their bins adapt. A depth set by hand in
 // the bin (it.depthSet) stays. Returns the bins changed.
@@ -13330,14 +13333,14 @@ const BinUI = {
     if (this.advBin !== b.id) { $('#bin-adv').open = false; this.advBin = b.id; }
     $('#bin-lip').checked = b.lip; $('#bin-mag').checked = b.magnets; $('#bin-autofit').checked = b.autoFit !== false; $('#bin-autofinger').checked = !!b.autoFingers;
     $('#bin-lift').value = b.lift || 0; $('#bin-lift').disabled = !b.lip;
-    $('#bin-dims').textContent = `${nf(binW(b), 1)} × ${nf(binD(b), 1)} × ${nf(binTop(b), 0)} mm${binLift(b) ? ` + ${binLift(b) * GF.unit} mm erhöhter Rand` : ''}${b.lip ? ' + 4.4 Stapelrand' : ''} · Taschen bis ${nf(maxDepth(b), 1)} mm tief`;
+    $('#bin-dims').textContent = `${nf(binW(b), 1)} × ${nf(binD(b), 1)} × ${nf(binTop(b), 0)} mm${binLift(b) ? ` + ${binLift(b) * GF.unit} mm erhöhter Rand` : ''}${b.lip ? ' + 4.4 Stapelrand' : ''} · Taschen bis ${nf(Math.floor(maxDepth(b) * 10 + 1e-6) / 10, 1)} mm tief`;
     const add = $('#bin-add-tool'); add.replaceChildren(...S.tools.map((t) => h('option', { value: t.id, text: t.name })));
     const items = $('#bin-items'); items.replaceChildren();
     for (const it of b.items) {
       const t = toolById(it.toolId);
       items.append(h('div', { class: 'item' + (this.sel && this.sel.id === it.id ? ' sel' : ''), onclick: () => { this.sel = { kind: 'item', id: it.id }; this.renderPanel(); this.stage.redraw(); } },
         h('span', { class: 'swatch', style: { background: b.color } }),
-        h('div', null, h('div', { class: 't', text: t ? t.name : 'fehlt' }), h('div', { class: 's', text: `Tiefe ${nf(Math.min(it.depth, maxDepth(b)), 1)} mm · ${nf(it.rot, 0)}°${it.mirror ? ' · gespiegelt' : ''}` })), h('span')));
+        h('div', null, h('div', { class: 't', text: t ? t.name : 'fehlt' }), h('div', { class: 's', text: `Tiefe ${nf(Math.min(it.depth, maxDepth(b)), 1)} mm${t && t.height > Math.min(it.depth, maxDepth(b)) + 0.05 ? ` (Werkzeug ${nf(t.height, 1)} mm hoch)` : ''} · ${nf(it.rot, 0)}°${it.mirror ? ' · gespiegelt' : ''}` })), h('span')));
     }
     for (const f of b.fingers) {
       const lb = shapeLabel(f);
@@ -13480,7 +13483,8 @@ const BinUI = {
     }
     for (const p of pockets) {
       const bb = polyBBox([p.poly]);
-      if (p.kind === 'item') { const t = toolById(p.ref.toolId); if (t && st.scale > 1.2) drawLabel(c, st, `${t.name} · ${nf(p.depth, 0)} mm`, bb.cx, bb.cy, { size: 11 }); }
+      // the pocket's depth; when the tool is taller (it stands out, or the bin is too low for it) both
+      if (p.kind === 'item') { const t = toolById(p.ref.toolId); if (t && st.scale > 1.2) drawLabel(c, st, t.height > p.depth + 0.05 ? `${t.name} · Tasche ${nf(p.depth, 0)} von ${nf(t.height, 0)} mm` : `${t.name} · ${nf(p.depth, 0)} mm`, bb.cx, bb.cy, { size: 11 }); }
       else if (st.scale > 1.2 && (this.sel && this.sel.id === p.ref.id || bb.w * st.scale > 70)) drawLabel(c, st, `${shapeLabel(p.ref).size} · ${nf(p.depth, 0)} mm`, bb.cx, bb.y1 + st.px(12), { size: 10 });
     }
     // size handles of the selected shape
@@ -14899,13 +14903,28 @@ const App = {
       for (const b of S.bins) if (b.clearance === 0.8) { b.clearance = TOL_DEFAULT; fitBin(b); b._rev = (b._rev || 0) + 1; Store.save('bin', b); retoled++; }
       S.ui.tolV = 3;
     }
+    // pockets still at the depth of an earlier tool height (heights changed in the library before pockets
+    // followed them, until 2026-10-20): set once from the heights, as deep as the bin allows; a depth set by
+    // hand afterwards stays (depthSet)
+    let redepth = 0;
+    if (!S.ui.depthV) {
+      for (const b of S.bins) {
+        const off = depthsOff(b); if (!off.length) continue;
+        for (const it of off) it.depth = defaultDepth(b, toolById(it.toolId));
+        fitBin(b); b._rev = (b._rev || 0) + 1; Store.save('bin', b); redepth++;
+      }
+      S.ui.depthV = 1;
+    }
     FotoUI.init(); TraceUI.init(); LibUI.init(); BinUI.init(); CaseUI.init(); Overview.init(); NewBin.init(); TestPrint.init(); DataUI.init(); Undo.init(); DataFolder.init(); GDrive.init();
     window.addEventListener('online', () => Store.sendAll());
     DataUI.takeStartData();
     for (const b of $$('.tab')) b.addEventListener('click', () => this.show(b.dataset.tab));
     setSaveState('saved');
     this.show(S.ui.tab || 'foto');
-    if (retoled) toast(`Toleranz in ${retoled === 1 ? 'einem Bin' : retoled + ' Bins'} von 0.8 auf ${nf(TOL_DEFAULT, 1)} mm umgestellt (der neue Standard).`);
+    const news = [];
+    if (retoled) news.push(`Toleranz in ${retoled === 1 ? 'einem Bin' : retoled + ' Bins'} von 0.8 auf ${nf(TOL_DEFAULT, 1)} mm umgestellt (der neue Standard).`);
+    if (redepth) news.push(`Taschentiefen in ${redepth === 1 ? 'einem Bin' : redepth + ' Bins'} an die Werkzeughöhen angepasst, so tief, wie der Bin es zulässt.`);
+    if (news.length) toast(news.join(' '));
     Store.connect(() => { this.renderAll(); this.show(this.tab); });
   },
 };
