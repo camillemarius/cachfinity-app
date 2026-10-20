@@ -10898,7 +10898,8 @@ function relocateFingers(b, allowOutside = false) {
   }
   return moved;
 }
-// with b.autoFingers every tool in the bin has its finger trough
+// with b.autoFingers every tool in the bin has its finger trough, except one whose trough was deleted by
+// hand (it.noFinger: say, several rods side by side that share one long slot instead)
 function ensureFingers(b) {
   if (!b.autoFingers) return 0;
   // the first automatic troughs ran along the tool; they are now placed across it
@@ -10907,7 +10908,7 @@ function ensureFingers(b) {
   for (const f of b.fingers) if (f.auto && !f.v) { f.w = FINGER_W; f.l = Math.max(f.l, f.w); f.dplus = FINGER_DEEPER; f.v = 2; }
   let n = 0;
   for (const it of b.items) {
-    if (b.fingers.some((f) => f.itemId === it.id)) continue;
+    if (it.noFinger || b.fingers.some((f) => f.itemId === it.id)) continue;
     const f = autoFinger(b, it); if (f) { b.fingers.push(f); n++; }
   }
   return n;
@@ -13050,6 +13051,7 @@ const BinUI = {
     $('#bin-autofinger').onchange = (e) => {
       const b = curBin(); if (!b) return; b.autoFingers = e.target.checked;
       if (!b.autoFingers) { b.fingers = b.fingers.filter((f) => !f.auto); if (this.sel && this.sel.kind === 'finger' && !this.selRef()) this.sel = null; }
+      else for (const it of b.items) delete it.noFinger; // switched on: every tool again, also those whose trough was deleted
       const n = ensureFingers(b); fitBin(b); this.changed(true);
       toast(b.autoFingers ? (n ? `${n} Griffmulde${n === 1 ? '' : 'n'} gesetzt.` : 'Jedes Werkzeug hat schon eine Griffmulde.') : 'Automatische Griffmulden entfernt.');
     };
@@ -13132,11 +13134,20 @@ const BinUI = {
   },
   removeSel() {
     const b = curBin(); if (!b || !this.sel) return;
-    if (this.sel.kind === 'item') b.items = b.items.filter((x) => x.id !== this.sel.id); else b.fingers = b.fingers.filter((x) => x.id !== this.sel.id);
+    let note = '';
+    if (this.sel.kind === 'item') b.items = b.items.filter((x) => x.id !== this.sel.id);
+    else {
+      const f = this.selRef(); b.fingers = b.fingers.filter((x) => x.id !== this.sel.id);
+      // a tool's last trough deleted by hand stays deleted (the automatic troughs used to put it right back)
+      const it = f && f.itemId && b.items.find((x) => x.id === f.itemId);
+      if (it && !b.fingers.some((x) => x.itemId === it.id)) { it.noFinger = true; if (b.autoFingers) note = 'Griffmulde entfernt. Dieses Werkzeug bekommt keine automatische mehr; «Griffmulde dazu» setzt wieder eine.'; }
+    }
     fitBin(b); this.sel = null; this.changed(true);
+    if (note) toast(note);
   },
   // one more finger trough for this tool, at the best free spot (see autoFinger); it moves with the tool
   addFinger(it) {
+    delete it.noFinger;
     const b = curBin(); const f = autoFinger(b, it); if (!f) return;
     b.fingers.push(f); fitBin(b); this.sel = { kind: 'finger', id: f.id }; this.changed(true);
   },
@@ -13279,6 +13290,7 @@ const BinUI = {
         h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: ref.mirror, onchange: (e) => { ref.mirror = e.target.checked; this.changed(); } }), 'Spiegeln (Teil liegt umgedreht)'),
         h('label', { class: 'f' }, h('span', { text: `Taschentiefe mm (Teil ${t ? nf(t.height, 1) : '?'} mm hoch, max ${nf(maxDepth(b), 1)})` }),
           h('input', { type: 'number', value: ref.depth, min: 1, max: 200, step: 0.5, onchange: (e) => { ref.depth = clamp(num(e.target, ref.depth), 0.5, 200); this.changed(); } })),
+        ...(ref.noFinger && !b.fingers.some((f) => f.itemId === ref.id) ? [h('p', { class: 'unit', text: 'Ohne Griffmulde: von Hand entfernt. «Griffmulde dazu» setzt wieder eine.' })] : []),
         h('div', { class: 'row' },
           h('button', { class: 'btn small', type: 'button', onclick: () => this.addFinger(ref) }, 'Griffmulde dazu'),
           t ? h('button', { class: 'btn small', type: 'button', title: 'Umriss des Werkzeugs korrigieren; gilt in allen Bins', onclick: () => TraceUI.editTool(t) }, 'Umriss bearbeiten') : null,
