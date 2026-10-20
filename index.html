@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '66453e8cd160';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'ea3d2c90dba8';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -10953,8 +10953,9 @@ function binChecks(b) {
       const beyond = polysArea(clipBool('diff', [p.poly], [binOutline(b)])) > 0.5;
       res.push({ level: 'bad', over: true, beyond, name, ref: p.ref, text: beyond ? `${name} ragt über den Bin hinaus.` : `${name} ragt in die Wand (weniger als ${nf(b.wall, 1)} mm Wand übrig).` });
     }
-    const want = p.kind === 'item' ? p.ref.depth : p.ref.depth;
-    if (want > maxDepth(b) + 0.01) res.push({ level: 'warn', text: `${name}: Tiefe ${nf(want, 1)} mm passt nicht, wird auf ${nf(maxDepth(b), 1)} mm begrenzt.`, ref: p.ref });
+    // (a tool's finger trough stopping at the bin's deepest pocket is meant so: no warning for it)
+    const want = p.ref.depth, trough = p.kind === 'finger' && p.ref.itemId;
+    if (want > maxDepth(b) + 0.01 && !trough) res.push({ level: 'warn', text: `${name}: Tiefe ${nf(want, 1)} mm passt nicht, wird auf ${nf(maxDepth(b), 1)} mm begrenzt.`, ref: p.ref });
   }
   const troughName = (p) => { const it = p.ref.itemId && b.items.find((x) => x.id === p.ref.itemId), t = it && toolById(it.toolId); return t ? `Griffmulde von «${t.name}»` : shapeLabel(p.ref).name; };
   const fings = pockets.filter((p) => p.kind === 'finger');
@@ -11041,7 +11042,9 @@ function autoSize(b) {
   const bb = polyBBox(polys);
   b.gx = clamp(Math.ceil((bb.w + 2 * b.wall + GF.gap) / GF.pitch), 1, 12);
   b.gy = clamp(Math.ceil((bb.h + 2 * b.wall + GF.gap) / GF.pitch), 1, 12);
-  const deepest = Math.max(...b.items.map((it) => it.depth), ...b.fingers.map((f) => f.depth), 5);
+  // the height comes from the pockets and the shapes set by hand; a tool's finger trough does not make the
+  // bin higher, it goes as deep as the bin is anyway (Camille's choice; binPockets stops it at maxDepth)
+  const deepest = Math.max(...b.items.map((it) => it.depth), ...b.fingers.filter((f) => !f.itemId).map((f) => f.depth), 5);
   b.hu = clamp(Math.ceil((deepest + GF.base + b.floor) / GF.unit), 2, 30);
   centerItems(b);
 }
@@ -11083,9 +11086,9 @@ const toolLocked = (t) => !!t && t.fit === 'ok' && !(typeof LibUI !== 'undefined
 // whether a pocket takes its depth from its tool's height: not when set by hand, not while its tool is locked
 const followsHeight = (it) => !it.depthSet && !toolLocked(toolById(it.toolId));
 // How deep a pocket may be: in a bin of fixed size as its height allows; a bin that fits its content grows
-// until its tools lie fully in their pockets (Camille's choice), up to 30 u with room for the troughs, which
-// are FINGER_DEEPER deeper.
-const fullRoom = (b) => 30 * GF.unit - GF.base - b.floor - FINGER_DEEPER;
+// until its tools lie fully in their pockets (Camille's choice), up to 30 u (troughs need no room of their
+// own: they stop at the bin's deepest pocket).
+const fullRoom = (b) => 30 * GF.unit - GF.base - b.floor;
 const depthRoom = (b) => (b.autoFit !== false ? fullRoom(b) : maxDepth(b));
 // A pocket is this much deeper than its tool is high: the tool lies safely below the top edge even when its
 // measured height is a little short, and a bin stacked on top does not touch it (Camille's choice, instead
@@ -15098,6 +15101,17 @@ const App = {
       }
       S.ui.depthV = 3;
     }
+    // finger troughs no longer make a bin higher (since 2026-10-20): bins that fit their content take their
+    // height from the pockets once, and get lower where only a trough made them higher
+    const lower = [];
+    if (S.ui.depthV < 4) {
+      for (const b of S.bins) {
+        if (b.autoFit === false) continue;
+        const was = b.hu; fitBin(b);
+        if (b.hu !== was) { b._rev = (b._rev || 0) + 1; Store.save('bin', b); lower.push(`«${b.name}» ${was} → ${b.hu} u`); }
+      }
+      S.ui.depthV = 4;
+    }
     FotoUI.init(); TraceUI.init(); LibUI.init(); BinUI.init(); CaseUI.init(); Overview.init(); NewBin.init(); TestPrint.init(); DataUI.init(); Undo.init(); DataFolder.init(); GDrive.init();
     window.addEventListener('online', () => Store.sendAll());
     DataUI.takeStartData();
@@ -15109,6 +15123,7 @@ const App = {
     if (redepth) news.push(`Taschentiefen in ${redepth === 1 ? 'einem Bin' : redepth + ' Bins'} an die Werkzeughöhen angepasst, so tief, wie der Bin es zulässt.`);
     if (grown.length) news.push(`${grown.length === 1 ? `«${grown[0]}» ist` : `${grown.length} Bins sind`} jetzt so hoch, dass die Werkzeuge ganz in ihren Taschen liegen.`);
     if (deeper) news.push(`Taschen in ${deeper === 1 ? 'einem Bin' : deeper + ' Bins'} jetzt ${nf(DEPTH_EXTRA, 0)} mm tiefer als die Werkzeuge hoch sind (Reserve nach oben).`);
+    if (lower.length) news.push(`Griffmulden machen Bins nicht mehr höher: ${lower.join(', ')}.`);
     if (news.length) toast(news.join(' '));
     Store.connect(() => { this.renderAll(); this.show(this.tab); });
   },
