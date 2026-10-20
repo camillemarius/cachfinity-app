@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'a9147c34f0ac';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '2cff59c4bc7e';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -648,6 +648,7 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
         <p id="bin-split-info"></p>
         <button class="btn primary block" type="button" id="bin-export">STEP + STL herunterladen</button>
         <p id="bin-export-status"></p>
+        <button class="btn block" type="button" id="bin-testprint" title="Alle Werkzeuge dieses Bins zum Anprobieren: dünne Rahmen (STL) oder 1:1 auf Papier (PDF), mit der Toleranz dieses Bins">Testdruck aller Werkzeuge…</button>
       </div>
     </div>
   </section>
@@ -13054,6 +13055,8 @@ const LibUI = {
     bar.append(h('strong', { text: `${n} Werkzeug${n === 1 ? '' : 'e'} ausgewählt` }),
       h('button', { class: 'btn small primary', type: 'button', onclick: () => this.binFromPicked() }, 'Neuer Bin daraus'),
       cur ? h('button', { class: 'btn small', type: 'button', onclick: () => this.addPickedTo(cur) }, `In «${cur.name}» legen`) : null,
+      // the ticked tools together, to try them before a bin is printed
+      h('button', { class: 'btn small', type: 'button', title: 'Die ausgewählten Werkzeuge zum Anprobieren: dünne Rahmen (STL) oder 1:1 auf Papier (PDF)', onclick: () => TestPrint.open({ sel: null, all: S.tools.filter((t) => this.picked.has(t.id)).map((t) => ({ name: t.name, poly: t.outline })) }, { title: `Testdruck: ${n} Werkzeug${n === 1 ? '' : 'e'}` }) }, 'Testdruck…'),
       h('button', { class: 'btn small ghost', type: 'button', onclick: () => { this.picked.clear(); this.render(); } }, 'Auswahl aufheben'));
   },
   binFromPicked() {
@@ -13168,6 +13171,17 @@ const BinUI = {
       const it = addToolToBin(b, t); fitBin(b); this.sel = { kind: 'item', id: it.id }; this.changed(true);
     };
     $('#bin-export').onclick = () => this.exportCur();
+    // every tool of the bin once, as its pocket has it (turned over when it lies mirrored), with the bin's play
+    $('#bin-testprint').onclick = () => {
+      const b = curBin(); if (!b) return;
+      const seen = new Set(), parts = [];
+      for (const it of b.items) {
+        const t = toolById(it.toolId), key = it.toolId + (it.mirror ? ':m' : ''); if (!t || seen.has(key)) continue;
+        seen.add(key); parts.push({ name: t.name + (it.mirror ? ' (gespiegelt)' : ''), poly: placePoly(t.outline, 0, 0, 0, it.mirror) });
+      }
+      if (!parts.length) { toast('In diesem Bin liegt noch kein Werkzeug.'); return; }
+      TestPrint.open({ sel: null, all: parts }, { tol: b.clearance, title: `Testdruck «${b.name}»` });
+    };
     $('#bin-add-circle').onclick = () => this.addShape('circle');
     $('#bin-add-ball').onclick = () => this.addShape('ball');
     $('#bin-add-slot').onclick = () => this.addShape('slot');
@@ -14075,11 +14089,13 @@ const TestPrint = {
     $('#tp-pdf').onclick = () => this.paper();
     for (const id of ['#tp-tol', '#tp-h', '#tp-wall', '#tp-all']) $(id).addEventListener('input', () => this.renderInfo());
   },
-  // parts: { sel: {name, poly} | null, all: [{name, poly}] }, outlines in mm
-  open(parts) {
+  // parts: { sel: {name, poly} | null, all: [{name, poly}] }, outlines in mm; opts: the play to start with
+  // (a bin's own) and a title naming where the parts come from
+  open(parts, opts = {}) {
     if (!parts.all.length && !parts.sel) { toast('Noch kein Umriss da.'); return; }
     this.parts = parts;
-    $('#tp-tol').value = toolTol();
+    $('#tp-tol').value = opts.tol != null ? opts.tol : toolTol();
+    $('#tp-title').textContent = opts.title || 'Testdruck';
     // the chosen part; all of them only on request (without a chosen part: all)
     $('#tp-all-wrap').hidden = !(parts.sel && parts.all.length > 1);
     $('#tp-all').checked = false;
