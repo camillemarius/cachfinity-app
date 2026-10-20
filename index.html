@@ -12326,7 +12326,7 @@ const TraceUI = {
   },
   beginDrag(it, v, x, y, inserted) {
     if (!inserted) this.pushUndo(it);
-    const p = it.raw[v], ax = this.axisOn && it.axis;
+    const p = it.raw[v], ax = this.snapAxis(it);
     this.dragV = v; T.selVertex = v; this.hover = null;
     // the point's own mirror image on the other side (if there is one) is no place to snap to
     const partner = ax ? it.raw.findIndex((q, j) => j !== v && Math.hypot(...reflectPt(q, ax).map((c, k) => c - p[k])) < 0.1) : -1;
@@ -12368,6 +12368,14 @@ const TraceUI = {
     return null;
   },
   ensureAxis(it) { if (!it.axis) it.axis = startAxis(it); },
+  // The axis dragged points snap across: the part's axis (set with «Symmetrieachse»), else the mirror axis
+  // the symmetry check found and draws as a dash-dot line, so a nearly symmetric part snaps without switching
+  // anything on (that line looked like it should, and did not). The found one is kept as the part's axis from
+  // then on: it is fitted again after every change and would wander a little between the points.
+  snapAxis(it) {
+    if (!it.axis && ((it.symOn && it.sym) || it.symPreview)) it.axis = startAxis(it);
+    return it.axis || null;
+  },
   mirroring(it) { return this.axisOn && this.mirrorEdits && !!it.axis; },
   // which side an edit at p was made on (else where it started, else its neighbourhood)
   editSide(it, p, from) {
@@ -12434,12 +12442,12 @@ const TraceUI = {
     if (best.k === 'b') return { p: q, guides: [[b, q], ...mark(b, Lb.d, q)] };
     return { p: q, guides: [[a, q], [b, q], ...mark(q, a, b)] };
   },
-  // Magnetic help while dragging (Alt switches it off). With the symmetry axis shown: onto the mirror image
-  // of a point on the other side, or onto the axis. Else onto the straight line through the two neighbours
-  // (takes a kink out), then square corners (rightAngle), else level with a neighbour horizontally or
-  // vertically.
+  // Magnetic help while dragging (Alt switches it off). With a symmetry axis (snapAxis): onto the mirror
+  // image of a point on the other side, or onto the axis. Else onto the straight line through the two
+  // neighbours (takes a kink out), then square corners (rightAngle), else level with a neighbour
+  // horizontally or vertically.
   snap(it, v, px, py) {
-    const ax = this.axisOn && it.axis, tolM = this.stage.px(8);
+    const ax = this.snapAxis(it), tolM = this.stage.px(8);
     if (ax) {
       let best = null, bd = tolM;
       it.raw.forEach((q, j) => {
@@ -12477,9 +12485,11 @@ const TraceUI = {
     this.drag = null; this.dragV = -1; this.loupe = null; this.guides = null; this.mirrorPrev = null; this.render();
   },
   // Right click (or a long press): deletes the corner point nearest the pointer within reach; on another
-  // part it selects that part. The browser's own menu never opens over the outlines (it used to whenever a
-  // click missed a point by a few pixels).
+  // part it selects that part. The browser's own menu never opens over the outlines: it used to whenever a
+  // click missed a point by a few pixels, and always when editing a library tool, where the redraw after
+  // the deletion failed before the menu was turned off. So it is turned off first.
   context(x, y, e) {
+    e.preventDefault();
     if (e.pointerType) this.touch = e.pointerType === 'touch';
     const it = T.selItem;
     if (this.drag) {
@@ -12695,7 +12705,9 @@ const TraceUI = {
     $('#trace-mirror-edit').checked = this.mirrorEdits;
     $('#trace-print-row').hidden = !T.items.length;
     const pc = $('#parallax-text');
-    if (!has) pc.textContent = 'Erscheint nach der Erkennung.';
+    // (a tool from the library is edited without photos: then there is nothing to say here, and reading the
+    // missing photo's camera used to stop this render half way, so the outline was not redrawn after a change)
+    if (!has || !P.length) pc.textContent = 'Erscheint nach der Erkennung.';
     else if (parallaxMode() === 'multi') pc.replaceChildren('Die Umrisse sind die ', h('strong', { text: 'Schnittmenge der ' + P.length + ' Fotos' }), ' mit denselben Teilen. Jede Kamera sieht eine andere Seite der Teile unverfälscht, deshalb fällt die Überhöhung weg. Die Höhe brauchst du hier nur für die Taschentiefe.');
     else {
       const ph = P[0];
