@@ -427,7 +427,7 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
     </div>
     <div class="savestate local" id="savestate"><span class="dot"></span><span id="savestate-text">Nur in diesem Browser</span>
       <button class="btn small primary" type="button" id="df-grant-top" hidden title="Der Browser fragt nach jedem Start einmal, ob die App die Datendatei benutzen darf">Datendatei freigeben</button>
-      <button class="btn small primary" type="button" id="gd-sync-top" hidden title="Google gibt den Zugriff für eine Stunde; danach braucht der Abgleich einen Klick">Mit Google abgleichen</button>
+      <button class="btn small primary" type="button" id="gd-sync-top" hidden title="Google gibt den Zugriff für eine Stunde; dein nächster Klick in der App erneuert ihn, oder dieser Knopf">Mit Google abgleichen</button>
       <button class="btn small ghost" type="button" id="data-open" title="Sichern, laden, Datenordner, Offline-Version">Daten</button></div>
   </header>
 
@@ -764,7 +764,7 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
         <button class="btn primary" type="button" id="gd-connect">Mit Google verbinden</button>
         <button class="btn ghost" type="button" id="gd-off" hidden>Trennen</button>
       </div>
-      <p class="unit" id="gd-help">Die App legt in deinem Google Drive die Datei «Cachfinity_Daten.json» an. Jede Änderung geht hinein, und was ein anderer Laptop dort neuer gespeichert hat, kommt hierher. Die App sieht nur diese Datei, nicht den Rest deines Drives. Google gibt den Zugriff jeweils für eine Stunde: nach dem Start und später nach Änderungen erscheint oben «Mit Google abgleichen», ein Klick genügt.</p>
+      <p class="unit" id="gd-help">Die App legt in deinem Google Drive die Datei «Cachfinity_Daten.json» an. Jede Änderung geht hinein, und was ein anderer Laptop dort neuer gespeichert hat, kommt hierher. Die App sieht nur diese Datei, nicht den Rest deines Drives. Google gibt den Zugriff jeweils für eine Stunde. Nach dem Start und wenn die Stunde um ist, erneuert ihn dein nächster Klick irgendwo in der App: Googles Fenster blitzt kurz auf und schliesst sich wieder. Blockiert der Browser es, gleicht der Knopf «Mit Google abgleichen» oben ab.</p>
     </div>
     <div id="df-row">
       <h2>Datenordner auf diesem Laptop (OneDrive, Google-Drive-Ordner)</h2>
@@ -14493,9 +14493,10 @@ const DataFolder = {
 // and case keeps the newer copy (_t), deletions travel as tombstones (S.tomb). It is read when connecting,
 // when the window comes back and every 30 s, and written after every change.
 // Google gives access for an hour, and a new one needs a click (Google's small window may only open after a
-// click). So after a start, and when the hour is over and something changed, the header shows «Mit Google
-// abgleichen». Meanwhile the data stay in the browser and go to Drive with the next click. The access
-// itself is kept only in memory, never stored.
+// click). So after a start, and when the hour is over, the next click anywhere in the app renews it:
+// Google's window opens briefly and closes again by itself. Until then the header shows «Mit Google
+// abgleichen», and the data stay in the browser. When a renewal was blocked or closed, only that button
+// tries again (no window on every click). The access itself is kept only in memory, never stored.
 const GOOGLE_CLIENT_ID = '189772997096-0k0lfdth8ea47jr91vijjqd6sendlk0l.apps.googleusercontent.com';
 const GOOGLE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
 const DRIVE_NAME = 'Cachfinity_Daten.json';
@@ -14505,7 +14506,7 @@ const GDrive = {
   // (a test points origin and base at a local stand-in for Google)
   origin: 'https://camillemarius.github.io', base: 'https://www.googleapis.com',
   state: 'off', token: '', expires: 0, email: '', fileId: '', version: '', fileKey: '', problem: '',
-  busy: false, timer: null, lastWrite: null, gis: null,
+  busy: false, signing: false, paused: false, timer: null, lastWrite: null, gis: null,
   usable() { return !!window.CF_WEB && location.origin === this.origin; },
   saved() { try { return JSON.parse(lsGet(GD_KEY) || 'null'); } catch { return null; } },
   keep() { lsSet(GD_KEY, JSON.stringify({ email: this.email, fileId: this.fileId })); },
@@ -14513,6 +14514,7 @@ const GDrive = {
     $('#gd-connect').onclick = () => this.connect();
     $('#gd-sync-top').onclick = () => this.connect();
     $('#gd-off').onclick = () => this.disconnect();
+    document.addEventListener('click', (e) => this.renewOnClick(e), true);
     window.addEventListener('focus', () => this.check());
     window.addEventListener('online', () => this.check());
     setInterval(() => this.check(), 30000);
@@ -14609,11 +14611,28 @@ const GDrive = {
     if (r && r.id) this.fileId = r.id;
     this.version = (r && r.version) || ''; this.fileKey = key; this.lastWrite = new Date(); this.keep();
   },
-  // a click on «Mit Google verbinden» or «Mit Google abgleichen»
-  async connect() {
-    if (!this.usable()) return;
-    if (!navigator.onLine) { toast('Ohne Internet geht der Abgleich mit Google nicht. Die Daten bleiben solange in diesem Browser.'); return; }
-    try { await this.signIn(); } catch (e) { this.signInFailed(e); return; }
+  // any click in the app while the access is missing (after a start, or the hour is over) renews it; the
+  // click itself does what it always does
+  renewOnClick(e) {
+    if (this.paused || this.signing || this.busy || this.valid() || !navigator.onLine || !this.usable()) return;
+    if (this.state !== 'needs' && this.state !== 'on') return;
+    if (e.target && e.target.closest && e.target.closest('#gd-sync-top, #gd-connect, #gd-off')) return; // (those do it themselves)
+    // Google's window must open straight from the click: without the library at hand, the next click does it
+    if (!(window.google && google.accounts && google.accounts.oauth2)) { this.loadGis().catch(() => { /* next click */ }); return; }
+    this.connect(true);
+  },
+  // a click on «Mit Google verbinden» or «Mit Google abgleichen» (auto: any other click, see renewOnClick)
+  async connect(auto = false) {
+    if (!this.usable() || this.signing) return;
+    if (!navigator.onLine) { if (!auto) toast('Ohne Internet geht der Abgleich mit Google nicht. Die Daten bleiben solange in diesem Browser.'); return; }
+    if (!auto) this.paused = false;
+    this.signing = true;
+    try { await this.signIn(); } catch (e) {
+      // a renewal that was blocked or closed is not tried again on every click; the button still works
+      if (auto) this.paused = true;
+      if (!auto || (e && e.gd === 'popup_failed_to_open')) this.signInFailed(e);
+      this.render(); return;
+    } finally { this.signing = false; }
     const first = !this.saved();
     this.busy = true;
     try {
@@ -14623,6 +14642,7 @@ const GDrive = {
       await this.push(!f);
       this.state = 'on'; this.problem = '';
       const got = n && (n.added || n.replaced || n.removed) ? ` Übernommen: ${n.added} neu, ${n.replaced} aktualisiert, ${n.removed} entfernt.` : '';
+      if (auto) { if (got) toast('Aus Google Drive' + got.replace(' Übernommen', ' übernommen')); return; }
       toast(first ? `Mit Google Drive verbunden (${this.email}).` + (f ? got : ` Die Datei «${DRIVE_NAME}» ist angelegt; jede Änderung kommt jetzt hinein.`) : 'Mit Google Drive abgeglichen.' + got, 'ok');
     } catch (e) { this.fail(e); } finally { this.busy = false; this.render(); }
   },
@@ -14679,7 +14699,7 @@ const GDrive = {
     const when = this.lastWrite ? `, zuletzt geschrieben ${this.lastWrite.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' })}` : '';
     $('#gd-status').textContent = !ok ? `Den Abgleich mit Google Drive gibt es in der Web-App: ${WEB_URL}`
       : st === 'on' ? `Verbunden mit ${this.email || 'Google'}${when}.`
-        : st === 'needs' ? `Verbunden mit ${this.email || 'Google'}. Google möchte für den Abgleich einen Klick.`
+        : st === 'needs' ? `Verbunden mit ${this.email || 'Google'}. ` + (this.paused ? 'Klicke «Mit Google abgleichen», um weiter abzugleichen.' : 'Dein nächster Klick in der App erneuert den Zugriff bei Google.')
           : st === 'error' ? this.problem
             : 'Nicht verbunden: die Daten liegen nur in diesem Browser.';
     $('#gd-help').hidden = !ok;
