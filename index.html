@@ -734,7 +734,7 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
     <p>Prüfen, ob das Werkzeug passt, bevor der ganze Bin gedruckt wird. Der Rahmen hat innen genau die Tasche, die der Bin bekommt; auf Papier sind Tasche und Umriss als dünne Linien 1:1 gedruckt.</p>
     <label class="check" id="tp-all-wrap" hidden><input type="checkbox" id="tp-all"> <span id="tp-all-text">Alle Teile</span></label>
     <div class="fields">
-      <label class="f"><span>Spiel zum Werkzeug mm</span><input type="number" id="tp-tol" min="0" max="5" step="0.1" value="0.8"></label>
+      <label class="f"><span>Spiel zum Werkzeug mm</span><input type="number" id="tp-tol" min="0" max="5" step="0.1" value="0.5"></label>
       <label class="f"><span>Rahmen hoch mm</span><input type="number" id="tp-h" min="0.4" max="10" step="0.2" value="1.2"></label>
       <label class="f"><span>Rahmen breit mm</span><input type="number" id="tp-wall" min="0.4" max="5" step="0.1" value="1.2"></label>
     </div>
@@ -11146,11 +11146,15 @@ function freePlace(cs, b) {
 }
 
 // ---------- new objects ----------
+// play around a tool in its pocket (mm): what «Toleranz für neue Bins» says, else 0.5, which prints a
+// snug fit (it was 0.8 until 2026-10-20)
+const TOL_DEFAULT = 0.5;
+const toolTol = () => (S && S.ui && S.ui.tol != null ? S.ui.tol : TOL_DEFAULT);
 function newBin(props = {}) {
   const used = new Set(S.bins.map((b) => b.color));
   return {
     id: uid(), name: 'Bin ' + (S.bins.length + 1), gx: 2, gy: 2, hu: 4,
-    clearance: S.ui && S.ui.tol != null ? S.ui.tol : 0.8, wall: 3, floor: 1.2, lip: true, magnets: true, autoFit: true, autoFingers: true,
+    clearance: toolTol(), wall: 3, floor: 1.2, lip: true, magnets: true, autoFit: true, autoFingers: true,
     color: BIN_COLORS.find((c) => !used.has(c)) || BIN_COLORS[S.bins.length % BIN_COLORS.length],
     items: [], fingers: [], place: null, ...props,
   };
@@ -13809,9 +13813,9 @@ const Overview = {
   init() {
     for (const el of $$('[data-binview]')) el.addEventListener('click', () => this.setBinView(el.dataset.binview));
     for (const el of $$('[data-caseview]')) el.addEventListener('click', () => this.setCaseView(el.dataset.caseview));
-    $('#bin-all-tol').onchange = (e) => { S.ui.tol = Math.round(clamp(num(e.target, 0.8), 0, 5) * 10) / 10; e.target.value = S.ui.tol; Store.saveUi(); };
+    $('#bin-all-tol').onchange = (e) => { S.ui.tol = Math.round(clamp(num(e.target, TOL_DEFAULT), 0, 5) * 10) / 10; e.target.value = S.ui.tol; Store.saveUi(); };
     $('#bin-all-tol-apply').onclick = () => {
-      const t = S.ui.tol != null ? S.ui.tol : 0.8;
+      const t = toolTol();
       for (const b of S.bins) { if (b.clearance === t) continue; b.clearance = t; fitBin(b); b._rev = (b._rev || 0) + 1; Store.save('bin', b); }
       toast(`Toleranz ${nf(t, 1)} mm für alle ${S.bins.length} Bins übernommen.`); this.renderBins();
     };
@@ -13829,7 +13833,7 @@ const Overview = {
   open(b) { S.ui.binId = b.id; BinUI.sel = null; this.setBinView('edit'); },
   renderBins() {
     const grid = $('#bin-all-grid'); grid.replaceChildren();
-    $('#bin-all-tol').value = S.ui.tol != null ? S.ui.tol : 0.8;
+    $('#bin-all-tol').value = toolTol();
     $('#bin-all-count').textContent = S.bins.length ? `${S.bins.length} Bin${S.bins.length === 1 ? '' : 's'}, ${S.bins.filter((b) => b.place && caseById(b.place.caseId)).length} davon in Koffern` : '';
     if (!S.bins.length) { grid.append(h('div', { class: 'lib-empty' }, h('p', { text: 'Noch keine Bins. Wähle unter «Werkzeuge» Werkzeuge aus und lege daraus einen Bin an.' }))); return; }
     for (const b of S.bins) {
@@ -13942,7 +13946,7 @@ const TestPrint = {
   open(parts) {
     if (!parts.all.length && !parts.sel) { toast('Noch kein Umriss da.'); return; }
     this.parts = parts;
-    $('#tp-tol').value = S.ui && S.ui.tol != null ? S.ui.tol : 0.8;
+    $('#tp-tol').value = toolTol();
     // the chosen part; all of them only on request (without a chosen part: all)
     $('#tp-all-wrap').hidden = !(parts.sel && parts.all.length > 1);
     $('#tp-all').checked = false;
@@ -13951,7 +13955,7 @@ const TestPrint = {
     const d = $('#tp-dlg'); if (d.showModal) d.showModal(); else d.setAttribute('open', '');
   },
   chosen() { return $('#tp-all').checked || !this.parts.sel ? this.parts.all : [this.parts.sel]; },
-  opts() { return { tol: clamp(num($('#tp-tol'), 0.8), 0, 5), h: clamp(num($('#tp-h'), 1.2), 0.4, 10), wall: clamp(num($('#tp-wall'), 1.2), 0.4, 5) }; },
+  opts() { return { tol: clamp(num($('#tp-tol'), TOL_DEFAULT), 0, 5), h: clamp(num($('#tp-h'), 1.2), 0.4, 10), wall: clamp(num($('#tp-wall'), 1.2), 0.4, 5) }; },
   // pocket (outline + play) and frame (pocket + wall), turned straight like the tool in the library
   shapes(part, o) {
     const rot = toolPlacement(part.poly).rot, turn = (p) => placePoly(p, 0, 0, rot, false);
