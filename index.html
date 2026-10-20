@@ -11143,6 +11143,11 @@ function supportOf(b) {
   return { full: gaps === 0, on: [...on], gaps };
 }
 const stackTopMm = (b) => (b.place.z + stackU(b)) * GF.unit + (b.lip ? GF.lip : 0);
+// what the baseplate adds under every bin: its floor (the bins' feet sit in its sockets, on that floor);
+// the light plate has none
+const plateFloor = (cs) => (plateOpts(cs).type === 'light' ? 0 : PLATE.floor);
+// whether a bin at level z stays inside the case's height (its stacking lip not counted, as on the plan)
+const fitsHeight = (cs, b, z) => plateFloor(cs) + (z + stackU(b)) * GF.unit <= cs.hu * GF.unit + 0.01;
 function caseChecks(cs, b) {
   const res = []; const fp = footprint(b);
   if (isParked(b, cs)) return res; // in the storage area beside the case
@@ -11156,15 +11161,15 @@ function caseChecks(cs, b) {
   }
   const sup = supportOf(b);
   if (!sup.full) res.push({ level: 'warn', text: sup.on.length ? `liegt nur teilweise auf (${sup.gaps} Feld${sup.gaps === 1 ? '' : 'er'} frei)` : 'schwebt, darunter ist nichts' });
-  const over = stackTopMm(b) - cs.hu * GF.unit;
-  if (over > 0.01) res.push({ level: over > (b.lip ? GF.lip : 0) + 0.01 ? 'bad' : 'warn', text: `ragt ${nf(over, 1)} mm über die Kofferhöhe` });
+  const F = plateFloor(cs), over = F + stackTopMm(b) - cs.hu * GF.unit;
+  if (over > 0.01) res.push({ level: over > (b.lip ? GF.lip : 0) + 0.01 ? 'bad' : 'warn', text: `ragt ${nf(over, 1)} mm über die Kofferhöhe` + (F ? ` (mit ${nf(F, 0)} mm Boden der Grundplatte)` : '') });
   return res;
 }
 // first free place with full support, lowest level first, turned by 90° when only that fits; never
 // sticking out above the case
 function freePlace(cs, b) {
   const rots = b.gx === b.gy ? [0] : [0, 90];
-  for (let z = 0; z + stackU(b) <= cs.hu; z++) for (const rot of rots) {
+  for (let z = 0; fitsHeight(cs, b, z); z++) for (const rot of rots) {
     const fp = rot === 90 ? { w: b.gy, h: b.gx } : { w: b.gx, h: b.gy };
     for (let y = 0; y + fp.h <= cs.gy; y++) for (let x = 0; x + fp.w <= cs.gx; x++) {
       b.place = { caseId: cs.id, x, y, z, rot };
@@ -11901,7 +11906,7 @@ function meshGroup(THREE, mesh, color) {
 // chamfers are cut in steps, the 3 mm floor below for the «clip» type, the seams between the printed parts
 // as lines on top. In the case's frame: x to the right, y = -(down on the plan), the case floor at z = 0.
 function plateGroup(THREE, cs) {
-  const grp = new THREE.Group(), opt = plateOpts(cs), F = opt.type === 'light' ? 0 : PLATE.floor;
+  const grp = new THREE.Group(), F = plateFloor(cs);
   const W = cs.gx * GF.pitch, D = cs.gy * GF.pitch;
   const mat = new THREE.MeshStandardMaterial({ color: 0x9aa39e, roughness: 0.75, metalness: 0.02 });
   const outer = roundRectPoly(W, D, PLATE.r, 6).map(([x, y]) => [x + W / 2, y + D / 2]);
@@ -13593,7 +13598,7 @@ const CaseUI = {
     if (z < 0) { toast('Tiefer geht nicht: darunter ist der Boden oder ein anderer Bin.'); return; }
     if (z > cs.hu + 10) return;
     b.place.z = z; Store.save('bin', b); this.render();
-    if (z + stackU(b) > cs.hu) toast(`Ragt ${z + stackU(b) - cs.hu} u über den Koffer hinaus.`, 'bad');
+    if (!fitsHeight(cs, b, z)) toast(`Ragt ${nf(plateFloor(cs) + (z + stackU(b) - cs.hu) * GF.unit, 1)} mm über den Koffer hinaus` + (plateFloor(cs) ? ' (mit dem Boden der Grundplatte).' : '.'), 'bad');
   },
   // keyboard for the selected bin: arrows move one field, Page Up/Down or +/- one unit in height,
   // R turns, Delete takes it out of the case
@@ -13676,10 +13681,10 @@ const CaseUI = {
     this.renderPlate(cs);
     const bins = placedIn(cs), inside = inCase(cs);
     const floorCells = new Set(); for (const b of inside) if (b.place.z === 0) { const fp = footprint(b); for (let i = 0; i < fp.w; i++) for (let j = 0; j < fp.h; j++) floorCells.add((b.place.x + i) + ',' + (b.place.y + j)); }
-    const top = inside.reduce((m, b) => Math.max(m, stackTopMm(b)), 0);
+    const F = plateFloor(cs), top = F + inside.reduce((m, b) => Math.max(m, stackTopMm(b)), 0);
     $('#case-stats').replaceChildren(
       h('strong', { text: `${floorCells.size} von ${cs.gx * cs.gy}` }), ' Feldern am Boden belegt. Innenhöhe ', h('strong', { text: `${cs.hu * GF.unit} mm` }),
-      inside.length ? `, höchster Stapel ${nf(top, 1)} mm.` : '.');
+      inside.length ? `, höchster Stapel ${nf(top, 1)} mm` + (F ? ` (mit ${nf(F, 0)} mm Boden der Grundplatte).` : '.') : '.');
     const list = $('#case-bins'); list.replaceChildren();
     // the bins in the case, then those in the storage area
     const sorted = bins.slice().sort((a, b) => isParked(a, cs) - isParked(b, cs) || a.place.z - b.place.z || a.place.y - b.place.y || a.place.x - b.place.x);
@@ -14914,7 +14919,7 @@ if (location.hash === '#selbsttest') setTimeout(async () => {
     document.title = 'SELBSTTEST OK ' + Math.round(r.measureVolume(s)) + ' mm3, Schrift ' + (document.fonts.check('600 14px Barlow') ? 'da' : 'fehlt');
   } catch (e) { document.title = 'SELBSTTEST FEHLER ' + (e && (e.message || e)); }
 }, 800);
-window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf };
+window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor };
 // The mouse wheel over a number field that has the focus changes its value: easily by accident while
 // scrolling the panel (a bin's tolerance, wall, floor). The field gives up the focus instead, and the page
 // scrolls on.
