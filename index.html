@@ -14800,6 +14800,9 @@ const App = {
     // an offline file downloaded with data starts from that data rather than the examples
     if (!(await Store.loadLocal())) { if (DataUI.hasStartData()) S = { cases: [], tools: [], bins: [], ui: { tab: 'foto', binId: null, caseId: null } }; else seedState(); }
     S.ui = { tab: 'foto', ...S.ui };
+    // the play around a tool was 0.8 mm by default until 2026-10-20 and is 0.5 now (TOL_DEFAULT): a 0.8 kept
+    // from then counts as the old default, once; a value chosen after this stays (tolV goes along with it)
+    if (!S.ui.tolV) { if (S.ui.tol === 0.8) delete S.ui.tol; S.ui.tolV = 2; }
     FotoUI.init(); TraceUI.init(); LibUI.init(); BinUI.init(); CaseUI.init(); Overview.init(); NewBin.init(); TestPrint.init(); DataUI.init(); Undo.init(); DataFolder.init(); GDrive.init();
     window.addEventListener('online', () => Store.sendAll());
     DataUI.takeStartData();
