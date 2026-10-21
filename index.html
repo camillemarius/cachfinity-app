@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '357e8cb99025';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'c57b60de82f7';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -283,7 +283,7 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
 label.f.sub-opt { flex-direction: row; align-items: center; gap: 8px; padding-left: 24px; }
 label.f.sub-opt input { flex: none; }
 #bin-dims { white-space: pre-line; }
-.row[hidden] { display: none; }
+.row[hidden], .btn[hidden] { display: none; }
 
 .btn {
   border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); padding: 7px 12px; cursor: pointer;
@@ -654,7 +654,7 @@ label.f.sub-opt input { flex: none; }
             <label title="Material unter der tiefsten Tasche" class="f"><span>Boden mm</span><input type="number" id="bin-floor" min="0.8" max="10" step="0.1"></label>
           </div>
         </details>
-        <div class="row"><button class="btn small" type="button" id="bin-autosize" title="Felder und Höhe nach den Werkzeugen, so wie sie liegen; die Werkzeuge liegen danach ganz in ihren Taschen">Bin an Bauteile anpassen</button><button class="btn small" type="button" id="bin-arrange" title="Die Werkzeuge neu und platzsparend anordnen">Teile anordnen</button><button class="btn small" type="button" id="bin-nest" title="Die Werkzeuge nach ihren echten Umrissen ineinander schieben, auch gedreht, so dass der Bin möglichst wenige Felder braucht. Werkzeuge unter einer gemeinsamen Form (etwa einem Langloch über mehrere Stangen) bleiben zusammen. Griffmulden wandern dabei entlang ihres Werkzeugs und ragen, wo nötig, nur auf einer Seite hinaus. Dauert ein paar Sekunden; Strg+Z macht es rückgängig">Platzsparend anordnen</button><button class="btn small" type="button" id="bin-sink" title="Die Höhe so einstellen, dass alle Werkzeuge bündig in ihren Taschen liegen: jede Tasche so tief, wie ihr Werkzeug hoch ist (und 1 mm Reserve), auch wo eine Tiefe von Hand gesetzt war; der Bin wird so hoch wie nötig, auch niedriger. Breite und Länge bleiben. Strg+Z macht es rückgängig">Bauteile versenken</button></div>
+        <div class="row"><button class="btn small" type="button" id="bin-autosize" title="Felder und Höhe nach den Werkzeugen, so wie sie liegen; die Werkzeuge liegen danach ganz in ihren Taschen">Bin an Bauteile anpassen</button><button class="btn small" type="button" id="bin-nest" title="Die Werkzeuge nach ihren echten Umrissen ineinander schieben, auch gedreht, so dass der Bin möglichst wenige Felder braucht. Werkzeuge unter einer gemeinsamen Form (etwa einem Langloch über mehrere Stangen) bleiben zusammen. Griffmulden wandern dabei entlang ihres Werkzeugs und ragen, wo nötig, nur auf einer Seite hinaus. Dauert ein paar Sekunden; Strg+Z macht es rückgängig">Platzsparend anordnen</button><button class="btn small" type="button" id="bin-sink" title="Die Höhe so einstellen, dass alle Werkzeuge bündig in ihren Taschen liegen: jede Tasche so tief, wie ihr Werkzeug hoch ist (und 1 mm Reserve), auch wo eine Tiefe von Hand gesetzt war; der Bin wird so hoch wie nötig, auch niedriger. Breite und Länge bleiben. Strg+Z macht es rückgängig">Bauteile versenken</button></div>
         <h3 class="sub">Optionen</h3>
         <label title="Stapelrand oben, damit ein weiterer Bin auf diesem stehen kann" class="check"><input type="checkbox" id="bin-lip"> Stapelrand <span class="unit">(+4.4 mm)</span></label>
         <label class="f inline-f sub-opt" title="Hebt den Stapelrand um ganze Einheiten an. Werkzeuge, die aus ihrer Tasche ragen, haben dann Platz unter dem Bin darüber"><span>Zusätzlich erhöhen um</span><input type="number" id="bin-lift" min="0" max="10" step="1" style="width: 64px"><span class="unit">u (je 7 mm)</span></label>
@@ -11305,7 +11305,7 @@ const depthRoom = (b) => (b.autoFit !== false ? fullRoom(b) : maxDepth(b));
 // measured height is a little short, and a bin stacked on top does not touch it (Camille's choice, instead
 // of raising the stacking rim).
 const DEPTH_EXTRA = 1;
-// «Grösse anpassen» on any bin: the pockets get their tools' full height (a depth set by hand stays), so the
+// «Bin an Bauteile anpassen» (shown while a bin does not fit its content by itself): the pockets get their tools' full height (a depth set by hand stays), so the
 // size worked out afterwards (autoSize) is high enough for the tools to lie fully in them
 function fullDepths(b) { for (const it of b.items) { const t = toolById(it.toolId); if (t && followsHeight(it)) it.depth = Math.floor(Math.min(t.height + DEPTH_EXTRA, fullRoom(b)) * 10 + 1e-6) / 10; } }
 // «Bauteile versenken»: every tool fully in its pocket, flush with the top (its height and DEPTH_EXTRA, also
@@ -11679,7 +11679,8 @@ function setSaveState(st) {
 }
 
 // ===== «Platzsparend anordnen»: the tools nested into each other by their real outlines =====
-// «Teile anordnen» (packBin) puts the boxes around the tools in rows. Here each unit's footprint is its
+// packBin (the rows a new bin starts with; once the button «Teile anordnen», removed on Camille's word)
+// puts the boxes around the tools in rows. Here each unit's footprint is its
 // pockets with their troughs, grown by half the material NEST_GAP that stays between two pockets. A unit is
 // a tool, or tools held together by a shape set by hand (a long slot across rods lying side by side), or a
 // shape over no tool. A unit lies in one of four turns, and a tool's automatic trough may move along it, up
@@ -14044,7 +14045,6 @@ const BinUI = {
         + (r.grips === 'gaps' || r.grips === 'grown' ? ' Die Griffmulden liegen in Lücken am Rand.' : r.grips === 'ends' ? ' Die Griffmulden brauchen die Mitte der kurzen Seiten (am Rand war keine Lücke frei).' : '');
       toast((b.autoFit !== false ? `Platzsparend angeordnet: ${r.gx} × ${r.gy} = ${n} Felder` + (n < r.before ? ` statt ${r.before}.` : '.') : 'Platzsparend angeordnet.') + kept + ' Strg+Z macht es rückgängig.');
     };
-    $('#bin-arrange').onclick = () => { const b = curBin(); if (!b) return; b.manual = false; if (b.autoFit !== false) packBin(b); else arrangeItems(b); this.changed(true); };
     $('#bin-autofit').onchange = (e) => { const b = curBin(); if (!b) return; b.autoFit = e.target.checked; if (b.autoFit) fitBin(b); this.changed(true); };
     $('#bin-add').onclick = () => {
       const t = toolById($('#bin-add-tool').value); if (!t) { toast('Noch keine Werkzeuge vorhanden.'); return; }
@@ -14315,6 +14315,8 @@ const BinUI = {
     if (this.advBin !== b.id) { $('#bin-adv').open = false; this.advBin = b.id; }
     $('#bin-lip').checked = b.lip; $('#bin-grips').value = gripKind(b) || 'none'; $('#bin-mag').value = magnetMode(b); $('#bin-autofit').checked = b.autoFit !== false; $('#bin-autofinger').checked = !!b.autoFingers;
     $('#bin-lift').value = b.lift || 0; $('#bin-lift').closest('label').hidden = !b.lip; $('#bin-grip-row').hidden = !b.grips;
+    // (a bin that fits its content does this by itself on every change)
+    $('#bin-autosize').hidden = b.autoFit !== false;
     $('#bin-dims').textContent = `${nf(binW(b), 1)} × ${nf(binD(b), 1)} × ${nf(binTop(b), 0)} mm${binLift(b) ? ` + ${binLift(b) * GF.unit} mm erhöhter Rand` : ''}${b.lip ? ' + 4.4 Stapelrand' : ''}\nTaschen bis ${nf(Math.floor(maxDepth(b) * 10 + 1e-6) / 10, 1)} mm tief`;
     const add = $('#bin-add-tool'); add.replaceChildren(...S.tools.map((t) => h('option', { value: t.id, text: t.name })));
     const items = $('#bin-items'); items.replaceChildren();
