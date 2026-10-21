@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '4e62a7e808c8';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '0f1b6269f7fc';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -375,8 +375,9 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
 .tool .fit { position: absolute; top: 8px; right: 8px; z-index: 1; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; color: #fff; }
 .tool .fit.ok { background: var(--ok); }
 .tool .fit.bad { background: var(--bad); }
-.tool .fit.lock { border: 0; cursor: pointer; font-family: inherit; }
-.tool .fit.lock:hover { filter: brightness(1.1); }
+/* the lock of a tool whose test print fits: on its own, no field round it (Camille), a shadow for light pictures */
+.tool .fit.lock { background: none; border: 0; padding: 0 2px; font-size: 18px; line-height: 1; cursor: pointer; font-family: inherit; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
+.tool .fit.lock:hover { transform: scale(1.15); }
 /* what a lock holds: visibly off */
 .tool .seg button:disabled, .tool input:disabled, #bin-sel-body input:disabled { opacity: 0.5; cursor: not-allowed; }
 .tool .fit-row { align-items: center; gap: 8px; }
