@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '211badc4ce06';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '53f645a97c2f';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -468,7 +468,7 @@ label.f.sub-opt input { flex: none; }
       <button title="Übersicht aller Bins, Toleranz für neue Bins, neuer Bin" class="tab" role="tab" id="tab-btn-bins" data-tab="bins"><span class="n">4</span>Bins</button>
       <button title="Einen Bin einrichten: Grösse, Taschen, Griffmulden, Formen, 3D, Export" class="tab" role="tab" id="tab-btn-bin" data-tab="bin"><span class="n">5</span>Bin bearbeiten</button>
       <button title="Übersicht der Koffer; Bins einem Koffer zuweisen" class="tab" role="tab" id="tab-btn-cases" data-tab="cases"><span class="n">6</span>Koffer</button>
-      <button title="Bins im Koffer platzieren und stapeln, Grundplatte, Export" class="tab" role="tab" id="tab-btn-case" data-tab="case"><span class="n">7</span>Koffer einrichten</button>
+      <button title="Bins im Koffer platzieren und stapeln, Grundplatte, Export" class="tab" role="tab" id="tab-btn-case" data-tab="case"><span class="n">7</span>Koffer bearbeiten</button>
     </nav>
     <div class="seg mode-switch" role="group" aria-label="Online oder offline arbeiten">
       <button type="button" id="mode-online" title="Mit deinem claude.ai-Konto arbeiten">Online</button><button type="button" id="mode-offline" title="Ohne Internet arbeiten, mit der Offline-Datei">Offline</button>
@@ -715,7 +715,7 @@ label.f.sub-opt input { flex: none; }
     </div>
   </section>
 
-  <!-- 7 Koffer einrichten -->
+  <!-- 7 Koffer bearbeiten -->
   <section class="pane" id="pane-case" role="tabpanel" aria-labelledby="tab-btn-case">
     <div class="stage-wrap">
       <div class="stage-bar">
@@ -10978,6 +10978,15 @@ function fingerEdges(b, t, step = 6) {
   }
   return out;
 }
+// a few of them for «Platzsparend anordnen», which tries a trough's places one by one: the middle of both ends,
+// and on both sides the outermost place at a fifth, half and four fifths of the length
+function fingerEdgePicks(b, t) {
+  const all = fingerEdges(b, t, 3), out = [];
+  const pick = (ok, key) => { const c = all.filter(ok).sort((p, q) => key(p) - key(q))[0]; if (c && !out.includes(c)) out.push(c); };
+  pick((c) => c.at < 0.06, (c) => Math.abs(c.off)); pick((c) => c.at > 0.94, (c) => Math.abs(c.off));
+  for (const at of [0.2, 0.5, 0.8]) for (const sgn of [-1, 1]) pick((c) => Math.abs(c.at - at) < 0.06 && c.off * sgn > 0.2, (c) => Math.abs(c.at - at) - Math.abs(c.off));
+  return out;
+}
 function autoFinger(b, it, allowOutside = b.autoFit !== false) {
   const t = toolById(it.toolId); if (!t) return null;
   syncFingers(b);
@@ -11507,6 +11516,12 @@ function caseChecks(cs, b) {
   for (const o of placedIn(cs)) if (o !== b && collides(b, o)) res.push({ level: 'bad', text: 'kollidiert mit ' + o.name });
   // a bin right on top meets whatever stands out of this one's pockets above its raised rim
   const above = placedIn(cs).find((o) => o !== b && o.place.z === b.place.z + stackU(b) && overlapsCells(o, b));
+  // and its feet need this one's stacking lip to sit in (Camille: a box left unticked by mistake); fix: the
+  // case planner offers to tick it
+  if (above && !b.lip) {
+    const on = placedIn(cs).filter((o) => o !== b && o.place.z === b.place.z + stackU(b) && overlapsCells(o, b)).map((o) => `«${o.name}»`);
+    res.push({ level: 'bad', fix: 'lip', text: `trägt ${on.join(' und ')}, hat aber keinen Stapelrand` });
+  }
   if (above) {
     const out = Math.max(0, ...binPockets(b).filter((p) => p.kind === 'item').map((p) => { const t = toolById(p.ref.toolId); return t ? t.height - p.depth : 0; }));
     if (out > binLift(b) * GF.unit + 0.5) res.push({ level: 'bad', text: `Werkzeuge stehen ${nf(out, 0)} mm vor und stossen an «${above.name}» darüber. Im Bin «Stapelrand erhöhen» auf ${Math.ceil(out / GF.unit)} u stellen.` });
@@ -11798,7 +11813,8 @@ const normDeg = (a) => (((Math.round(a * 10) / 10) % 360) + 360) % 360;
 // lies in) holds them together as they lie now; a shape over no tool is a unit of its own. Each part keeps
 // its place relative to the unit's first part (a tool, whose straight turn and the turn it lies in now give
 // the unit's turns, each in 90° steps: a tool laid aslant by hand keeps that angle as a choice). A tool
-// on its own with one automatic trough has the trough's places in troughs (the first: where it is now).
+// on its own with one automatic trough has the trough's places in troughs (the first: where it is now; then
+// across the tool, and the short ones at its edge, fingerEdgePicks).
 function nestUnits(b) {
   const parts = [
     ...b.items.filter((it) => toolById(it.toolId)).map((it) => ({ kind: 'item', ref: it, x: it.x, y: it.y, rot: it.rot, polys: [itemPocket(b, it), ...b.fingers.filter((f) => f.itemId === it.id).map(fingerPoly)] })),
@@ -11818,11 +11834,10 @@ function nestUnits(b) {
     const own = ps.length === 1 && t ? b.fingers.filter((f) => f.itemId === a.ref.id) : [];
     const trough = own.length === 1 && own[0].auto ? own[0] : null, troughs = [null];
     if (trough) {
-      const at = [{ lx: trough.lx, ly: trough.ly, lrot: trough.lrot, l: trough.l }];
-      for (const k of NEST_AT) for (const side of [0, 1, -1]) {
-        const c = fingerAcross(b, t, k, side);
-        if (c && !at.some((x) => Math.hypot(x.lx - c.lx, x.ly - c.ly) < 2 && x.lrot === c.lrot && Math.abs(x.l - c.l) < 1)) at.push({ lx: c.lx, ly: c.ly, lrot: c.lrot, l: Math.max(trough.w, c.l) });
-      }
+      const at = [{ lx: trough.lx, ly: trough.ly, lrot: trough.lrot, l: trough.l, style: trough.style }];
+      const add = (c, style) => { if (!at.some((x) => Math.hypot(x.lx - c.lx, x.ly - c.ly) < 2 && Math.abs(normDeg(x.lrot) - normDeg(c.lrot)) < 1 && Math.abs(x.l - c.l) < 1)) at.push({ lx: c.lx, ly: c.ly, lrot: c.lrot, l: Math.max(trough.w, c.l), style }); };
+      for (const k of NEST_AT) for (const side of [0, 1, -1]) { const c = fingerAcross(b, t, k, side); if (c) add(c, 'across'); }
+      for (const c of fingerEdgePicks(b, t)) add(c, 'edge');
       troughs.push(...at.slice(1));
     }
     return { id: 'u' + n, parts: ps, ax: a.x, ay: a.y, tools: ps.filter((p) => p.kind === 'item').length, trough, troughs, turns: round ? [0] : [...new Set([0, 90, 180, 270].flatMap((d) => [normDeg(s + d), normDeg(d)]))] };
@@ -14835,7 +14850,11 @@ const CaseUI = {
         h('div', null,
           h('div', { class: 't', text: b.name }),
           h('div', { class: 's', text: `${sizeTag(fp.w, fp.h, b.hu)}${b.place.z ? ` · ab ${b.place.z} u gestapelt` : ''} · ${where}` }),
-          parked ? h('span', { class: 'pill mute', text: 'Ablage' }) : worst ? h('span', { class: 'pill ' + worst.level, text: worst.text }) : h('span', { class: 'pill ok', text: 'passt' })),
+          parked ? h('span', { class: 'pill mute', text: 'Ablage' }) : worst ? h('span', { class: 'pill ' + worst.level, text: worst.text }) : h('span', { class: 'pill ok', text: 'passt' }),
+          // (a bin carrying another without its stacking lip: ticked here with one click)
+          ...(!parked && checks.some((c) => c.fix === 'lip') ? [h('button', { class: 'btn small', type: 'button', style: { marginTop: '4px' }, title: 'Im Bin «Stapelrand» ankreuzen, damit der Bin darüber darin steht', onclick: (e) => {
+            e.stopPropagation(); b.lip = true; b._rev = (b._rev || 0) + 1; Store.save('bin', b); this.render(); toast(`«${b.name}» hat jetzt einen Stapelrand.`);
+          } }, 'Stapelrand einschalten')] : [])),
         h('span'));
       if (this.sel === b.id) {
         row.append(h('div', { class: 'row', style: { gridColumn: '1 / -1' }, onclick: (e) => e.stopPropagation() },
@@ -15086,7 +15105,7 @@ const Overview = {
     }
   },
   // ---------- cases ----------
-  // the overview has a tab of its own («Koffer»); the planner is «Koffer einrichten»
+  // the overview has a tab of its own («Koffer»); the planner is «Koffer bearbeiten»
   setCaseView(v) {
     this.confirm = null;
     if (v === 'all') { App.show('cases'); return; }
@@ -16125,7 +16144,7 @@ if (location.hash === '#selbsttest') setTimeout(async () => {
     document.title = 'SELBSTTEST OK ' + Math.round(r.measureVolume(s)) + ' mm3, Schrift ' + (document.fonts.check('600 14px Barlow') ? 'da' : 'fehlt');
   } catch (e) { document.title = 'SELBSTTEST FEHLER ' + (e && (e.message || e)); }
 }, 800);
-window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, sinkTools, gripShapes, gripGaps, placeGrips, optimizeTroughs, fingerEdges, gripPlaces, gripRoom, fieldsFor, GRIP, GRIP_BALL, loadThree, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner, binSplit, halfCuts, binClipSpots, binMagnetSpots, BIN_CLIP, dogbonePoly };
+window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, sinkTools, gripShapes, gripGaps, placeGrips, optimizeTroughs, fingerEdges, fingerEdgePicks, gripPlaces, gripRoom, fieldsFor, GRIP, GRIP_BALL, loadThree, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner, binSplit, halfCuts, binClipSpots, binMagnetSpots, BIN_CLIP, dogbonePoly };
 // The mouse wheel over a number field that has the focus changes its value: easily by accident while
 // scrolling the panel (a bin's tolerance, wall, floor). The field gives up the focus instead, and the page
 // scrolls on.
