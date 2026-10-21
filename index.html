@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '511ddda71d19';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '717acda21aca';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -11813,7 +11813,10 @@ function splitPlan(gx, gy) {
   const [kx, ky] = a[0] * a[1] <= t[0] * t[1] ? a : t;
   return { cols: splitEven(gx, kx), rows: splitEven(gy, ky), parts: kx * ky };
 }
-const partLetter = (k) => String.fromCharCode(65 + (k % 26)) + (k >= 26 ? Math.floor(k / 26) : '');
+// parts are numbered from 1, row by row from the top left (Camille: "Teil-1-von-2", letters read ambiguous)
+const partNo = (k) => String(k + 1);
+// the name for files: the bin's or case's name without the «(Kopie)» that «Duplizieren» adds
+const exportName = (s) => safeName(String(s || '').replace(/\s*\(Kopie[^)]*\)/gi, '').trim() || s);
 // where part i (column), j (row) of a split lies, seen from above as in the plan: 'oben-links', 'rechts', …
 const PLACE_X = { 2: ['links', 'rechts'], 3: ['links', 'Mitte', 'rechts'] }, PLACE_Y = { 2: ['oben', 'unten'], 3: ['oben', 'Mitte', 'unten'] };
 function partPlace(i, j, cols, rows) {
@@ -12062,8 +12065,8 @@ async function binParts(r, b, solid) {
       const ex = (i0, i1, n, lo, hi) => [i0 === 0 ? lo - 10 : lo + BIN_CUT_GAP, i1 === n ? hi + 10 : hi - BIN_CUT_GAP];
       const [bx0, bx1] = ex(x0, x0 + nx, b.gx, xa, xb), [by0, by1] = ex(y0, y0 + ny, b.gy, ya, yb);
       const box = r.makeBox([bx0, -by1, -2], [bx1, -by0, top]);
-      setBusyText(`${b.name}: Teil ${partLetter(k)} schneiden…`); await frame();
-      out.push({ label: partLetter(k), place: partPlace(i, j, plan.cols.length, plan.rows.length), nx, ny, solid: solid.clone().intersect(box) });
+      setBusyText(`${b.name}: Teil ${partNo(k)} schneiden…`); await frame();
+      out.push({ label: partNo(k), place: partPlace(i, j, plan.cols.length, plan.rows.length), nx, ny, solid: solid.clone().intersect(box) });
       k++; x0 += nx;
     }
     y0 += ny;
@@ -12075,7 +12078,7 @@ async function exportBins(bins) {
   cadKernel = await loadCAD();
   const meshes = new Map();
   for (const b of bins) {
-    let name = safeName(b.name); while (used.has(name)) name += '_'; used.add(name);
+    let name = exportName(b.name); while (used.has(name)) name += '_'; used.add(name);
     const solid = await buildBinSolid(b, (s) => setBusyText(`${b.name}: ${s}…`));
     setBusyText(`${b.name}: STEP und STL schreiben…`); await frame();
     const tag = `Bin-${b.gx}x${b.gy}-${b.hu}u`;
@@ -12085,8 +12088,8 @@ async function exportBins(bins) {
       setBusyText(`${b.name}: ${pieces.length > 1 ? `Teil ${pc.label}, ` : ''}STEP und STL schreiben…`); await frame();
       const step = new Uint8Array(await pc.solid.blobSTEP().arrayBuffer());
       const stl = new Uint8Array(await pc.solid.blobSTL({ tolerance: 0.02, angularTolerance: 0.15, binary: true }).arrayBuffer());
-      // e.g. Schraubendreher_Bin-4x8-5u_Teil-A-von-2-oben.stl
-      const suffix = pieces.length > 1 ? `_Teil-${pc.label}-von-${pieces.length}-${pc.place}` : '';
+      // e.g. Schraubendreher_Bin-4x8-5u_Teil-1-von-2.stl
+      const suffix = pieces.length > 1 ? `_Teil-${pc.label}-von-${pieces.length}` : '';
       files.push({ name: `${name}_${tag}${suffix}.stl`, data: stl }, { name: `${STEP_DIR}/${name}_${tag}${suffix}.step`, data: step });
     }
     const sp = binSplit(b), clips = binClipSpots(b, sp), bd = bed();
@@ -12100,7 +12103,7 @@ async function exportBins(bins) {
         glue: 'Der Schnitt läuft mitten durch die Felder: die halben Füsse an der Trennstelle sitzen zusammen in einem Fach der Grundplatte. Die Schnittflächen leimen (Sekundenkleber oder 2-Komponenten-Kleber), am besten mit den Teilen in der Grundplatte, die richtet sie aus.',
         loose: `Geschnitten an den Feldgrenzen: die Teile stehen im Raster nebeneinander, die Grundplatte richtet sie aus; an den Trennstellen ist je ${BIN_CUT_GAP} mm Luft. Wer will, klebt sie dort zusammen.`,
       }[sp.join];
-      splitNotes.push(`${b.name}: zu gross für ${bd.name} (${bd.x} × ${bd.y} mm), in ${pieces.length} Teile geteilt: ${pieces.map((p) => `${p.label} ${p.place} ${fieldsTxt(p.nx)}×${fieldsTxt(p.ny)} Felder`).join(', ')} (von oben gesehen wie im Plan). ${how}`);
+      splitNotes.push(`${b.name}: zu gross für ${bd.name} (${bd.x} × ${bd.y} mm), in ${pieces.length} Teile geteilt: ${pieces.map((p) => `Teil ${p.label} ${p.place} ${fieldsTxt(p.nx)}×${fieldsTxt(p.ny)} Felder`).join(', ')} (von oben gesehen wie im Plan). ${how}`);
     } else if (splitPlan(b.gx, b.gy).parts > 1) splitNotes.push(`${b.name}: am Stück exportiert, obwohl grösser als das Bett des ${bd.name} (${bd.x} × ${bd.y} mm); nur für einen Drucker mit grösserem Bett.`);
     const vol = (() => { try { return solid.volume ? solid.volume : null; } catch { return null; } })();
     if (vol) b._volume = vol;
@@ -12206,7 +12209,7 @@ function plateClipSpots(cs) {
 const plateClips = (cs) => plateClipSpots(cs).length;
 async function exportPlate(cs) {
   const r = await loadCAD(), opt = plateOpts(cs), plan = splitPlan(cs.gx, cs.gy), b = bed();
-  const files = [], enc = new TextEncoder(), name = safeName(cs.name), map = [];
+  const files = [], enc = new TextEncoder(), name = exportName(cs.name), map = [];
   let k = 0;
   const spots = plateClipSpots(cs), reach = clipDims(opt).dogOff + clipDims(opt).dogR + 1, p = GF.pitch;
   let y0 = 0;
@@ -12214,7 +12217,7 @@ async function exportPlate(cs) {
     const line = [];
     let x0 = 0;
     for (let i = 0; i < plan.cols.length; i++) {
-      const nx = plan.cols[i], ny = plan.rows[j], L = partLetter(k++), where = partPlace(i, j, plan.cols.length, plan.rows.length);
+      const nx = plan.cols[i], ny = plan.rows[j], L = partNo(k++), where = partPlace(i, j, plan.cols.length, plan.rows.length);
       // the clips that reach into this part, from its middle
       const X0 = x0 * p, Y0 = y0 * p, X1 = (x0 + nx) * p, Y1 = (y0 + ny) * p;
       const mine = spots.filter((s) => s.x > X0 - reach && s.x < X1 + reach && s.y > Y0 - reach && s.y < Y1 + reach).map((s) => ({ ...s, x: s.x - (X0 + X1) / 2, y: s.y - (Y0 + Y1) / 2 }));
@@ -12222,11 +12225,11 @@ async function exportPlate(cs) {
       const solid = await buildPlatePart(r, nx, ny, opt, mine);
       x0 += nx;
       setBusyText(`Grundplatte ${plan.parts > 1 ? `Teil ${L}: ` : ''}STEP und STL schreiben…`); await frame();
-      // e.g. Koffer_Grundplatte-8x7_Teil-A-von-4-oben-links.stl
-      const file = `${name}_Grundplatte-${cs.gx}x${cs.gy}` + (plan.parts > 1 ? `_Teil-${L}-von-${plan.parts}-${where}` : '');
+      // e.g. Koffer_Grundplatte-8x7_Teil-1-von-4.stl
+      const file = `${name}_Grundplatte-${cs.gx}x${cs.gy}` + (plan.parts > 1 ? `_Teil-${L}-von-${plan.parts}` : '');
       files.push({ name: `${file}.stl`, data: new Uint8Array(await solid.blobSTL({ tolerance: 0.02, angularTolerance: 0.15, binary: true }).arrayBuffer()) },
         { name: `${STEP_DIR}/${file}.step`, data: new Uint8Array(await solid.blobSTEP().arrayBuffer()) });
-      line.push(`${L} ${where} (${nx} x ${ny})`);
+      line.push(`Teil ${L} ${where} (${nx} x ${ny})`);
     }
     map.push(line.join('   '));
     y0 += plan.rows[j];
@@ -13909,7 +13912,7 @@ const BinUI = {
       this.exact.set(b.id, { rev: b._rev || 0, mesh: res.meshes.get(b.id) });
       $('#bin-export-status').textContent = `Zum Drucken: ${res.files.filter((f) => /\.stl$/.test(f.name)).map((f) => f.name + ' (' + nf(f.data.length / 1024, 0) + ' kB)').join(', ')}; dieselben Teile als STEP im Ordner ${STEP_DIR}.` + (errs.length ? ' Achtung: Die Prüfung meldet Fehler.' : '');
       if (this.view === '3d') this.update3d();
-      await saveFile(`${safeName(b.name)}_${b.gx}x${b.gy}x${b.hu}u.zip`, res.zip);
+      await saveFile(`${exportName(b.name)}_Bin-${b.gx}x${b.gy}-${b.hu}u.zip`, res.zip);
     } catch (e) {
       console.error(e);
       $('#bin-export-status').textContent = 'Export fehlgeschlagen: ' + (e.message || e);
@@ -14306,14 +14309,14 @@ const CaseUI = {
     try {
       const res = await busy('Lade CAD-Kern…', () => exportBins(bins));
       for (const b of bins) BinUI.exact.set(b.id, { rev: b._rev || 0, mesh: res.meshes.get(b.id) });
-      await saveFile(`${safeName(cs.name)}_alle_Bins.zip`, res.zip);
+      await saveFile(`${exportName(cs.name)}_alle_Bins.zip`, res.zip);
     } catch (e) { console.error(e); toast('Export fehlgeschlagen: ' + (e.message || e), 'bad'); }
   },
   async exportPlate() {
     const cs = curCase(); if (!cs) return;
     try {
       const res = await busy('Lade CAD-Kern…', () => exportPlate(cs));
-      await saveFile(`${safeName(cs.name)}_Grundplatte.zip`, res.zip);
+      await saveFile(`${exportName(cs.name)}_Grundplatte.zip`, res.zip);
     } catch (e) { console.error(e); toast('Export der Grundplatte fehlgeschlagen: ' + (e.message || e), 'bad'); }
   },
   renderPlate(cs) {
@@ -14427,7 +14430,7 @@ const CaseUI = {
         let y = 0; for (const n of plan.rows.slice(0, -1)) { y += n; c.moveTo(-6, y * GF.pitch); c.lineTo(cs.gx * GF.pitch + 6, y * GF.pitch); }
         c.stroke(); c.restore();
         let k = 0, y0 = 0;
-        for (const ny of plan.rows) { let x0 = 0; for (const nx of plan.cols) { drawLabel(c, st, `Grundplatte ${partLetter(k++)}`, (x0 + nx / 2) * GF.pitch, (y0 + ny) * GF.pitch - st.px(12), { size: 10 }); x0 += nx; } y0 += ny; }
+        for (const ny of plan.rows) { let x0 = 0; for (const nx of plan.cols) { drawLabel(c, st, `Grundplatte Teil ${partNo(k++)}`, (x0 + nx / 2) * GF.pitch, (y0 + ny) * GF.pitch - st.px(12), { size: 10 }); x0 += nx; } y0 += ny; }
       }
     }
     // the storage area beside the case
