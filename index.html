@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '8dc98e8739da';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '631d3d5f7a60';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -16270,6 +16270,21 @@ const App = {
       if (f) { f.lx -= 0.65; syncFingers(b); b._rev = (b._rev || 0) + 1; Store.save('bin', b); ratchet = true; }
       S.ui.ratchetFix = 1;
     }
+    // Camille asked for it too: «Werkzeug-Allgemein» back where it was. The size fitting at the start (lengthening
+    // and taking it back) moved its whole layout to the middle: all six tools lie off the 0.5 mm grid they snap to
+    // by hand by the same −0.183 / +0.204 mm. Back onto that grid, the troughs with their tools; size and all else
+    // as they are. Once, only when every tool lies exactly as in her backup of 14:39 and the bin is not locked.
+    let general = false;
+    if (!S.ui.generalFix) {
+      const b = S.bins.find((x) => x.id === '8437u6bqok' && x.name === 'Werkzeug-Allgemein' && !binLocked(x));
+      const was = [['ncsgfxbqok', -3.1829999999999927, 9.703894398538466], ['rb8w3ibqok', 54.31700000000001, 17.703894398538466], ['fazqs4bqom', 55.31700000000001, 67.20389439853845],
+        ['gee935bqoo', -69.18299999999999, 80.70389439853845], ['4odhswbqop', -42.18299999999999, -13.796105601461534], ['yv13l8bqoq', -49.18299999999999, -70.29610560146155]];
+      if (b && b.items.length === was.length && was.every(([id, x, y]) => b.items.some((it) => it.id === id && Math.abs(it.x - x) < 1e-6 && Math.abs(it.y - y) < 1e-6))) {
+        for (const it of b.items) { it.x = Math.round(it.x * 2) / 2; it.y = Math.round(it.y * 2) / 2; }
+        syncFingers(b); b._rev = (b._rev || 0) + 1; Store.save('bin', b); general = true;
+      }
+      S.ui.generalFix = 1;
+    }
     FotoUI.init(); TraceUI.init(); LibUI.init(); BinUI.init(); CaseUI.init(); Overview.init(); NewBin.init(); TestPrint.init(); DataUI.init(); Undo.init(); DataFolder.init(); GDrive.init();
     window.addEventListener('online', () => Store.sendAll());
     DataUI.takeStartData();
@@ -16281,6 +16296,7 @@ const App = {
     if (redepth) news.push(`Taschentiefen in ${redepth === 1 ? 'einem Bin' : redepth + ' Bins'} an die Werkzeughöhen angepasst, so tief, wie der Bin es zulässt.`);
     if (grown.length) news.push(`${grown.length === 1 ? `«${grown[0]}» ist` : `${grown.length} Bins sind`} jetzt so hoch, dass die Werkzeuge ganz in ihren Taschen liegen.`);
     if (deeper) news.push(`Taschen in ${deeper === 1 ? 'einem Bin' : deeper + ' Bins'} jetzt ${nf(DEPTH_EXTRA, 0)} mm tiefer als die Werkzeuge hoch sind (Reserve nach oben).`);
+    if (general) news.push('«Werkzeug-Allgemein» liegt wieder, wie es war: alle Werkzeuge 0.18 mm nach rechts und 0.20 mm nach oben zurück, auf das Raster, auf das sie von Hand gelegt waren. Sonst ist nichts verändert.');
     if (ratchet) news.push('In «Werkzeug-USM» liegt die Griffmulde der Rätsche wieder 0.65 mm weiter innen, 0.2 mm vor der Wand. Sonst ist nichts verändert.');
     if (shorter) news.push(`Die Griffmulden der Werkzeuge in ${shorter === 1 ? 'einem Bin' : shorter + ' Bins'} sind wieder so lang wie vorher: die Verlängerung um 1 mm beim letzten Start ist zurückgenommen. Bestehende Bins verändert die App nicht mehr von selbst; unter «Bin bearbeiten» lässt sich ein Bin sperren.`);
     if (wider) news.push(`Griffmulden der Werkzeuge wieder ${nf(FINGER_W, 0)} mm breit (in ${wider === 1 ? 'einem Bin' : wider + ' Bins'} angepasst).`);
