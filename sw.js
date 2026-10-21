@@ -2,8 +2,8 @@
 // the browser, so Cachfinity starts and works without internet once it has been opened. build.py fills in
 // the file list, a version made from the files' content and the build of the page; a changed file makes a
 // new version, which the browser fetches in the background and takes over at once.
-const VERSION = '5e183faf2fe1';
-const BUILD = 'ea3d2c90dba8';
+const VERSION = '0c3a5a2f9315';
+const BUILD = '31e01385ddfe';
 const FILES = ["apple-touch-icon.png", "fonts/-F63fjptAgt5VM-kVkqdyU8n1i8q1w.woff2", "fonts/-F63fjptAgt5VM-kVkqdyU8n1iEq129k.woff2", "fonts/-F6qfjptAgt5VM-kVkqdyU8n3twJwl5FgtIU.woff2", "fonts/-F6qfjptAgt5VM-kVkqdyU8n3twJwlBFgg.woff2", "fonts/7cHpv4kjgoGqM7E_Ass52Hs.woff2", "fonts/7cHpv4kjgoGqM7E_DMs5.woff2", "fonts/7cHqv4kjgoGqM7E30-8s51os.woff2", "fonts/7cHqv4kjgoGqM7E30-8s6VospT4.woff2", "fonts/7cHqv4kjgoGqM7E3_-gs51os.woff2", "fonts/7cHqv4kjgoGqM7E3_-gs6VospT4.woff2", "fonts/7cHqv4kjgoGqM7E3t-4s51os.woff2", "fonts/7cHqv4kjgoGqM7E3t-4s6VospT4.woff2", "fonts/HTxwL3I-JCGChYJ8VI-L6OO_au7B46r2z3bWuQ.woff2", "fonts/HTxwL3I-JCGChYJ8VI-L6OO_au7B46r2z3jWuZEC.woff2", "fonts/HTxwL3I-JCGChYJ8VI-L6OO_au7B4873z3bWuQ.woff2", "fonts/HTxwL3I-JCGChYJ8VI-L6OO_au7B4873z3jWuZEC.woff2", "icon-192.png", "icon-512.png", "icon-maskable-512.png", "./", "manifest.webmanifest", "oc.bundle.js", "replicad.bundle.js", "replicad_single.wasm", "three.bundle.js"];
 const CACHE = 'cachfinity-' + VERSION;
 

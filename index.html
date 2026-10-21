@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'ea3d2c90dba8';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '31e01385ddfe';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -634,7 +634,7 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
         <label title="Stapelrand oben, damit ein weiterer Bin auf diesem stehen kann" class="check"><input type="checkbox" id="bin-lip"> Stapelrand</label>
         <label class="f inline-f" style="padding-left: 26px" title="Hebt den Stapelrand um ganze Einheiten an. Werkzeuge, die aus ihrer Tasche ragen, haben dann Platz unter dem Bin darüber."><span>Rand erhöhen</span><input type="number" id="bin-lift" min="0" max="10" step="1" style="width: 64px"><span class="unit">u (je 7 mm)</span></label>
         <label title="Löcher für Magnete 6 × 2 mm unter jedem Feld" class="check"><input type="checkbox" id="bin-mag"> Magnetlöcher 6 × 2 mm</label>
-        <div class="row"><button class="btn small" type="button" id="bin-autosize" title="Breite, Länge und Höhe nach dem Inhalt; die Werkzeuge liegen danach ganz in ihren Taschen">Grösse anpassen</button><button class="btn small" type="button" id="bin-arrange" title="Die Werkzeuge neu und platzsparend anordnen">Teile anordnen</button></div>
+        <div class="row"><button class="btn small" type="button" id="bin-autosize" title="Breite, Länge und Höhe nach dem Inhalt; die Werkzeuge liegen danach ganz in ihren Taschen">Grösse anpassen</button><button class="btn small" type="button" id="bin-arrange" title="Die Werkzeuge neu und platzsparend anordnen">Teile anordnen</button><button class="btn small" type="button" id="bin-nest" title="Die Werkzeuge nach ihren echten Umrissen ineinander schieben, auch gedreht, so dass der Bin möglichst wenige Felder braucht. Werkzeuge unter einer gemeinsamen Form (etwa einem Langloch über mehrere Stangen) bleiben zusammen. Dauert ein paar Sekunden; Strg+Z macht es rückgängig">Platzsparend anordnen</button></div>
       </div>
       <div class="card">
         <h2>Inhalt</h2>
@@ -10878,20 +10878,27 @@ function crossings(poly, alongX, v) {
 // (chosen defaults), so the fingers get under the tool; it keeps that relation when the pocket's depth
 // changes.
 const FINGER_REACH = 14, FINGER_W = 25, FINGER_DEEPER = 5;
+// the automatic trough of tool t at the place at (0 … 1) along it: across the tool and FINGER_REACH past
+// both sides, in tool coordinates (lx, ly, lrot, l), and the tool's width there (across); null where the
+// line misses the tool
+function fingerAcross(b, t, at) {
+  const o = t.outline, bb = polyBBox([o]), alongX = bb.w >= bb.h, len = alongX ? bb.w : bb.h;
+  const along = (alongX ? bb.x0 : bb.y0) + at * len, cr = crossings(o, alongX, along);
+  if (cr.length < 2) return null;
+  const lo = Math.min(...cr), hi = Math.max(...cr), mid = (lo + hi) / 2, across = hi - lo + 2 * b.clearance;
+  return { across, lx: alongX ? along : mid, ly: alongX ? mid : along, lrot: alongX ? 90 : 0, l: Math.max(FINGER_W, Math.round((across + 2 * FINGER_REACH) * 2) / 2) };
+}
 function autoFinger(b, it, allowOutside = b.autoFit !== false) {
   const t = toolById(it.toolId); if (!t) return null;
   syncFingers(b);
-  const o = t.outline, bb = polyBBox([o]), alongX = bb.w >= bb.h, len = alongX ? bb.w : bb.h;
   const W = FINGER_W, depth = Math.round((it.depth + FINGER_DEEPER) * 10) / 10;
   const others = binPockets(b).filter((p) => p.ref !== it && p.ref.itemId !== it.id).map((p) => p.poly), inner = binInner(b);
   const cands = [];
   for (const at of [0.5, 0.45, 0.55, 0.4, 0.6, 0.35, 0.65, 0.3, 0.7]) {
-    const along = (alongX ? bb.x0 : bb.y0) + at * len, cr = crossings(o, alongX, along);
-    if (cr.length < 2) continue;
-    const lo = Math.min(...cr), hi = Math.max(...cr), mid = (lo + hi) / 2, across = hi - lo + 2 * b.clearance;
+    const a = fingerAcross(b, t, at); if (!a) continue;
+    const across = a.across;
     const f = { id: uid(), shape: 'slot', role: 'finger', profile: 'round', auto: true, style: 'across', v: 2, itemId: it.id,
-      w: W, l: Math.max(W, Math.round((across + 2 * FINGER_REACH) * 2) / 2), depth, dplus: FINGER_DEEPER,
-      lx: alongX ? along : mid, ly: alongX ? mid : along, lrot: alongX ? 90 : 0 };
+      w: W, l: a.l, depth, dplus: FINGER_DEEPER, lx: a.lx, ly: a.ly, lrot: a.lrot };
     Object.assign(f, fingerWorld(it, f));
     const poly = fingerPoly(f);
     // a bin that adapts to its content may grow for the trough; otherwise it has to stay inside
@@ -11450,6 +11457,278 @@ function setSaveState(st) {
       : Store.mode !== 'db' ? 'Nur in diesem Browser' : st === 'pending' ? 'Speichert…' : 'In deinem Konto gespeichert';
 }
 
+// ===== «Platzsparend anordnen»: the tools nested into each other by their real outlines =====
+// «Teile anordnen» (packBin) puts the boxes around the tools in rows. Here each unit's footprint is its
+// pockets with their troughs, grown by half the material NEST_GAP that stays between two pockets. A unit is
+// a tool, or tools held together by a shape set by hand (a long slot across rods lying side by side), or a
+// shape over no tool. A unit lies in one of four turns, and a tool's automatic trough may move along it
+// (still across the tool and past both its sides, so it stays easy to take out; Camille's choice).
+// Units are put into a strip of the bin's inner width at the free place that keeps the strip shortest
+// (bottom left). The free places come from no-fit polygons: positions of a unit's origin where it would
+// overlap one already set are the Minkowski sum of that one's footprint and the mirrored footprint of the
+// unit, and what stays of the strip outside all of them is where it may go; its corners are the places
+// tried. The footprints are cut into convex pieces, whose Minkowski sums are quick (the hull of the sums of
+// their corners).
+// First every strip width is filled in two plain orders. Then each width aims at a row less than the best
+// so far: units are taken out near a random place and put back where they fit, again and again, until all
+// fit into the shorter strip (ruin and recreate). The result with the fewest fields wins (for a bin of fixed
+// size: the first that fits it).
+const NEST_GAP = 2; // mm of material at least between two pockets (and their troughs)
+// footprints are simplified to NEST_EPS (few corners) and grown by that more, so they still hold their pockets
+const NEST_EPS = 0.3, NEST_OFF = NEST_GAP / 2 + NEST_EPS;
+const NEST_AT = [0.5, 0.35, 0.65, 0.2, 0.8]; // places along a tool tried for its automatic trough
+const normDeg = (a) => (((Math.round(a * 10) / 10) % 360) + 360) % 360;
+// The units of bin b. A shape set by hand over one or several tools (a slot across rods, a rectangle a tool
+// lies in) holds them together as they lie now; a shape over no tool is a unit of its own. Each part keeps
+// its place relative to the unit's first part (a tool, whose straight turn gives the unit's turns). A tool
+// on its own with one automatic trough has the trough's places in troughs (the first: where it is now).
+function nestUnits(b) {
+  const parts = [
+    ...b.items.filter((it) => toolById(it.toolId)).map((it) => ({ kind: 'item', ref: it, x: it.x, y: it.y, rot: it.rot, polys: [itemPocket(b, it), ...b.fingers.filter((f) => f.itemId === it.id).map(fingerPoly)] })),
+    ...b.fingers.filter((f) => !f.itemId).map((f) => ({ kind: 'shape', ref: f, x: f.x, y: f.y, rot: f.rot || 0, polys: [fingerPoly(f)] })),
+  ];
+  const up = parts.map((_, i) => i), root = (i) => (up[i] === i ? i : (up[i] = root(up[i])));
+  for (let i = 0; i < parts.length; i++) for (let j = i + 1; j < parts.length; j++) {
+    if (parts[i].kind === 'item' && parts[j].kind === 'item') continue; // (two tools alone: apart afterwards)
+    if (polysArea(clipBool('intersect', parts[i].polys, parts[j].polys)) > 0.5) up[root(i)] = root(j);
+  }
+  const groups = new Map();
+  parts.forEach((p, i) => { const r = root(i); if (!groups.has(r)) groups.set(r, []); groups.get(r).push(p); });
+  return [...groups.values()].map((ps, n) => {
+    ps.sort((p, q) => (p.kind === 'item' ? 0 : 1) - (q.kind === 'item' ? 0 : 1));
+    const a = ps[0], t = a.kind === 'item' && toolById(a.ref.toolId), s = t ? straightRot(t, a.ref.mirror) - a.rot : 0;
+    const round = ps.length === 1 && a.kind === 'shape' && shapeKind(a.ref) === 'circle';
+    const own = ps.length === 1 && t ? b.fingers.filter((f) => f.itemId === a.ref.id) : [];
+    const trough = own.length === 1 && own[0].auto ? own[0] : null, troughs = [null];
+    if (trough) {
+      const at = [{ lx: trough.lx, ly: trough.ly, lrot: trough.lrot, l: trough.l }];
+      for (const k of NEST_AT) {
+        const c = fingerAcross(b, t, k);
+        if (c && !at.some((x) => Math.hypot(x.lx - c.lx, x.ly - c.ly) < 2 && x.lrot === c.lrot)) at.push({ lx: c.lx, ly: c.ly, lrot: c.lrot, l: Math.max(trough.w, c.l) });
+      }
+      troughs.push(...at.slice(1));
+    }
+    return { id: 'u' + n, parts: ps, ax: a.x, ay: a.y, tools: ps.filter((p) => p.kind === 'item').length, trough, troughs, turns: round ? [0] : [0, 90, 180, 270].map((d) => normDeg(s + d)) };
+  });
+}
+// where part p of unit u lies when the unit is turned by d with its origin at 0,0
+function nestPose(u, p, d) {
+  const [[x, y]] = placePoly([[p.x - u.ax, p.y - u.ay]], 0, 0, d, false);
+  return { x, y, rot: normDeg(p.rot + d) };
+}
+// unit u's trough f at its place v (as it is for v = 0)
+const nestTrough = (u, f, v) => (u.trough === f && u.troughs[v] ? { ...f, ...u.troughs[v] } : f);
+// twice the signed area of the triangle a, b, c (> 0: a left turn)
+const cross3 = (a, b, c) => (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+// A simple polygon cut into convex pieces: triangles by ear clipping, merged again along their shared edges
+// where the result stays convex (Hertel–Mehlhorn). null when no ear is found (a ragged polygon).
+function convexParts(poly) {
+  const p = poly.slice();
+  if (p.reduce((s, a, i) => { const b = p[(i + 1) % p.length]; return s + a[0] * b[1] - b[0] * a[1]; }, 0) < 0) p.reverse();
+  for (let i = 0; p.length > 3 && i < p.length;) { if (Math.abs(cross3(p[(i + p.length - 1) % p.length], p[i], p[(i + 1) % p.length])) < 1e-6) p.splice(i, 1); else i++; }
+  const idx = p.map((_, i) => i), pieces = [];
+  while (idx.length > 3) {
+    let cut = false;
+    for (let k = 0; k < idx.length && !cut; k++) {
+      const i0 = idx[(k + idx.length - 1) % idx.length], i1 = idx[k], i2 = idx[(k + 1) % idx.length];
+      if (cross3(p[i0], p[i1], p[i2]) <= 1e-9) continue;
+      if (idx.some((j) => j !== i0 && j !== i1 && j !== i2 && cross3(p[i0], p[i1], p[j]) >= 0 && cross3(p[i1], p[i2], p[j]) >= 0 && cross3(p[i2], p[i0], p[j]) >= 0)) continue;
+      pieces.push([i0, i1, i2]); idx.splice(k, 1); cut = true;
+    }
+    if (!cut) return null;
+  }
+  pieces.push(idx.slice());
+  const convex = (q) => q.every((v, k) => cross3(p[q[(k + q.length - 1) % q.length]], p[v], p[q[(k + 1) % q.length]]) >= -1e-9);
+  for (let merged = true; merged;) {
+    merged = false;
+    search: for (let a = 0; a < pieces.length; a++) for (let c = a + 1; c < pieces.length; c++) {
+      const A = pieces[a], B = pieces[c];
+      for (let i = 0; i < A.length; i++) {
+        // A has the edge u → v, B the edge v → u: A from v round to u, then B on from u to before v
+        const u = A[i], v = A[(i + 1) % A.length], j = B.indexOf(v);
+        if (j < 0 || B[(j + 1) % B.length] !== u) continue;
+        const q = [...A.map((_, k) => A[(i + 1 + k) % A.length]), ...B.slice(0, B.length - 2).map((_, k) => B[(j + 2 + k) % B.length])];
+        if (!convex(q)) continue;
+        pieces[a] = q; pieces.splice(c, 1); merged = true; break search;
+      }
+    }
+  }
+  return pieces.map((q) => q.map((i) => p[i]));
+}
+// unit u turned by d, its trough at place v: its footprint, as convex pieces too, and the box around its
+// pockets
+function nestFootprint(b, u, d, v = 0) {
+  const polys = [];
+  for (const p of u.parts) {
+    const q = nestPose(u, p, d);
+    if (p.kind === 'shape') { polys.push(fingerPoly({ ...p.ref, ...q })); continue; }
+    const it = p.ref, at = { ...it, ...q }, raw = placePoly(toolById(it.toolId).outline, q.x, q.y, q.rot, it.mirror);
+    polys.push(largestRing(offsetPolys([raw], b.clearance)) || raw);
+    for (const f of b.fingers) if (f.itemId === it.id) { const g = nestTrough(u, f, v); polys.push(fingerPoly({ ...g, ...fingerWorld(at, g) })); }
+  }
+  // (a hole inside a footprint stays closed; parts apart from each other, such as a trough set away from its
+  // tool: one hull around them, which keeps the footprint one piece)
+  const { outer } = splitRings(clipBool('union', polys));
+  const ring = outer.length === 1 ? outer[0] : convexHull(outer.flat());
+  // simplified, then grown with mitred corners (which hold the rounded ones)
+  const C = ClipperLib, co = new C.ClipperOffset(2, 0.25 * CLIP_SCALE), sol = new C.Paths();
+  co.AddPath(toPath(simplifyClosed(ring, NEST_EPS)), C.JoinType.jtMiter, C.EndType.etClosedPolygon);
+  co.Execute(sol, NEST_OFF * CLIP_SCALE);
+  const poly = largestRing(sol.map(fromPath));
+  return { poly, parts: convexParts(poly) || [convexHull(poly)], box: polyBBox(polys), area: Math.abs(polyArea(poly)) };
+}
+// positions of the moving footprint M's origin at which it overlaps the fixed footprint P (both as convex
+// pieces)
+function noFit(P, M) {
+  const sums = [];
+  for (const a of P) for (const m of M) { const pts = []; for (const [x, y] of a) for (const [s, t] of m) pts.push([x - s, y - t]); sums.push(convexHull(pts)); }
+  return clipBool('union', sums);
+}
+// The best free place for unit u in one of its poses ({d, v}) among the units placed, in a strip
+// x ∈ [0, W], y ∈ [0, T] (the pockets in it): by 'end' the far edge of the unit first, then the side (the
+// left one, or the right one for side −1); by 'top' its near edge first, then the side; by 'col' the side
+// first, then the far edge. foot(u, d, v) gives footprints, nfp(...) caches no-fit polygons.
+function nestSpot(u, poses, placed, W, T, foot, nfp, side = 1, by = 'end') {
+  let best = null;
+  for (const { d, v } of poses) {
+    const { box } = foot(u, d, v);
+    const x0 = -box.x0, y0 = -box.y0; let x1 = W - box.x1, y1 = Math.min(T, 1e4) - box.y1;
+    if (x1 < x0 - 1e-6 || y1 < y0 - 1e-6) continue;
+    x1 = Math.max(x1, x0 + 0.01); y1 = Math.max(y1, y0 + 0.01); // (a unit as wide as the strip: a sliver to stand in)
+    const ifr = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
+    const blocked = placed.flatMap((p) => nfp(p.u, p.d, p.v, u, d, v).map((poly) => poly.map(([x, y]) => [x + p.x, y + p.y])));
+    const free = blocked.length ? clipBool('diff', [ifr], blocked) : [ifr];
+    for (const ring of free) for (const [x, y] of ring) {
+      const lx = side > 0 ? x + box.x0 : -(x + box.x1);
+      const key = by === 'col' ? lx * 1000 + y + box.y1 : (y + (by === 'top' ? box.y0 : box.y1)) * 1000 + lx;
+      if (!best || key < best.key - 1e-6) best = { key, u, d, v, x, y, end: y + box.y1, l: x + box.x0, r: x + box.x1 };
+    }
+  }
+  return best;
+}
+// a strip filled in the given order: the places with the length and width of the pockets, or null when a
+// unit fits in none of its turns
+function nestStrip(order, W, foot, nfp) {
+  const placed = [];
+  for (const u of order) {
+    const s = nestSpot(u, u.turns.map((d) => ({ d, v: 0 })), placed, W, Infinity, foot, nfp);
+    if (!s) return null;
+    placed.push(s);
+  }
+  return nestSized(placed);
+}
+const nestSized = (placed) => ({ placed, length: Math.max(...placed.map((p) => p.end)), width: Math.max(...placed.map((p) => p.r)) - Math.min(...placed.map((p) => p.l)) });
+// a small seeded random source, so the same bin starts the same search every time
+function nestRandom(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s ^= s >>> 17; s ^= s << 5; return ((s >>> 0) % 1e6) / 1e6; }; }
+// «Platzsparend anordnen» for bin b: sets the places and turns of its tools and shapes and the places of the
+// tools' automatic troughs (and, for a bin that fits its content, its size). Returns {ok, gx, gy, before,
+// kept, tries, ms} (kept: groups of tools held together by a shape; tries: rounds of the search) or
+// {ok: false, why}. Takes up to budget ms.
+async function nestBin(b, budget = 5000) {
+  if (!b.items.some((it) => toolById(it.toolId))) return { ok: false, why: 'empty' };
+  const before = b.gx * b.gy;
+  ensureFingers(b); syncFingers(b);
+  const units = nestUnits(b);
+  const feet = new Map(), nfps = new Map();
+  const foot = (u, d, v) => { const k = `${u.id}@${d}#${v}`; if (!feet.has(k)) feet.set(k, nestFootprint(b, u, d, v)); return feet.get(k); };
+  const nfp = (a, da, va, m, dm, vm) => {
+    const k = `${a.id}@${da}#${va}|${m.id}@${dm}#${vm}`;
+    if (!nfps.has(k)) nfps.set(k, noFit(foot(a, da, va).parts, foot(m, dm, vm).parts));
+    return nfps.get(k);
+  };
+  const area = (u) => foot(u, u.turns[0], 0).area;
+  const span = (u) => { const bb = foot(u, u.turns[0], 0).box; return Math.max(bb.w, bb.h); };
+  const rnd = nestRandom(units.length * 7919 + Math.round(units.reduce((s, u) => s + area(u), 0)));
+  // (a hair less than the bin's inside, so a strip filled to the edge does not count as a field more)
+  const inner = (n) => n * GF.pitch - GF.gap - 2 * b.wall - 0.01;
+  const fixed = b.autoFit === false, cs = curCase(), t0 = performance.now();
+  // the strips: a bin of fixed size has its inner width and length (and the same turned); otherwise every
+  // width from the narrowest unit up to 8 fields
+  const minSide = Math.max(...units.map((u) => Math.min(...u.turns.map((d) => foot(u, d, 0).box.w))));
+  const lanes = (fixed ? [{ n: b.gx, W: inner(b.gx), T: inner(b.gy), turned: false }, { n: b.gy, W: inner(b.gy), T: inner(b.gx), turned: true }]
+    : [1, 2, 3, 4, 5, 6, 7, 8].filter((n) => inner(n) >= minSide).map((n) => ({ n, W: inner(n), T: Infinity, turned: false })));
+  // a result as fields (as autoSize counts them), fitting the case first
+  const rate = (res) => {
+    const gx = fixed ? b.gx : Math.ceil((res.width + 2 * b.wall + GF.gap) / GF.pitch);
+    const gy = fixed ? b.gy : Math.ceil((res.length + 2 * b.wall + GF.gap) / GF.pitch);
+    const fits = !cs || (gx <= cs.gx && gy <= cs.gy) || (gy <= cs.gx && gx <= cs.gy);
+    return { fields: gx * gy, score: fixed ? 0 : (fits ? 0 : 1e6) + gx * gy * 100 + Math.abs(gx - gy) + res.length / 1000 };
+  };
+  let best = null;
+  const take = (lane, res) => {
+    if (res.length > lane.T + 0.01) return;
+    const r = rate(res);
+    if (!best || r.score < best.score - 1e-9) best = { ...r, res, turned: lane.turned };
+  };
+  // each strip filled in two plain orders: the largest units first, the longest first
+  for (const lane of lanes) {
+    for (const order of [units.slice().sort((p, q) => area(q) - area(p)), units.slice().sort((p, q) => span(q) - span(p))]) {
+      const res = nestStrip(order, lane.W, foot, nfp); if (!res) continue;
+      take(lane, res);
+      if (!lane.res || res.length < lane.res.length) lane.res = res;
+    }
+  }
+  // Then each strip aims at a row less than needed for the fewest fields so far (a bin of fixed size: at its
+  // length), the units beyond it left out. A round takes out up to three units near a random place and puts
+  // them and the ones left out back where they fit best in the shorter strip (in any turn; now and then with
+  // the trough elsewhere, from the right, or in a shuffled order); it is kept when no more is left out than
+  // before (and now and then, less often as time goes on, when a little more is left out: a way out of a dead
+  // end). A strip whose aim cannot hold the units' area any more is done.
+  const need = units.reduce((s, u) => s + area(u), 0);
+  const aim = (lane) => {
+    let T = lane.T;
+    if (!fixed) { const rows = Math.ceil(best.fields / lane.n) - 1; T = rows >= 1 ? inner(rows) : 0; }
+    if ((lane.W + 2 * NEST_OFF) * (T + 2 * NEST_OFF) < need) return false;
+    if (T < (lane.aimT ?? Infinity) - 1e-6 || !lane.placed) {
+      const was = lane.placed || lane.res.placed;
+      lane.aimT = T; lane.placed = was.filter((p) => p.end <= T + 0.01); lane.out = units.filter((u) => !lane.placed.some((p) => p.u === u));
+      lane.outArea = lane.out.reduce((s, u) => s + area(u), 0);
+    }
+    return true;
+  };
+  let open = lanes.filter((l) => l.res && (fixed || best) && aim(l)), k = 0;
+  for (; open.length && !(fixed && best) && performance.now() - t0 < budget; k++) {
+    // mostly the strip whose units left out need the least of its free room, now and then any
+    const tight = (l) => l.outArea / Math.max(1, (l.W + 2 * NEST_OFF) * (l.aimT + 2 * NEST_OFF) - need + l.outArea);
+    const lane = rnd() < 0.7 ? open.reduce((a, l) => (tight(l) < tight(a) ? l : a)) : open[Math.floor(rnd() * open.length)];
+    const px = rnd() * lane.W, py = rnd() * lane.aimT;
+    const dist = (p) => { const bb = foot(p.u, p.d, p.v).box; return Math.hypot(p.x + bb.cx - px, p.y + bb.cy - py); };
+    // (now and then all of them: built anew)
+    const taken = lane.placed.slice().sort((p, q) => dist(p) - dist(q)).slice(0, rnd() < 0.05 ? units.length : 1 + Math.floor(rnd() * 3));
+    let placed = lane.placed.filter((p) => !taken.includes(p));
+    const todo = [...lane.out, ...taken.map((p) => p.u)];
+    if (rnd() < 0.3) for (let i = todo.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [todo[i], todo[j]] = [todo[j], todo[i]]; }
+    else todo.sort((p, q) => area(q) - area(p));
+    const side = rnd() < 0.5 ? 1 : -1, by = ['end', 'end', 'top', 'col'][Math.floor(rnd() * 4)], out = [];
+    for (const u of todo) {
+      // (a unit left out tries every place of its trough)
+      const was = taken.find((p) => p.u === u), vs = was ? [was.v] : u.troughs.map((_, v) => v);
+      if (was && u.troughs.length > 1 && rnd() < 0.4) vs.push(Math.floor(rnd() * u.troughs.length));
+      const s = nestSpot(u, u.turns.flatMap((d) => [...new Set(vs)].map((v) => ({ d, v }))), placed, lane.W, lane.aimT, foot, nfp, side, by);
+      if (s) placed = [...placed, s]; else out.push(u);
+    }
+    const outArea = out.reduce((s, u) => s + area(u), 0);
+    const heat = (1 - (performance.now() - t0) / budget) * need / units.length / 6;
+    if (outArea <= lane.outArea + 1e-6 || rnd() < Math.exp(-(outArea - lane.outArea) / Math.max(heat, 1e-6))) { lane.placed = placed; lane.out = out; lane.outArea = outArea; }
+    if (!lane.out.length) { take(lane, nestSized(lane.placed)); open = open.filter((l) => aim(l)); }
+    if (k % 8 === 7) await new Promise((r) => setTimeout(r, 0)); // (a breath for the page; not frame(), which stops in a hidden tab)
+  }
+  if (!best) return { ok: false, why: fixed ? 'fixed' : 'none' };
+  // apply: turned by 90° for the bin's length when that is the side that fitted; troughs moved along their tool
+  for (const pl of best.res.placed) {
+    for (const p of pl.u.parts) {
+      const q = nestPose(pl.u, p, pl.d); let x = q.x + pl.x, y = q.y + pl.y, rot = q.rot;
+      if (best.turned) [x, y, rot] = [y, -x, normDeg(rot + 270)];
+      Object.assign(p.ref, { x, y, rot });
+    }
+    if (pl.v && pl.u.trough) Object.assign(pl.u.trough, pl.u.troughs[pl.v], { manual: true });
+  }
+  syncFingers(b);
+  if (fixed) centerItems(b); else autoSize(b);
+  b.manual = true; // nested by hand, as it were: later changes keep it (fitBin would lay it out in rows again)
+  return { ok: true, gx: b.gx, gy: b.gy, before, kept: units.filter((u) => u.tools > 1).length, tries: k, ms: Math.round(performance.now() - t0) };
+}
+
 // ===== printing: the printer's bed, and cutting what is too large for it into parts =====
 const BED_PRESETS = [
   { id: 'p1s', name: 'Bambu Lab P1S / P1P / X1C / A1', x: 256, y: 256 },
@@ -11480,6 +11759,16 @@ function splitPlan(gx, gy) {
   return { cols: splitEven(gx, kx), rows: splitEven(gy, ky), parts: kx * ky };
 }
 const partLetter = (k) => String.fromCharCode(65 + (k % 26)) + (k >= 26 ? Math.floor(k / 26) : '');
+// where part i (column), j (row) of a split lies, seen from above as in the plan: 'oben-links', 'rechts', …
+const PLACE_X = { 2: ['links', 'rechts'], 3: ['links', 'Mitte', 'rechts'] }, PLACE_Y = { 2: ['oben', 'unten'], 3: ['oben', 'Mitte', 'unten'] };
+function partPlace(i, j, cols, rows) {
+  const x = cols === 1 ? '' : PLACE_X[cols] ? PLACE_X[cols][i] : `Spalte${i + 1}`, y = rows === 1 ? '' : PLACE_Y[rows] ? PLACE_Y[rows][j] : `Reihe${j + 1}`;
+  return x === 'Mitte' && y === 'Mitte' ? 'Mitte' : [y, x].filter(Boolean).join('-');
+}
+// the folder in an export's zip for the STEP files (the same parts, for a CAD program; the STL files on top
+// are the ones to print)
+const STEP_DIR = 'STEP-fuer-CAD';
+const STEP_NOTE = `Zum Drucken: die STL-Dateien (eine pro Teil). Im Ordner ${STEP_DIR} liegen dieselben Teile noch einmal als STEP, zum Weiterbearbeiten in einem CAD-Programm, nicht zusätzlich drucken.`;
 
 // The printer, chosen once and shown wherever it matters (bin export, baseplate). el: a container.
 const BedUI = {
@@ -11660,16 +11949,16 @@ async function binParts(r, b, solid) {
   if (plan.parts === 1) return [{ label: '', nx: b.gx, ny: b.gy, solid }];
   const out = [], top = binTop(b) + binLift(b) * GF.unit + GF.lip + 10;
   let k = 0, y0 = 0;
-  for (const ny of plan.rows) {
+  for (const [j, ny] of plan.rows.entries()) {
     let x0 = 0;
-    for (const nx of plan.cols) {
+    for (const [i, nx] of plan.cols.entries()) {
       // field lines in the bin's frame (x right, y down, centre 0); the CAD frame has y up
       const xa = (x0 - b.gx / 2) * GF.pitch, xb = (x0 + nx - b.gx / 2) * GF.pitch, ya = (y0 - b.gy / 2) * GF.pitch, yb = (y0 + ny - b.gy / 2) * GF.pitch;
       const ex = (i0, i1, n, lo, hi) => [i0 === 0 ? lo - 10 : lo + BIN_CUT_GAP, i1 === n ? hi + 10 : hi - BIN_CUT_GAP];
       const [bx0, bx1] = ex(x0, x0 + nx, b.gx, xa, xb), [by0, by1] = ex(y0, y0 + ny, b.gy, ya, yb);
       const box = r.makeBox([bx0, -by1, -2], [bx1, -by0, top]);
       setBusyText(`${b.name}: Teil ${partLetter(k)} schneiden…`); await frame();
-      out.push({ label: partLetter(k), nx, ny, solid: solid.clone().intersect(box) });
+      out.push({ label: partLetter(k), place: partPlace(i, j, plan.cols.length, plan.rows.length), nx, ny, solid: solid.clone().intersect(box) });
       k++; x0 += nx;
     }
     y0 += ny;
@@ -11684,23 +11973,24 @@ async function exportBins(bins) {
     let name = safeName(b.name); while (used.has(name)) name += '_'; used.add(name);
     const solid = await buildBinSolid(b, (s) => setBusyText(`${b.name}: ${s}…`));
     setBusyText(`${b.name}: STEP und STL schreiben…`); await frame();
-    const tag = `${b.gx}x${b.gy}x${b.hu}u`;
+    const tag = `Bin-${b.gx}x${b.gy}-${b.hu}u`;
     meshes.set(b.id, solid.mesh({ tolerance: 0.08, angularTolerance: 0.3 }));
     const pieces = await binParts(r0(), b, solid);
     for (const pc of pieces) {
       setBusyText(`${b.name}: ${pieces.length > 1 ? `Teil ${pc.label}, ` : ''}STEP und STL schreiben…`); await frame();
       const step = new Uint8Array(await pc.solid.blobSTEP().arrayBuffer());
       const stl = new Uint8Array(await pc.solid.blobSTL({ tolerance: 0.02, angularTolerance: 0.15, binary: true }).arrayBuffer());
-      const suffix = pieces.length > 1 ? `_Teil${pc.label}_${pc.nx}x${pc.ny}` : '';
-      files.push({ name: `${name}_${tag}${suffix}.step`, data: step }, { name: `${name}_${tag}${suffix}.stl`, data: stl });
+      // e.g. Schraubendreher_Bin-4x8-5u_Teil-A-von-2-oben.stl
+      const suffix = pieces.length > 1 ? `_Teil-${pc.label}-von-${pieces.length}-${pc.place}` : '';
+      files.push({ name: `${name}_${tag}${suffix}.stl`, data: stl }, { name: `${STEP_DIR}/${name}_${tag}${suffix}.step`, data: step });
     }
-    if (pieces.length > 1) splitNotes.push(`${b.name}: zu gross für ${bed().name} (${bed().x} × ${bed().y} mm), in ${pieces.length} Teile geteilt: ${pieces.map((p) => `${p.label} ${p.nx}×${p.ny}`).join(', ')} (von oben gesehen zeilenweise von links oben). Die Teile stehen im Raster nebeneinander, die Grundplatte richtet sie aus; an den Trennstellen ist je ${BIN_CUT_GAP} mm Luft. Wer will, klebt sie dort zusammen.`);
+    if (pieces.length > 1) splitNotes.push(`${b.name}: zu gross für ${bed().name} (${bed().x} × ${bed().y} mm), in ${pieces.length} Teile geteilt: ${pieces.map((p) => `${p.label} ${p.place} ${p.nx}×${p.ny} Felder`).join(', ')} (von oben gesehen wie im Plan). Die Teile stehen im Raster nebeneinander, die Grundplatte richtet sie aus; an den Trennstellen ist je ${BIN_CUT_GAP} mm Luft. Wer will, klebt sie dort zusammen.`);
     const vol = (() => { try { return solid.volume ? solid.volume : null; } catch { return null; } })();
     if (vol) b._volume = vol;
   }
   const info = bins.map((b) => `${b.name}: ${b.gx} x ${b.gy} Felder, ${b.hu} u (${binTop(b)} mm${binLift(b) ? ` + ${binLift(b) * GF.unit} mm erhöhter Rand` : ''}${b.lip ? ' + 4.4 mm Stapelrand' : ''}), Spiel ${b.clearance} mm, Magnete ${b.magnets ? 'ja' : 'nein'}`).join('\r\n');
   const notes = splitNotes.length ? '\r\n\r\nGeteilte Bins:\r\n' + splitNotes.join('\r\n') : '';
-  files.push({ name: 'LIESMICH.txt', data: enc.encode('Erzeugt mit Cachfinity.\r\n\r\n' + info + notes + '\r\n') });
+  files.push({ name: 'LIESMICH.txt', data: enc.encode('Erzeugt mit Cachfinity.\r\n\r\n' + STEP_NOTE + '\r\n\r\n' + info + notes + '\r\n') });
   return { zip: makeZip(files), meshes, files };
 }
 
@@ -11795,7 +12085,7 @@ async function exportPlate(cs) {
     const line = [];
     let x0 = 0;
     for (let i = 0; i < plan.cols.length; i++) {
-      const nx = plan.cols[i], ny = plan.rows[j], L = partLetter(k++);
+      const nx = plan.cols[i], ny = plan.rows[j], L = partLetter(k++), where = partPlace(i, j, plan.cols.length, plan.rows.length);
       // the clips that reach into this part, from its middle
       const X0 = x0 * p, Y0 = y0 * p, X1 = (x0 + nx) * p, Y1 = (y0 + ny) * p;
       const mine = spots.filter((s) => s.x > X0 - reach && s.x < X1 + reach && s.y > Y0 - reach && s.y < Y1 + reach).map((s) => ({ ...s, x: s.x - (X0 + X1) / 2, y: s.y - (Y0 + Y1) / 2 }));
@@ -11803,19 +12093,22 @@ async function exportPlate(cs) {
       const solid = await buildPlatePart(r, nx, ny, opt, mine);
       x0 += nx;
       setBusyText(`Grundplatte ${plan.parts > 1 ? `Teil ${L}: ` : ''}STEP und STL schreiben…`); await frame();
-      const tag = plan.parts > 1 ? `_${L}_${nx}x${ny}` : `_${nx}x${ny}`;
-      files.push({ name: `${name}_Grundplatte${tag}.step`, data: new Uint8Array(await solid.blobSTEP().arrayBuffer()) },
-        { name: `${name}_Grundplatte${tag}.stl`, data: new Uint8Array(await solid.blobSTL({ tolerance: 0.02, angularTolerance: 0.15, binary: true }).arrayBuffer()) });
-      line.push(`${L} (${nx} x ${ny})`);
+      // e.g. Koffer_Grundplatte-8x7_Teil-A-von-4-oben-links.stl
+      const file = `${name}_Grundplatte-${cs.gx}x${cs.gy}` + (plan.parts > 1 ? `_Teil-${L}-von-${plan.parts}-${where}` : '');
+      files.push({ name: `${file}.stl`, data: new Uint8Array(await solid.blobSTL({ tolerance: 0.02, angularTolerance: 0.15, binary: true }).arrayBuffer()) },
+        { name: `${STEP_DIR}/${file}.step`, data: new Uint8Array(await solid.blobSTEP().arrayBuffer()) });
+      line.push(`${L} ${where} (${nx} x ${ny})`);
     }
     map.push(line.join('   '));
     y0 += plan.rows[j];
   }
   const clips = spots.length;
-  if (clips) files.push({ name: `${name}_Klammer_${clips}x_drucken.stl`, data: new Uint8Array(await clipSolid(r, clipDims(opt)).blobSTL({ tolerance: 0.01, angularTolerance: 0.1, binary: true }).arrayBuffer()) });
+  if (clips) files.push({ name: `${name}_Klammer_${clips}-mal-drucken.stl`, data: new Uint8Array(await clipSolid(r, clipDims(opt)).blobSTL({ tolerance: 0.01, angularTolerance: 0.1, binary: true }).arrayBuffer()) });
   const txt = [
     `Grundplatte für «${cs.name}»: ${cs.gx} x ${cs.gy} Felder (${cs.gx * GF.pitch} x ${cs.gy * GF.pitch} mm), ${opt.type !== 'light' ? `mit ${PLATE.floor} mm Boden, ${PLATE.floor + PLATE.h} mm hoch` : opt.magnets ? `offen, auf ${PLATE.floor} mm hohen Inseln in den Ecken der Felder, ${PLATE.floor + PLATE.h} mm hoch` : `offen (ohne Boden), ${PLATE.h} mm hoch`}${opt.magnets ? ', mit Magnetlöchern 6 x 2 mm (4 je Feld)' : ''}.`,
     `Drucker: ${b.name}, Bett ${b.x} x ${b.y} mm.`,
+    '',
+    STEP_NOTE,
     '',
     plan.parts > 1 ? `In ${plan.parts} Teile geteilt, so angeordnet (von oben gesehen, oben = hinten im Koffer):` : 'Passt in einem Stück aufs Druckbett.',
     ...(plan.parts > 1 ? map : []),
@@ -13263,6 +13556,21 @@ const BinUI = {
     };
     // width, length and height from the content; the height so the tools lie fully in their pockets
     $('#bin-autosize').onclick = () => { const b = curBin(); if (!b) return; fullDepths(b); autoSize(b); this.changed(true); this.stage.fit(); };
+    // the tools nested by their real outlines (nestBin); a bin that fits its content takes the size it needs
+    $('#bin-nest').onclick = async () => {
+      const b = curBin(); if (!b) return;
+      let r;
+      try { r = await busy('Ordne die Werkzeuge platzsparend an…', () => nestBin(b)); } catch (e) { console.error(e); toast('Das Anordnen ging nicht: ' + (e.message || e), 'bad'); return; }
+      if (!r.ok) {
+        toast(r.why === 'fixed' ? 'So passen die Werkzeuge nicht in diesen Bin. Mit «Grösse passt sich dem Inhalt an» sucht die App die kleinste passende Grösse.'
+          : r.why === 'empty' ? 'Im Bin liegt noch kein Werkzeug.' : 'Keine Anordnung gefunden.', 'bad');
+        return;
+      }
+      this.sel = null; this.changed(true); this.stage.fitted = false; this.stage.fit();
+      const n = r.gx * r.gy;
+      const kept = r.kept ? ` Werkzeuge unter einer gemeinsamen Form (${r.kept === 1 ? 'eine Gruppe' : r.kept + ' Gruppen'}) sind zusammen geblieben.` : '';
+      toast((b.autoFit !== false ? `Platzsparend angeordnet: ${r.gx} × ${r.gy} = ${n} Felder` + (n < r.before ? ` statt ${r.before}.` : '.') : 'Platzsparend angeordnet.') + kept + ' Strg+Z macht es rückgängig.');
+    };
     $('#bin-arrange').onclick = () => { const b = curBin(); if (!b) return; b.manual = false; if (b.autoFit !== false) packBin(b); else arrangeItems(b); this.changed(true); };
     $('#bin-autofit').onchange = (e) => { const b = curBin(); if (!b) return; b.autoFit = e.target.checked; if (b.autoFit) fitBin(b); this.changed(true); };
     $('#bin-add').onclick = () => {
@@ -13416,7 +13724,7 @@ const BinUI = {
     try {
       const res = await busy('Lade CAD-Kern (einmalig ~11 MB)…', () => exportBins([b]));
       this.exact.set(b.id, { rev: b._rev || 0, mesh: res.meshes.get(b.id) });
-      $('#bin-export-status').textContent = `Erzeugt: ${res.files.filter((f) => /\.(step|stl)$/.test(f.name)).map((f) => f.name + ' (' + nf(f.data.length / 1024, 0) + ' kB)').join(', ')}.` + (errs.length ? ' Achtung: Die Prüfung meldet Fehler.' : '');
+      $('#bin-export-status').textContent = `Zum Drucken: ${res.files.filter((f) => /\.stl$/.test(f.name)).map((f) => f.name + ' (' + nf(f.data.length / 1024, 0) + ' kB)').join(', ')}; dieselben Teile als STEP im Ordner ${STEP_DIR}.` + (errs.length ? ' Achtung: Die Prüfung meldet Fehler.' : '');
       if (this.view === '3d') this.update3d();
       await saveFile(`${safeName(b.name)}_${b.gx}x${b.gy}x${b.hu}u.zip`, res.zip);
     } catch (e) {
@@ -15138,7 +15446,7 @@ if (location.hash === '#selbsttest') setTimeout(async () => {
     document.title = 'SELBSTTEST OK ' + Math.round(r.measureVolume(s)) + ' mm3, Schrift ' + (document.fonts.check('600 14px Barlow') ? 'da' : 'fehlt');
   } catch (e) { document.title = 'SELBSTTEST FEHLER ' + (e && (e.message || e)); }
 }, 800);
-window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross };
+window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner };
 // The mouse wheel over a number field that has the focus changes its value: easily by accident while
 // scrolling the panel (a bin's tolerance, wall, floor). The field gives up the focus instead, and the page
 // scrolls on.
