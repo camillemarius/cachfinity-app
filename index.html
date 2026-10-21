@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '4e703529cdef';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'e0ff31cd4f0a';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -11788,9 +11788,10 @@ const STEP_DIR = 'STEP-fuer-CAD';
 // the same way, to be glued; 'loose' cut on field lines, the parts stand side by side on the baseplate;
 // 'whole' not cut. Through the middle of a field the two halves of the foot there sit in one socket of the
 // baseplate, which holds them in line (and under that foot there is room for a clip, where a field line has
-// the baseplate's ridge).
+// the baseplate's ridge). The clips take the pull at the bottom of the cut (a bin carried by both ends sags);
+// held by one end only, the cut opens at the top, so for that its faces are glued as well.
 const BIN_JOINS = [
-  { id: 'clip', name: 'Geteilt mit Klammern', hint: 'Schnitt mitten durch die Felder, Klammern von unten über die Trennstelle (unsichtbar); der Bin lässt sich am Stück aus dem Koffer nehmen' },
+  { id: 'clip', name: 'Geteilt mit Klammern', hint: 'Schnitt mitten durch die Felder, Klammern von unten über die Trennstelle (unsichtbar). Sie halten den Bin, wenn man ihn an beiden Enden hebt; wer ihn an einem Ende anhebt, leimt die Schnittflächen zusätzlich' },
   { id: 'glue', name: 'Geteilt zum Leimen', hint: 'Schnitt mitten durch die Felder, ohne Klammern: die Schnittflächen leimen, am besten auf der Grundplatte, die richtet die Teile aus' },
   { id: 'loose', name: 'Geteilt, lose', hint: 'Schnitt an den Feldgrenzen: die Teile stehen ohne Verbindung nebeneinander auf der Grundplatte' },
   { id: 'whole', name: 'Am Stück', hint: 'Nicht teilen, etwa für einen Drucker mit grösserem Bett' },
@@ -12055,7 +12056,7 @@ async function exportBins(bins) {
     }
     if (pieces.length > 1) {
       const how = {
-        clip: `Der Schnitt läuft mitten durch die Felder: die halben Füsse an der Trennstelle sitzen zusammen in einem Fach der Grundplatte. Zusammenbau: die Teile mit der Unterseite nach oben aneinanderlegen und in jede Aussparung über der Trennstelle eine Klammer fest eindrücken (${clips.length} Stück, die Datei mit «Klammer» im Namen; flach drucken, 100 % Füllung). Sitzt eine locker, ein Tropfen Sekundenkleber in die Aussparung. Danach lässt sich der Bin am Stück aus dem Koffer nehmen.`,
+        clip: `Der Schnitt läuft mitten durch die Felder: die halben Füsse an der Trennstelle sitzen zusammen in einem Fach der Grundplatte. Zusammenbau: die Teile mit der Unterseite nach oben aneinanderlegen und in jede Aussparung über der Trennstelle eine Klammer fest eindrücken (${clips.length} Stück, die Datei mit «Klammer» im Namen; flach drucken, 100 % Füllung). Sitzt eine locker, ein Tropfen Sekundenkleber in die Aussparung. Die Klammern halten die Trennstelle unten: so lässt sich der Bin an beiden Enden gefasst am Stück herausnehmen. Wer ihn an einem Ende anhebt (das andere in der Luft), leimt zusätzlich die Schnittflächen (Sekundenkleber oder 2-Komponenten-Kleber), sonst klappt die Trennstelle oben auf.`,
         glue: 'Der Schnitt läuft mitten durch die Felder: die halben Füsse an der Trennstelle sitzen zusammen in einem Fach der Grundplatte. Die Schnittflächen leimen (Sekundenkleber oder 2-Komponenten-Kleber), am besten mit den Teilen in der Grundplatte, die richtet sie aus.',
         loose: `Geschnitten an den Feldgrenzen: die Teile stehen im Raster nebeneinander, die Grundplatte richtet sie aus; an den Trennstellen ist je ${BIN_CUT_GAP} mm Luft. Wer will, klebt sie dort zusammen.`,
       }[sp.join];
@@ -13982,7 +13983,7 @@ const BinUI = {
       $('#bin-split-info').textContent = !big ? `Passt auf das Druckbett (${bd.x} × ${bd.y} mm).`
         : sp.parts === 1 ? `Grösser als das Druckbett (${bd.x} × ${bd.y} mm), wird trotzdem am Stück exportiert: nur für einen grösseren Drucker.`
           : `Zu gross für das Druckbett (${bd.x} × ${bd.y} mm): ${sp.parts} Teile (${sizes}, in der Draufsicht gestrichelt). ` + {
-            clip: `Der Schnitt läuft mitten durch die Felder; ${clips} Klammern von unten halten die Teile zusammen, auch ausserhalb des Koffers.`,
+            clip: `Der Schnitt läuft mitten durch die Felder; ${clips} Klammern von unten halten die Teile zusammen, wenn du den Bin an beiden Enden hebst. Zum Anheben an einem Ende die Schnittflächen zusätzlich leimen.`,
             glue: 'Der Schnitt läuft mitten durch die Felder; die Teile werden geleimt, die Grundplatte richtet sie dabei aus.',
             loose: 'Geschnitten an den Feldgrenzen; die Teile stehen nebeneinander, die Grundplatte richtet sie aus.',
           }[sp.join]; }
