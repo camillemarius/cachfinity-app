@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '7c7e205591ca';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '6a7d88028322';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -297,6 +297,9 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
 label.f.sub-opt { flex-direction: row; align-items: center; gap: 8px; padding-left: 24px; }
 label.f.sub-opt input { flex: none; }
 #bin-dims { white-space: pre-line; }
+/* a locked bin: its settings shown, greyed, not to be touched */
+#bin-panel.locked { opacity: 0.55; }
+#bin-lock[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
 .row[hidden], .btn[hidden], p[hidden] { display: none; }
 
 .btn {
@@ -474,8 +477,8 @@ label.f.sub-opt input { flex: none; }
     </div>
     <nav class="tabs" role="tablist" aria-label="Arbeitsschritte">
       <button title="Fotos der Werkzeuge laden: auf einem weissen A4-Blatt, von oben fotografiert; das Blatt gibt den Massstab" class="tab" role="tab" id="tab-btn-foto" data-tab="foto"><span class="n">1</span>Fotos</button>
-      <button title="Umrisse erkennen und von Hand korrigieren: Punkte, Symmetrieachse, Testdruck" class="tab" role="tab" id="tab-btn-trace" data-tab="trace"><span class="n">2</span>Umrisse</button>
-      <button title="Alle Werkzeuge: Name, Höhe, Testdruck-Status, Umriss bearbeiten, in einen Bin legen" class="tab" role="tab" id="tab-btn-lib" data-tab="lib"><span class="n">3</span>Werkzeuge</button>
+      <button title="Alle Werkzeuge: Name, Höhe, Testdruck-Status, Umriss bearbeiten, in einen Bin legen" class="tab" role="tab" id="tab-btn-lib" data-tab="lib"><span class="n">2</span>Werkzeuge</button>
+      <button title="Umrisse erkennen und von Hand korrigieren: Punkte, Symmetrieachse, Testdruck" class="tab" role="tab" id="tab-btn-trace" data-tab="trace"><span class="n">3</span>Umrisse bearbeiten</button>
       <button title="Übersicht aller Bins, Toleranz für neue Bins, neuer Bin" class="tab" role="tab" id="tab-btn-bins" data-tab="bins"><span class="n">4</span>Bins</button>
       <button title="Einen Bin einrichten: Grösse, Taschen, Griffmulden, Formen, 3D, Export" class="tab" role="tab" id="tab-btn-bin" data-tab="bin"><span class="n">5</span>Bin bearbeiten</button>
       <button title="Übersicht der Koffer; Bins einem Koffer zuweisen" class="tab" role="tab" id="tab-btn-cases" data-tab="cases"><span class="n">6</span>Koffer</button>
@@ -646,6 +649,7 @@ label.f.sub-opt input { flex: none; }
         <button title="Einen neuen Bin anlegen" class="btn small" type="button" id="bin-new">Neuer Bin</button>
         <button class="btn small ghost" type="button" id="bin-undo" title="Rückgängig (Strg+Z)" aria-label="Rückgängig">↶</button><button class="btn small ghost" type="button" id="bin-redo" title="Wiederholen (Strg+Y)" aria-label="Wiederholen">↷</button>
         <button title="Eine Kopie dieses Bins anlegen" class="btn small" type="button" id="bin-dup">Duplizieren</button>
+        <button title="Sperren, zum Beispiel wenn der Bin gedruckt ist: danach ändert sich nichts mehr daran, weder durch dich noch durch Anpassungen der App (auch nicht, wenn sich ein Werkzeug später ändert). Exportieren geht weiter; ein Klick entsperrt wieder" class="btn small" type="button" id="bin-lock" aria-pressed="false">Sperren</button>
         <span id="bin-del-wrap" class="confirm"><button title="Diesen Bin löschen (mit Rückfrage)" class="btn small danger" type="button" id="bin-del">Löschen</button></span>
         <span class="hint"></span>
         <div class="seg" role="group" aria-label="Ansicht"><button title="Draufsicht: Werkzeuge und Formen anordnen" type="button" id="bin-view-2d" aria-pressed="true">Draufsicht</button><button title="3D-Ansicht; die exakte Form wird nach einem Moment berechnet. Werkzeuge mit Haken «3D» in der Liste erscheinen darin" type="button" id="bin-view-3d" aria-pressed="false">3D</button></div>
@@ -686,6 +690,7 @@ label.f.sub-opt input { flex: none; }
         <label class="f" title="Griffmulden an den kurzen Seiten, damit sich ein Bin, der den Koffer ganz füllt, herausheben lässt. Kugel: Ø 30 mm, oben ein Loch von 24 mm, die Fingerkuppe hakt unter den Rand. Rechteckige Mulde: 20 mm breit und 18 mm nach innen, unter die Kante ausgehöhlt. Sie kommen in Lücken am Rand; ist keine frei, liegen sie mittig an den kurzen Seiten unter einem Werkzeug (zum Herausheben dieses zuerst herausnehmen). Der Bin wird dafür nicht grösser"><span>Griffmulden zum Herausheben</span><select id="bin-grips" title="Griffmulden an den kurzen Seiten, damit sich ein Bin, der den Koffer ganz füllt, herausheben lässt. Kugel: Ø 30 mm, oben ein Loch von 24 mm, die Fingerkuppe hakt unter den Rand. Rechteckige Mulde: 20 mm breit und 18 mm nach innen, unter die Kante ausgehöhlt. Sie kommen in Lücken am Rand; ist keine frei, liegen sie mittig an den kurzen Seiten unter einem Werkzeug (zum Herausheben dieses zuerst herausnehmen). Der Bin wird dafür nicht grösser"><option value="none">Keine</option><option value="ball">Kugel</option><option value="slot">Rechteckige Mulde</option></select></label>
         <p class="unit" id="bin-grip-row">Im Bild an der Wand entlang verschieben. «Griffmulden optimieren» legt sie in Lücken am Rand, sonst mittig unter ein Werkzeug.</p>
         <label class="f" title="Löcher für Magnete 6 × 2 mm unten im Bin: keine, 4 unter jedem Feld, oder nur die 4 in den äussersten Ecken (spart Magnete, der Bin hält trotzdem)"><span>Magnetlöcher 6 × 2 mm</span><select id="bin-mag" title="Löcher für Magnete 6 × 2 mm unten im Bin: keine, 4 unter jedem Feld, oder nur die 4 in den äussersten Ecken (spart Magnete, der Bin hält trotzdem)"><option value="none">Keine</option><option value="all">4 pro Feld</option><option value="corners">Nur 4 in den äussersten Ecken</option></select></label>
+        <label title="Rundet die oberen Kanten um 1 mm ab: an den Taschen, den Griffmulden und, ohne Stapelrand, am äusseren Rand. Angenehmer zum Greifen; im Druck aus fünf Schichten zu 0.2 mm" class="check"><input type="checkbox" id="bin-round" checked> Kanten oben abrunden <span class="unit">(1 mm)</span></label>
       </div>
       <div class="card">
         <h2>Inhalt</h2>
@@ -10823,14 +10828,27 @@ const stackU = (b) => b.hu + binLift(b);
 const maxDepth = (b) => Math.max(1, binTop(b) - GF.base - b.floor);
 const binOutline = (b) => roundRectPoly(binW(b), binD(b), GF.r, 8);
 const binInner = (b) => roundRectPoly(binW(b) - 2 * b.wall, binD(b) - 2 * b.wall, Math.max(0.5, GF.r - b.wall + 1), 8);
+// A bin locked (b.locked; Camille, for bins already printed: nothing may change them, not she, not the app):
+// no edit, no adjustment by the app at the start or after a change; its pockets keep the tools' outlines as
+// they were when it was locked (b.frozen.tools, also when a tool changes or goes later), its grips their shape
+// (b.frozen.grip) and its rounded edges their radius (b.frozen.edge).
+const binLocked = (b) => !!(b && b.locked);
+const binTool = (b, id) => (b && b.locked && b.frozen && b.frozen.tools && b.frozen.tools[id] ? { id, ...b.frozen.tools[id] } : toolById(id));
+function lockBin(b, on) {
+  if (!on) { delete b.locked; delete b.frozen; delete b.lockedAt; return; }
+  const tools = {};
+  for (const it of b.items) { const t = toolById(it.toolId); if (t) tools[t.id] = { name: t.name, outline: t.outline, height: t.height }; }
+  b.frozen = { tools, grip: { GRIP: { ...GRIP }, BALL: { ...GRIP_BALL } }, edge: EDGE_ROUND };
+  b.locked = true; b.lockedAt = Date.now();
+}
 function itemPoly(it) { const t = toolById(it.toolId); return t ? placePoly(t.outline, it.x, it.y, it.rot, it.mirror) : null; }
 const pocketCache = new WeakMap();
 function itemPocket(b, it) {
-  const t = toolById(it.toolId); if (!t) return null;
+  const t = binTool(b, it.toolId); if (!t) return null;
   const key = [t.outline, it.x, it.y, it.rot, it.mirror, b.clearance];
   const c = pocketCache.get(it);
   if (c && c.key.every((v, i) => v === key[i])) return c.val;
-  const p = itemPoly(it);
+  const p = placePoly(t.outline, it.x, it.y, it.rot, it.mirror);
   const val = largestRing(offsetPolys([p], b.clearance)) || p;
   pocketCache.set(it, { key, val });
   return val;
@@ -10947,21 +10965,21 @@ function crossings(poly, alongX, v) {
 // changes. 25 mm wide (on 2026-10-21 20 mm for a few hours by mistake, v 3; Camille wanted the lift grip
 // narrower, not these; v 4 marks them back at 25). Reaching 15 mm past the tool since her first printed bin
 // (2026-10-21: 25 wide is right, 15 out fits; 14 before; 20 for a moment): v 5.
-const FINGER_REACH = 15, FINGER_W = 25, FINGER_DEEPER = 5, FINGER_V = 5;
-// An automatic trough from before (v 4, reaching 14 mm) made as long as FINGER_REACH asks: across the tool on
-// the same side or sides as it was, at the same place along it; at the tool's edge, pushed out (the slot's
-// length stays). true when it was one.
-function reachTrough(b, f) {
-  if (!f.auto || f.v !== 4) return false;
-  f.v = FINGER_V;
+const FINGER_REACH = 15, FINGER_W = 25, FINGER_DEEPER = 5, FINGER_V = 6; // (v 6: made at 15 mm)
+// The same day, at the start, the troughs from before (v 4, 14 mm) were lengthened to reach 15 (v 5): that
+// changed printed bins, and is taken back once (90-app): v 5 → v 4, 1 mm shorter on each side it reaches past
+// (across both sides 2 mm shorter; past one side 1 mm shorter, its centre 0.5 mm back; at the edge 1 mm in).
+function unreachTrough(b, f) {
+  if (!f.auto || f.v !== 5) return false;
+  f.v = 4;
+  if (f.style === 'edge') { const a = (f.lrot * Math.PI) / 180; f.lx -= Math.cos(a); f.ly -= Math.sin(a); return true; }
   const it = b.items.find((x) => x.id === f.itemId), t = it && toolById(it.toolId); if (!t) return true;
-  if (f.style === 'edge') { const a = (f.lrot * Math.PI) / 180, d = FINGER_REACH - 14; f.lx += Math.cos(a) * d; f.ly += Math.sin(a) * d; return true; }
   const bb = polyBBox([t.outline]), alongX = bb.w >= bb.h, len = Math.max(1, alongX ? bb.w : bb.h);
   const at = clamp(((alongX ? f.lx : f.ly) - (alongX ? bb.x0 : bb.y0)) / len, 0, 1), mid = fingerAcross(b, t, at, 0); if (!mid) return true;
-  // (one past one side only lay 7 mm off the middle: half the old reach)
   const off = (alongX ? f.ly : f.lx) - (alongX ? mid.ly : mid.lx), side = Math.abs(off) < 2 ? 0 : Math.sign(off);
-  const a = fingerAcross(b, t, at, side); if (!a) return true;
-  Object.assign(f, { lx: a.lx, ly: a.ly, lrot: a.lrot, l: Math.max(f.w, a.l) });
+  if (!side) { f.l = Math.max(f.w, f.l - 2); return true; }
+  f.l = Math.max(f.w, f.l - 1);
+  if (alongX) f.ly -= side / 2; else f.lx -= side / 2;
   return true;
 }
 // the automatic trough of tool t at the place at (0 … 1) along it: across the tool and FINGER_REACH past
@@ -11083,6 +11101,7 @@ function optimizeTroughs(b) {
 // wider) move to a free spot on their own tool; troughs placed by hand stay.
 // (allowOutside: the bin is resized afterwards, so a trough may reach past its present wall)
 function relocateFingers(b, allowOutside = false) {
+  if (binLocked(b)) return 0;
   syncFingers(b);
   let moved = 0;
   for (const f of b.fingers.slice()) {
@@ -11099,15 +11118,13 @@ function relocateFingers(b, allowOutside = false) {
 // with b.autoFingers every tool in the bin has its finger trough, except one whose trough was deleted by
 // hand (it.noFinger: say, several rods side by side that share one long slot instead)
 function ensureFingers(b) {
-  if (!b.autoFingers) return 0;
+  if (!b.autoFingers || binLocked(b)) return 0;
   // the first automatic troughs ran along the tool; they are now placed across it
   b.fingers = b.fingers.filter((f) => !(f.auto && f.style !== 'across' && f.style !== 'edge'));
   // the next ones were 20 mm wide and as deep as the pocket: now FINGER_W wide and FINGER_DEEPER deeper
   for (const f of b.fingers) if (f.auto && !f.v) { f.w = FINGER_W; f.l = Math.max(f.l, f.w); f.dplus = FINGER_DEEPER; f.v = 2; }
   // then 25 mm wide, for a few hours 20 (v 3): those back to FINGER_W (one set to another width by hand stays)
   for (const f of b.fingers) if (f.auto && (f.v === 2 || f.v === 3)) { if (f.v === 3 && Math.abs(f.w - 20) < 0.01) { f.w = FINGER_W; f.l = Math.max(f.l, f.w); } f.v = 4; }
-  // then reaching 14 mm past the tool: now FINGER_REACH (v 5)
-  for (const f of b.fingers) reachTrough(b, f);
   let n = 0;
   for (const it of b.items) {
     if (it.noFinger || b.fingers.some((f) => f.itemId === it.id)) continue;
@@ -11238,17 +11255,19 @@ const GRIP = { width: 20, open: 18, under: 5, lip: 4, depth: 15 };
 // without support). In a low bin it sinks less, down to a plain dip.
 const GRIP_BALL = { r: 15, sink: 9 };
 const gripKind = (b) => (b.grips === 'ball' ? 'ball' : b.grips ? 'slot' : null);
-const ballSink = (b) => Math.min(GRIP_BALL.sink, maxDepth(b) - GRIP_BALL.r);
+// the grips' sizes for bin b: as they are, or as they were when it was locked
+const gripDims = (b) => (b && b.locked && b.frozen && b.frozen.grip) || { GRIP, BALL: GRIP_BALL };
+const ballSink = (b) => { const B = gripDims(b).BALL; return Math.min(B.sink, maxDepth(b) - B.r); };
 // how deep a grip reaches in from the end, and half its band across (both with the 2 mm kept between pockets)
-const gripZone = (b) => (gripKind(b) === 'ball' ? 2 * GRIP_BALL.r : GRIP.under + GRIP.open) + 2;
-const gripBand = (b) => (gripKind(b) === 'ball' ? GRIP_BALL.r : GRIP.width / 2) + 2;
+const gripZone = (b) => { const { GRIP: G, BALL: B } = gripDims(b); return (gripKind(b) === 'ball' ? 2 * B.r : G.under + G.open) + 2; };
+const gripBand = (b) => { const { GRIP: G, BALL: B } = gripDims(b); return (gripKind(b) === 'ball' ? B.r : G.width / 2) + 2; };
 const gripAxis = (b) => (b.gy >= b.gx ? 'y' : 'x');
 // Where the two grips sit (Camille: fixed in the middle of the ends they took too much room; she drags them
 // along the walls, and «In Lücken am Rand legen» finds free places): each at a wall of the inside, ax 'y' at
 // the top (s −1) or bottom (s 1) one, ax 'x' at the left or right one, at mm from that wall's middle along it.
 // b.gripPos not set: the middle of both short ends, as before.
-const gripWidth = (b, ax) => Math.min(GRIP.width, (ax === 'y' ? binW(b) : binD(b)) - 2 * b.wall - 10);
-const gripHalfAlong = (b, ax) => (gripKind(b) === 'ball' ? GRIP_BALL.r : gripWidth(b, ax) / 2);
+const gripWidth = (b, ax) => Math.min(gripDims(b).GRIP.width, (ax === 'y' ? binW(b) : binD(b)) - 2 * b.wall - 10);
+const gripHalfAlong = (b, ax) => (gripKind(b) === 'ball' ? gripDims(b).BALL.r : gripWidth(b, ax) / 2);
 // how far from its wall's middle a grip may go: clear of the inside's rounded corner, 1 mm to spare
 function gripRoom(b, ax) {
   const along = (ax === 'y' ? binW(b) : binD(b)) - 2 * b.wall;
@@ -11268,13 +11287,13 @@ function gripShapes(b) {
     const half = (ax === 'y' ? id : iw) / 2, pt = (u, v) => (ax === 'y' ? [v, u] : [u, v]);
     if (gripKind(b) === 'ball') {
       // (ledge: the ball's widest circle, hidden under the rim; open: the opening at the top)
-      const R = GRIP_BALL.r, sink = ballSink(b), ro = Math.sqrt(Math.max(1, R * R - sink * sink)), [cx, cy] = pt(s * (half - R), at);
+      const R = gripDims(b).BALL.r, sink = ballSink(b), ro = Math.sqrt(Math.max(1, R * R - sink * sink)), [cx, cy] = pt(s * (half - R), at);
       return { i, kind: 'ball', s, ax, at, under, half, R, sink, cx, cy, poly: circlePoly(cx, cy, R, 40), ledge: circlePoly(cx, cy, R, 40), open: circlePoly(cx, cy, ro, 40) };
     }
     const w = gripWidth(b, ax), v0 = at - w / 2, v1 = at + w / 2;
     const box = (t0, t1) => { const a = s * (half - t0), c = s * (half - t1), lo = Math.min(a, c), hi = Math.max(a, c);
       return ax === 'y' ? [pt(lo, v0), pt(lo, v1), pt(hi, v1), pt(hi, v0)] : [pt(lo, v0), pt(hi, v0), pt(hi, v1), pt(lo, v1)]; };
-    return { i, s, ax, at, under, w, half, ledge: box(0, GRIP.under), open: box(GRIP.under, GRIP.under + GRIP.open), poly: box(0, GRIP.under + GRIP.open) };
+    return { i, s, ax, at, under, w, half, ...(({ under: u, open: o }) => ({ ledge: box(0, u), open: box(u, u + o), poly: box(0, u + o) }))(gripDims(b).GRIP) };
   });
 }
 // Free places for the two grips: along every wall the stretches where a grip keeps 2 mm from every pocket (as
@@ -11369,6 +11388,7 @@ function centerItems(b) {
   for (const f of b.fingers) { f.x -= bb.cx; f.y -= bb.cy; }
 }
 function autoSize(b) {
+  if (binLocked(b)) return;
   const polys = binPockets(b).map((p) => p.poly); if (!polys.length) return;
   [b.gx, b.gy] = fieldsFor(b, polys.map((p) => polyBBox([p])), polys);
   // the height comes from the pockets and the shapes set by hand; a tool's finger trough does not make the
@@ -11400,6 +11420,7 @@ function packBin(b) {
 // after tools or shapes were added or removed: a bin set to fit its content adapts. Laid out by the
 // packer while nobody moved anything by hand; otherwise only its size follows what is there.
 function fitBin(b) {
+  if (binLocked(b)) return;
   // a bin that fits its content gives every tool its full height as pocket (it grows for it, see depthRoom)
   if (b.autoFit !== false) for (const it of b.items) { const t = toolById(it.toolId); if (t && followsHeight(it)) it.depth = defaultDepth(b, t); }
   ensureFingers(b);
@@ -11432,6 +11453,7 @@ function fullDepths(b) { for (const it of b.items) { const t = toolById(it.toolI
 // its outline, height and status, and this button is asked for (Camille). Returns the height before, and the
 // tools taller than 30 u allow (tall).
 function sinkTools(b) {
+  if (binLocked(b)) return { was: b.hu, tall: [] };
   const was = b.hu, tall = [];
   for (const it of b.items) {
     const t = toolById(it.toolId); if (!t) continue;
@@ -11452,6 +11474,7 @@ function defaultDepth(b, tool) { return Math.floor(Math.min(tool.height + DEPTH_
 function toolHeightChanged(t) {
   const changed = [];
   for (const b of S.bins) {
+    if (binLocked(b)) continue; // (locked: stays as printed)
     let n = 0;
     for (const it of b.items) {
       if (it.toolId !== t.id || !followsHeight(it)) continue;
@@ -11580,7 +11603,7 @@ function newBin(props = {}) {
   const used = new Set(S.bins.map((b) => b.color));
   return {
     id: uid(), name: 'Bin ' + (S.bins.length + 1), gx: 2, gy: 2, hu: 4,
-    clearance: toolTol(), wall: 3, floor: 1.2, lip: true, magnets: 'corners', autoFit: true, autoFingers: true,
+    clearance: toolTol(), wall: 3, floor: 1.2, lip: true, magnets: 'corners', autoFit: true, autoFingers: true, round: true,
     color: BIN_COLORS.find((c) => !used.has(c)) || BIN_COLORS[S.bins.length % BIN_COLORS.length],
     items: [], fingers: [], place: null, ...props,
   };
@@ -12357,6 +12380,7 @@ function scoopCutter(r, f, zTop, h) {
 // One grip to lift the bin out (see GRIP, gripShapes) as a prism: its profile across the bin's end, t from the
 // inside's edge inwards and z up, drawn for a grip at the top end (CAD +y) and turned to its end.
 function gripCutter(r, b, g, zTop) {
+  const GRIP = gripDims(b).GRIP; // (a locked bin keeps the grips' shape it had)
   // the ball: centred under the top (CAD y is up, bin y down)
   if (g.kind === 'ball') return r.makeSphere(g.R).translate([g.cx, -g.cy, zTop - g.sink]);
   const H = Math.min(GRIP.depth, maxDepth(b)), u = clamp(H - GRIP.lip - 2, 0, GRIP.under), Y = (t) => g.half - t;
@@ -12370,6 +12394,32 @@ function gripCutter(r, b, g, zTop) {
   // then along its wall to its place (bin x is CAD x, bin y CAD −y)
   const turned = turn ? cut.rotate(turn, [0, 0, 0], [0, 0, 1]) : cut;
   return g.at ? turned.translate(g.ax === 'y' ? [g.at, 0, 0] : [0, -g.at, 0]) : turned;
+}
+// The top edges rounded (b.round: on for bins made from 2026-10-21 on, bins from before stay as printed; Camille: 1 mm), as EDGE_STEPS layers under the top,
+// each reaching as far as a quarter circle of EDGE_ROUND does at its depth: 0.2 mm, the print's own layers, so
+// it prints as round. (A fillet in the CAD kernel breaks on the traced outlines' many short edges.) The rims:
+// the pockets', the troughs', the grips' openings, kept inside the bin's inside (islands between pockets stay);
+// without a lip also the bin's outer top edge.
+const EDGE_ROUND = 1, EDGE_STEPS = 5;
+function roundCutters(r, b, rims, zTop) {
+  const R = (b.locked && b.frozen && b.frozen.edge) || EDGE_ROUND, h = R / EDGE_STEPS, inner = binInner(b), W = binW(b), D = binD(b), out = [], rings = [];
+  const pos = (p) => (polyArea(p) < 0 ? p.slice().reverse() : p);
+  for (let k = 0; k < EDGE_STEPS; k++) {
+    const d = (k + 0.5) * h, w = R - Math.sqrt(Math.max(0, R * R - (R - d) ** 2));
+    const z0 = zTop - (k + 1) * h, tall = h + (k === 0 ? 1 : 0);
+    const { outer, holes } = splitRings(clipBool('intersect', clipBool('union', offsetPolys(rims.map(pos), w)), [inner]));
+    for (const o of outer) {
+      let c = cadPolyDrawing(r, o).sketchOnPlane('XY', z0).extrude(tall);
+      for (const hl of holes) if (pointInPoly(hl[0][0], hl[0][1], o)) c = c.cut(cadPolyDrawing(r, hl).sketchOnPlane('XY', z0 - 1).extrude(tall + 2));
+      out.push(c);
+    }
+    if (!b.lip) {
+      const ring = r.drawRoundedRectangle(W + 2, D + 2, GF.r + 1).cut(r.drawRoundedRectangle(W - 2 * w, D - 2 * w, Math.max(0.2, GF.r - w)));
+      rings.push(ring.sketchOnPlane('XY', z0).extrude(tall));
+    }
+  }
+  // (the outer rings cut one by one: in one go with the rest the kernel lost the whole bin)
+  return { cutters: out, rings };
 }
 async function buildBinSolid(b, onStep = () => {}) {
   const r = await loadCAD();
@@ -12403,6 +12453,13 @@ async function buildBinSolid(b, onStep = () => {}) {
   }
   const grips = gripShapes(b);
   if (grips.length) { onStep('Griffmulden'); for (const g of grips) solid = solid.cut(gripCutter(r, b, g, zTop)); await frame(); }
+  if (b.round === true) {
+    onStep('Kanten abrunden');
+    const rc = roundCutters(r, b, [...pockets.map((p) => p.poly), ...grips.map((g) => g.open)], zTop);
+    if (rc.cutters.length) solid = solid.cut(r.makeCompound(rc.cutters));
+    for (const ring of rc.rings) solid = solid.cut(ring);
+    await frame();
+  }
   const holes = binMagnetSpots(b);
   if (holes.length) {
     onStep('Magnetlöcher'); // (all in one cut, they never overlap; the CAD frame has y up)
@@ -12704,7 +12761,7 @@ function slab(THREE, shapes, z0, z1, mat) {
 function gripPreview(b) {
   const out = [];
   for (const g of gripShapes(b)) {
-    if (g.kind !== 'ball') { out.push({ poly: g.open, depth: Math.min(GRIP.depth, maxDepth(b)), kind: 'grip', ref: g }); continue; }
+    if (g.kind !== 'ball') { out.push({ poly: g.open, depth: Math.min(gripDims(b).GRIP.depth, maxDepth(b)), kind: 'grip', ref: g }); continue; }
     const ro = Math.sqrt(Math.max(1, g.R * g.R - g.sink * g.sink));
     for (let k = 0; k <= 8; k++) {
       const d = g.sink + (g.R * k) / 8, rr = Math.min(ro, Math.sqrt(Math.max(0, g.R * g.R - (d - g.sink) ** 2)));
@@ -14062,7 +14119,8 @@ const LibUI = {
     toast(`${t.name} liegt jetzt in «${b.name}».`);
   },
   remove(t) {
-    for (const b of S.bins) { const n = b.items.length; b.items = b.items.filter((it) => it.toolId !== t.id); if (n !== b.items.length) Store.save('bin', b); }
+    // (a locked bin keeps it: its pocket comes from the copy kept when it was locked)
+    for (const b of S.bins) { if (binLocked(b)) continue; const n = b.items.length; b.items = b.items.filter((it) => it.toolId !== t.id); if (n !== b.items.length) Store.save('bin', b); }
     S.tools = S.tools.filter((x) => x !== t); Store.remove('tool', t.id);
     this.confirmId = null; this.render();
   },
@@ -14087,7 +14145,7 @@ const BinUI = {
       },
       tool: {
         down: (x, y, e) => {
-          const b = curBin(); if (!b) return false;
+          const b = curBin(); if (!b || binLocked(b)) return false;
           this.touch = e && e.pointerType === 'touch';
           // the size handles of a selected shape come first
           const add = !!(e && e.shiftKey), hd = add ? null : this.hitHandle(x, y);
@@ -14126,6 +14184,12 @@ const BinUI = {
     $('#bin-select').onchange = (e) => { S.ui.binId = e.target.value; this.sel = null; Store.saveUi(); this.stage.fitted = false; this.render(); this.stage.fit(); };
     $('#bin-new').onclick = () => NewBin.open();
     $('#bin-dup').onclick = () => { const b = curBin(); if (!b) return; S.ui.binId = this.duplicate(b).id; this.render(); };
+    // a printed bin locked (Camille): see lockBin
+    $('#bin-lock').onclick = () => {
+      const b = curBin(); if (!b) return;
+      lockBin(b, !b.locked); b._rev = (b._rev || 0) + 1; Store.save('bin', b); this.sel = null; this.render();
+      toast(b.locked ? `«${b.name}» ist gesperrt: daran ändert sich nichts mehr, weder durch dich noch durch Anpassungen der App. Exportieren geht weiter.` : `«${b.name}» ist entsperrt und lässt sich wieder bearbeiten.`);
+    };
     $('#bin-del').onclick = () => { this.confirmDel = true; this.renderTop(); };
     $('#bin-view-2d').onclick = () => this.setView('2d');
     $('#bin-view-3d').onclick = () => this.setView('3d');
@@ -14166,6 +14230,7 @@ const BinUI = {
       toast(parts.join(' ') + ' Strg+Z macht es rückgängig.', how === 'none' || stuck ? 'bad' : undefined);
     };
     $('#bin-lift').onchange = (e) => { const b = curBin(); if (!b) return; b.lift = Math.round(clamp(num(e.target, 0), 0, 10)); this.changed(); };
+    $('#bin-round').onchange = (e) => { const b = curBin(); if (!b) return; b.round = e.target.checked; this.changed(); };
     $('#bin-mag').onchange = (e) => { const b = curBin(); if (!b) return; b.magnets = { none: false, all: true, corners: 'corners' }[e.target.value]; this.changed(); };
     $('#bin-join').replaceChildren(...BIN_JOINS.map((j) => h('option', { value: j.id, text: j.name, title: j.hint })));
     $('#bin-join').onchange = (e) => { const b = curBin(); if (!b) return; b.join = e.target.value; this.changed(); };
@@ -14233,7 +14298,7 @@ const BinUI = {
     document.addEventListener('keydown', (e) => this.key(e));
   },
   key(e) {
-    if (App.tab !== 'bin' || this.view !== '2d') return;
+    if (App.tab !== 'bin' || this.view !== '2d' || binLocked(curBin())) return;
     if (/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName || '')) return;
     if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'A')) { e.preventDefault(); this.selectAll(); return; }
     if (e.key === 'Escape' && this.multi.size) { this.sel = null; this.render(); return; }
@@ -14421,7 +14486,7 @@ const BinUI = {
     }
   },
   duplicate(b) {
-    const c = JSON.parse(JSON.stringify(b)); c.id = uid(); c.name = b.name + ' (Kopie)'; c.place = null; c.example = false;
+    const c = JSON.parse(JSON.stringify(b)); c.id = uid(); c.name = b.name + ' (Kopie)'; c.place = null; c.example = false; delete c.locked; delete c.frozen; delete c.lockedAt;
     const ids = new Map(); c.items.forEach((it) => { const n = uid(); ids.set(it.id, n); it.id = n; });
     c.fingers.forEach((f) => { f.id = uid(); if (f.itemId) f.itemId = ids.get(f.itemId); });
     const used = new Set(S.bins.map((x) => x.color)); c.color = BIN_COLORS.find((x) => !used.has(x)) || c.color;
@@ -14432,16 +14497,23 @@ const BinUI = {
     S.bins = S.bins.filter((x) => x !== b); Store.remove('bin', b.id);
     if (S.ui.binId === b.id) { S.ui.binId = S.bins[0] ? S.bins[0].id : null; this.sel = null; this.stage.fitted = false; }
   },
+  // a locked bin: its settings greyed and out of reach, no undo
+  renderLock() {
+    const lb = binLocked(curBin()), panel = $('#bin-panel');
+    panel.inert = lb; panel.classList.toggle('locked', lb);
+    if (lb) { $('#bin-undo').disabled = true; $('#bin-redo').disabled = true; }
+  },
   renderTop() {
     const sel = $('#bin-select'); sel.replaceChildren();
     for (const b of S.bins) sel.append(h('option', { value: b.id, text: `${b.name} · ${binTag(b)}` }));
     const b = curBin(); if (b) sel.value = b.id;
     sel.disabled = !S.bins.length; $('#bin-dup').disabled = !b;
+    const lk = $('#bin-lock'); lk.disabled = !b; lk.textContent = binLocked(b) ? '🔒 Gesperrt' : 'Sperren'; lk.setAttribute('aria-pressed', String(binLocked(b)));
     const wrap = $('#bin-del-wrap'); wrap.replaceChildren();
     if (this.confirmDel && b) wrap.append('Bin löschen?', h('button', { class: 'btn small danger', type: 'button', onclick: () => {
       this.removeBin(b); this.confirmDel = false; this.sel = null; this.stage.fitted = false; this.render(); this.stage.fit();
     } }, 'Ja'), h('button', { class: 'btn small', type: 'button', onclick: () => { this.confirmDel = false; this.renderTop(); } }, 'Nein'));
-    else wrap.append(h('button', { class: 'btn small danger', type: 'button', title: 'Diesen Bin löschen (mit Rückfrage)', disabled: !b, onclick: () => { this.confirmDel = true; this.renderTop(); } }, 'Löschen'));
+    else wrap.append(h('button', { class: 'btn small danger', type: 'button', title: binLocked(b) ? 'Gesperrt: zuerst entsperren' : 'Diesen Bin löschen (mit Rückfrage)', disabled: !b || binLocked(b), onclick: () => { this.confirmDel = true; this.renderTop(); } }, 'Löschen'));
   },
   // a tool or shape sticking out of the bin or into its wall: a red notice on the bin itself
   renderAlert(b, over) {
@@ -14461,11 +14533,11 @@ const BinUI = {
   },
   // bins from the first version of automatic troughs (along the tool) get the troughs across it
   migrateFingers(b) {
-    if (!b || !b.fingers.some((f) => f.auto && ((f.style !== 'across' && f.style !== 'edge') || !f.v))) return;
+    if (!b || binLocked(b) || !b.fingers.some((f) => f.auto && ((f.style !== 'across' && f.style !== 'edge') || !f.v))) return;
     ensureFingers(b); fitBin(b); b._rev = (b._rev || 0) + 1; Store.save('bin', b);
     if (this.sel && !this.selRef()) this.sel = null;
   },
-  render() { if (Overview.syncBin()) return; this.migrateFingers(curBin()); this.renderTop(); this.renderPanel(); Undo.syncBin(); if (this.view === '3d') this.update3d(); this.stage.redraw(); },
+  render() { if (Overview.syncBin()) return; this.migrateFingers(curBin()); this.renderTop(); this.renderPanel(); Undo.syncBin(); this.renderLock(); if (this.view === '3d') this.update3d(); this.stage.redraw(); },
   renderPanel() {
     const b = curBin();
     $('#bin-empty').hidden = !!b; $('#bin-panel').style.opacity = b ? 1 : 0.5;
@@ -14476,7 +14548,7 @@ const BinUI = {
     const mm = (v) => nf(v, 1).replace(/\.0$/, '');
     $('#bin-adv-sum').textContent = `Toleranz ${mm(b.clearance)} mm · Rand ${mm(b.wall)} mm · Boden ${mm(b.floor)} mm`;
     if (this.advBin !== b.id) { $('#bin-adv').open = false; this.advBin = b.id; }
-    $('#bin-lip').checked = b.lip; $('#bin-grips').value = gripKind(b) || 'none'; $('#bin-mag').value = magnetMode(b); $('#bin-autofit').checked = b.autoFit !== false; $('#bin-autofinger').checked = !!b.autoFingers;
+    $('#bin-lip').checked = b.lip; $('#bin-grips').value = gripKind(b) || 'none'; $('#bin-mag').value = magnetMode(b); $('#bin-round').checked = b.round === true; $('#bin-autofit').checked = b.autoFit !== false; $('#bin-autofinger').checked = !!b.autoFingers;
     $('#bin-lift').value = b.lift || 0; $('#bin-lift').closest('label').hidden = !b.lip; $('#bin-grip-row').hidden = !b.grips; $('#bin-grip-opt').hidden = !b.grips && !b.fingers.some((f) => f.auto && f.itemId);
     // (a bin that fits its content does this by itself on every change)
     $('#bin-autosize').hidden = b.autoFit !== false;
@@ -15145,12 +15217,12 @@ const Overview = {
         ? h('span', { class: 'confirm' }, 'Wirklich löschen?',
           h('button', { class: 'btn small danger', type: 'button', onclick: () => { BinUI.removeBin(b); this.confirm = null; this.renderBins(); } }, 'Löschen'),
           h('button', { class: 'btn small', type: 'button', onclick: () => { this.confirm = null; this.renderBins(); } }, 'Abbrechen'))
-        : h('button', { class: 'btn small ghost danger', type: 'button', title: 'Diesen Bin löschen (mit Rückfrage)', onclick: () => { this.confirm = b.id; this.renderBins(); } }, 'Löschen');
+        : h('button', { class: 'btn small ghost danger', type: 'button', disabled: binLocked(b), title: binLocked(b) ? 'Gesperrt: zuerst unter «Bin bearbeiten» entsperren' : 'Diesen Bin löschen (mit Rückfrage)', onclick: () => { this.confirm = b.id; this.renderBins(); } }, 'Löschen');
       const thumb = binThumb(b, 300, 188); thumb.style.cursor = 'pointer'; thumb.title = 'Öffnen'; thumb.addEventListener('click', () => this.open(b));
       grid.append(h('article', { class: 'tool' }, thumb,
         h('div', { class: 'body' },
-          h('input', { type: 'text', value: b.name, 'aria-label': 'Name', title: 'Name des Bins', onchange: (e) => { b.name = e.target.value.trim() || b.name; Store.save('bin', b); } }),
-          h('div', { class: 'dims' }, h('div', { text: binTag(b) }), h('div', { text: `Toleranz ${nf(b.clearance, 1)} mm` })),
+          h('input', { type: 'text', value: b.name, 'aria-label': 'Name', title: 'Name des Bins', disabled: binLocked(b), onchange: (e) => { b.name = e.target.value.trim() || b.name; Store.save('bin', b); } }),
+          h('div', { class: 'dims' }, h('div', { text: binTag(b) + (binLocked(b) ? ' · 🔒 gesperrt' : '') }), h('div', { text: `Toleranz ${nf(b.clearance, 1)} mm` })),
           bad.length ? h('span', { class: 'pill bad', style: { whiteSpace: 'normal', alignSelf: 'flex-start' }, text: bad[0].text + (bad.length > 1 ? ` (+${bad.length - 1} weitere)` : '') }) : null,
           h('label', { class: 'f' }, h('span', { text: 'Koffer' }), caseSel),
           h('div', { class: 'actions' },
@@ -15711,7 +15783,7 @@ const Undo = {
     });
   },
   bin(dir) {
-    const b = curBin(); if (!b) return;
+    const b = curBin(); if (!b || binLocked(b)) return;
     if (BinHistory.step(b.id, b, dir)) { BinUI.sel = null; BinUI.render(); } else toast(dir < 0 ? 'Nichts mehr rückgängig zu machen.' : 'Nichts zum Wiederholen.');
   },
   kase(dir) {
@@ -16172,23 +16244,20 @@ const App = {
       }
       S.ui.troughV = 2;
     }
-    // the tools' troughs reached 14 mm past the tool until 2026-10-21, FINGER_REACH (20) now: lengthened once;
-    // a bin that fits its content takes the size it then needs
-    let longer = 0;
-    if (!S.ui.reachV) {
+    // 2026-10-21 the tools' troughs in every bin were lengthened by 1 mm at the start (reach 14 → 15), and bins
+    // that fit their content took the size that needed: printed bins changed (Camille: «verändere nicht
+    // andauernd meine bereits gedruckten Bins»). Taken back once where it ran (reachV 1). From now on nothing at
+    // the start changes a bin. (Grips placed anew at the start the same day, gripV, cannot be told apart from
+    // ones moved by hand; they stay.)
+    let shorter = 0;
+    if (S.ui.reachV === 1) {
       for (const b of S.bins) {
-        let n = 0; for (const f of b.fingers) if (reachTrough(b, f)) n++;
-        if (n) { syncFingers(b); if (b.autoFit !== false) autoSize(b); b._rev = (b._rev || 0) + 1; Store.save('bin', b); longer++; }
+        if (binLocked(b)) continue;
+        let n = 0; for (const f of b.fingers) if (unreachTrough(b, f)) n++;
+        if (n) { syncFingers(b); if (b.autoFit !== false) autoSize(b); b._rev = (b._rev || 0) + 1; Store.save('bin', b); shorter++; }
       }
-      S.ui.reachV = 1;
     }
-    // grips to lift a bin out with a tool in their way (an error until 2026-10-21): placed once, into a gap or
-    // in the middle of the short ends under the tools
-    let regrip = 0;
-    if (!S.ui.gripV) {
-      for (const b of S.bins) if (settleGrips(b)) { b._rev = (b._rev || 0) + 1; Store.save('bin', b); regrip++; }
-      S.ui.gripV = 1;
-    }
+    S.ui.reachV = 2;
     FotoUI.init(); TraceUI.init(); LibUI.init(); BinUI.init(); CaseUI.init(); Overview.init(); NewBin.init(); TestPrint.init(); DataUI.init(); Undo.init(); DataFolder.init(); GDrive.init();
     window.addEventListener('online', () => Store.sendAll());
     DataUI.takeStartData();
@@ -16200,8 +16269,7 @@ const App = {
     if (redepth) news.push(`Taschentiefen in ${redepth === 1 ? 'einem Bin' : redepth + ' Bins'} an die Werkzeughöhen angepasst, so tief, wie der Bin es zulässt.`);
     if (grown.length) news.push(`${grown.length === 1 ? `«${grown[0]}» ist` : `${grown.length} Bins sind`} jetzt so hoch, dass die Werkzeuge ganz in ihren Taschen liegen.`);
     if (deeper) news.push(`Taschen in ${deeper === 1 ? 'einem Bin' : deeper + ' Bins'} jetzt ${nf(DEPTH_EXTRA, 0)} mm tiefer als die Werkzeuge hoch sind (Reserve nach oben).`);
-    if (longer) news.push(`Griffmulden der Werkzeuge ragen jetzt ${nf(FINGER_REACH, 0)} mm über das Werkzeug hinaus statt 14 (in ${longer === 1 ? 'einem Bin' : longer + ' Bins'} angepasst). Wo es eng wird: «Griffmulden optimieren».`);
-    if (regrip) news.push(`Griffmulden zum Herausheben in ${regrip === 1 ? 'einem Bin' : regrip + ' Bins'} neu gelegt: in eine Lücke am Rand oder mittig unter ein Werkzeug (dieses zuerst herausnehmen).`);
+    if (shorter) news.push(`Die Griffmulden der Werkzeuge in ${shorter === 1 ? 'einem Bin' : shorter + ' Bins'} sind wieder so lang wie vorher: die Verlängerung um 1 mm beim letzten Start ist zurückgenommen. Bestehende Bins verändert die App nicht mehr von selbst; unter «Bin bearbeiten» lässt sich ein Bin sperren.`);
     if (wider) news.push(`Griffmulden der Werkzeuge wieder ${nf(FINGER_W, 0)} mm breit (in ${wider === 1 ? 'einem Bin' : wider + ' Bins'} angepasst).`);
     if (lower.length) news.push(`Griffmulden machen Bins nicht mehr höher: ${lower.join(', ')}.`);
     if (news.length) toast(news.join(' '));
@@ -16218,7 +16286,7 @@ if (location.hash === '#selbsttest') setTimeout(async () => {
     document.title = 'SELBSTTEST OK ' + Math.round(r.measureVolume(s)) + ' mm3, Schrift ' + (document.fonts.check('600 14px Barlow') ? 'da' : 'fehlt');
   } catch (e) { document.title = 'SELBSTTEST FEHLER ' + (e && (e.message || e)); }
 }, 800);
-window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, sinkTools, gripShapes, gripGaps, placeGrips, gripCovers, settleGrips, reachTrough, FINGER_REACH, optimizeTroughs, fingerEdges, fingerEdgePicks, gripPlaces, gripRoom, fieldsFor, GRIP, GRIP_BALL, loadThree, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner, binSplit, halfCuts, binClipSpots, binMagnetSpots, BIN_CLIP, dogbonePoly };
+window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, sinkTools, gripShapes, gripGaps, placeGrips, gripCovers, settleGrips, unreachTrough, FINGER_REACH, lockBin, binLocked, binTool, gripDims, roundCutters, EDGE_ROUND, optimizeTroughs, fingerEdges, fingerEdgePicks, gripPlaces, gripRoom, fieldsFor, GRIP, GRIP_BALL, loadThree, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner, binSplit, halfCuts, binClipSpots, binMagnetSpots, BIN_CLIP, dogbonePoly };
 // The mouse wheel over a number field that has the focus changes its value: easily by accident while
 // scrolling the panel (a bin's tolerance, wall, floor). The field gives up the focus instead, and the page
 // scrolls on.
