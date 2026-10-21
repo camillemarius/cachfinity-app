@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'e0ff31cd4f0a';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'af39f1fd121a';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -11487,11 +11487,14 @@ function setSaveState(st) {
 // First every strip width is filled in two plain orders. Then each width aims at a row less than the best
 // so far: units are taken out near a random place and put back where they fit, again and again, until all
 // fit into the shorter strip (ruin and recreate). The result with the fewest fields wins (for a bin of fixed
-// size: the first that fits it).
+// size: the first that fits it). Last, it is pressed together, and the tools go into a corner of the bin:
+// the room left over is one piece, usable for another tool (Camille's example), not gaps all round.
 const NEST_GAP = 2; // mm of material at least between two pockets (and their troughs)
 // footprints are simplified to NEST_EPS (few corners) and grown by that more, so they still hold their pockets
 const NEST_EPS = 0.3, NEST_OFF = NEST_GAP / 2 + NEST_EPS;
 const NEST_AT = [0.5, 0.35, 0.65, 0.2, 0.8]; // places along a tool tried for its automatic trough
+const NEST_EDGE = 0.4; // mm from the inside's sides where there is room (its corners are rounded by 1.75 mm)
+const NEST_SQUEEZE = 1.5; // mm the best arrangement is asked to get shorter, again and again, at the end
 const normDeg = (a) => (((Math.round(a * 10) / 10) % 360) + 360) % 360;
 // The units of bin b. A shape set by hand over one or several tools (a slot across rods, a rectangle a tool
 // lies in) holds them together as they lie now; a shape over no tool is a unit of its own. Each part keeps
@@ -11639,7 +11642,7 @@ function nestRandom(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13
 // tools' automatic troughs (and, for a bin that fits its content, its size). Returns {ok, gx, gy, before,
 // kept, tries, ms} (kept: groups of tools held together by a shape; tries: rounds of the search) or
 // {ok: false, why}. Takes up to budget ms.
-async function nestBin(b, budget = 5000) {
+async function nestBin(b, budget = 7000) {
   if (!b.items.some((it) => toolById(it.toolId))) return { ok: false, why: 'empty' };
   const before = b.gx * b.gy;
   ensureFingers(b); syncFingers(b);
@@ -11673,7 +11676,7 @@ async function nestBin(b, budget = 5000) {
   const take = (lane, res) => {
     if (res.length > lane.T + 0.01) return;
     const r = rate(res);
-    if (!best || r.score < best.score - 1e-9) best = { ...r, res, turned: lane.turned };
+    if (!best || r.score < best.score - 1e-9) best = { ...r, res, lane };
   };
   // each strip filled in two plain orders: the largest units first, the longest first
   for (const lane of lanes) {
@@ -11701,11 +11704,8 @@ async function nestBin(b, budget = 5000) {
     }
     return true;
   };
-  let open = lanes.filter((l) => l.res && (fixed || best) && aim(l)), k = 0;
-  for (; open.length && !(fixed && best) && performance.now() - t0 < budget; k++) {
-    // mostly the strip whose units left out need the least of its free room, now and then any
-    const tight = (l) => l.outArea / Math.max(1, (l.W + 2 * NEST_OFF) * (l.aimT + 2 * NEST_OFF) - need + l.outArea);
-    const lane = rnd() < 0.7 ? open.reduce((a, l) => (tight(l) < tight(a) ? l : a)) : open[Math.floor(rnd() * open.length)];
+  // one round in a strip: up to three units near a random place taken out, put back with the ones left out
+  const round = (lane) => {
     const px = rnd() * lane.W, py = rnd() * lane.aimT;
     const dist = (p) => { const bb = foot(p.u, p.d, p.v).box; return Math.hypot(p.x + bb.cx - px, p.y + bb.cy - py); };
     // (now and then all of them: built anew)
@@ -11719,29 +11719,62 @@ async function nestBin(b, budget = 5000) {
       // (a unit left out tries every place of its trough)
       const was = taken.find((p) => p.u === u), vs = was ? [was.v] : u.troughs.map((_, v) => v);
       if (was && u.troughs.length > 1 && rnd() < 0.4) vs.push(Math.floor(rnd() * u.troughs.length));
-      const s = nestSpot(u, u.turns.flatMap((d) => [...new Set(vs)].map((v) => ({ d, v }))), placed, lane.W, lane.aimT, foot, nfp, side, by);
-      if (s) placed = [...placed, s]; else out.push(u);
+      const sp = nestSpot(u, u.turns.flatMap((d) => [...new Set(vs)].map((v) => ({ d, v }))), placed, lane.W, lane.aimT, foot, nfp, side, by);
+      if (sp) placed = [...placed, sp]; else out.push(u);
     }
-    const outArea = out.reduce((s, u) => s + area(u), 0);
+    const outArea = out.reduce((t, u) => t + area(u), 0);
     const heat = (1 - (performance.now() - t0) / budget) * need / units.length / 6;
     if (outArea <= lane.outArea + 1e-6 || rnd() < Math.exp(-(outArea - lane.outArea) / Math.max(heat, 1e-6))) { lane.placed = placed; lane.out = out; lane.outArea = outArea; }
+  };
+  const breath = () => new Promise((r) => setTimeout(r, 0)); // (for the page; not frame(), which stops in a hidden tab)
+  let open = lanes.filter((l) => l.res && (fixed || best) && aim(l)), k = 0;
+  for (; open.length && !(fixed && best) && performance.now() - t0 < budget * 0.7; k++) {
+    // mostly the strip whose units left out need the least of its free room, now and then any
+    const tight = (l) => l.outArea / Math.max(1, (l.W + 2 * NEST_OFF) * (l.aimT + 2 * NEST_OFF) - need + l.outArea);
+    const lane = rnd() < 0.7 ? open.reduce((p, l) => (tight(l) < tight(p) ? l : p)) : open[Math.floor(rnd() * open.length)];
+    round(lane);
     if (!lane.out.length) { take(lane, nestSized(lane.placed)); open = open.filter((l) => aim(l)); }
-    if (k % 8 === 7) await new Promise((r) => setTimeout(r, 0)); // (a breath for the page; not frame(), which stops in a hidden tab)
+    if (k % 8 === 7) await breath();
+  }
+  // Then the best arrangement is pressed together for the rest of the time: its strip aims NEST_SQUEEZE mm
+  // shorter than it is, anew after every success, so the room left over gathers at its end.
+  if (best) {
+    const sq = { ...best.lane };
+    const squeeze = () => {
+      sq.aimT = best.res.length - NEST_SQUEEZE; sq.placed = best.res.placed.filter((p) => p.end <= sq.aimT + 0.01);
+      sq.out = units.filter((u) => !sq.placed.some((p) => p.u === u)); sq.outArea = sq.out.reduce((t, u) => t + area(u), 0);
+    };
+    squeeze();
+    for (; performance.now() - t0 < budget; k++) {
+      round(sq);
+      if (!sq.out.length) { take(sq, nestSized(sq.placed)); squeeze(); }
+      if (k % 8 === 7) await breath();
+    }
   }
   if (!best) return { ok: false, why: fixed ? 'fixed' : 'none' };
   // apply: turned by 90° for the bin's length when that is the side that fitted; troughs moved along their tool
   for (const pl of best.res.placed) {
     for (const p of pl.u.parts) {
       const q = nestPose(pl.u, p, pl.d); let x = q.x + pl.x, y = q.y + pl.y, rot = q.rot;
-      if (best.turned) [x, y, rot] = [y, -x, normDeg(rot + 270)];
+      if (best.lane.turned) [x, y, rot] = [y, -x, normDeg(rot + 270)];
       Object.assign(p.ref, { x, y, rot });
     }
     if (pl.v && pl.u.trough) Object.assign(pl.u.trough, pl.u.troughs[pl.v], { manual: true });
   }
   syncFingers(b);
-  if (fixed) centerItems(b); else autoSize(b);
+  if (!fixed) autoSize(b);
+  nestCorner(b);
   b.manual = true; // nested by hand, as it were: later changes keep it (fitBin would lay it out in rows again)
   return { ok: true, gx: b.gx, gy: b.gy, before, kept: units.filter((u) => u.tools > 1).length, tries: k, ms: Math.round(performance.now() - t0) };
+}
+// the pockets of bin b moved into the inside's top left corner, NEST_EDGE from its sides (less where it is
+// tight): the room left over is one piece at the far sides
+function nestCorner(b) {
+  const polys = binPockets(b).map((p) => p.poly); if (!polys.length) return;
+  const bb = polyBBox(polys), inn = polyBBox([binInner(b)]);
+  const dx = inn.x0 + Math.min(NEST_EDGE, (inn.w - bb.w) / 2) - bb.x0, dy = inn.y0 + Math.min(NEST_EDGE, (inn.h - bb.h) / 2) - bb.y0;
+  for (const it of b.items) { it.x += dx; it.y += dy; }
+  for (const f of b.fingers) { f.x += dx; f.y += dy; }
 }
 
 // ===== printing: the printer's bed, and cutting what is too large for it into parts =====
