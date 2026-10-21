@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'e80128578e5e';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '511ddda71d19';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -609,7 +609,7 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
         <div class="stage-overlay" id="bin-overlay"></div>
         <div class="stage-alert" id="bin-alert" role="alert" hidden></div>
       </div>
-      <div class="stage-bar"><span class="hint" id="bin-hint">Teile und Formen ziehen zum Verschieben, Griffe an einer Form ändern ihre Grösse. Pfeiltasten schieben um 1 mm, mit Shift um 5 mm. R dreht um 90°.</span>
+      <div class="stage-bar"><span class="hint" id="bin-hint">Teile und Formen ziehen zum Verschieben, Griffe an einer Form ändern ihre Grösse. Pfeiltasten schieben um 1 mm, mit Shift um 5 mm. R dreht um 90°. Shift-Klick wählt mehrere Teile, Strg+A alle: sie bewegen sich dann zusammen.</span>
         <button class="btn small ghost" type="button" id="bin-fit" title="Zoom so, dass alles zu sehen ist">Alles zeigen</button></div>
     </div>
     <div class="panel" id="bin-panel">
@@ -13617,7 +13617,12 @@ const LibUI = {
 
 // ===== Tab 4: bin editor =====
 const BinUI = {
-  stage: null, sel: null, drag: null, view: '2d', viewer: null, exact: new Map(), confirmDel: false,
+  stage: null, _sel: null, multi: new Set(), drag: null, view: '2d', viewer: null, exact: new Map(), confirmDel: false,
+  // The selection: sel is the part shown in the panel; multi holds the keys ('item:<id>', 'finger:<id>') of
+  // everything selected, which moves, turns and goes together (Shift-click adds a part or takes it out,
+  // Strg+A takes all). Setting sel selects that part alone.
+  get sel() { return this._sel; },
+  set sel(v) { this._sel = v; this.multi = new Set(v ? [v.kind + ':' + v.id] : []); },
   init() {
     this.stage = new Stage($('#cv-bin'), {
       draw: (c, st) => this.draw(c, st),
@@ -13632,21 +13637,27 @@ const BinUI = {
           const b = curBin(); if (!b) return false;
           this.touch = e && e.pointerType === 'touch';
           // the size handles of a selected shape come first
-          const hd = this.hitHandle(x, y);
+          const add = !!(e && e.shiftKey), hd = add ? null : this.hitHandle(x, y);
           if (hd) { this.drag = { handle: hd, moved: false }; return true; }
           const hit = this.hit(b, x, y);
-          if (!hit) { if (this.sel) { this.sel = null; this.render(); } return false; }
-          this.sel = { kind: hit.kind, id: hit.ref.id };
-          this.drag = { ref: hit.ref, ox: x - hit.ref.x, oy: y - hit.ref.y, moved: false };
+          if (!hit) { if (this.multi.size && !add) { this.sel = null; this.render(); } return false; }
+          if (add) { this.toggleSel(hit.kind, hit.ref); this.renderPanel(); this.stage.redraw(); return true; }
+          // a part of the selection keeps it (and is shown in the panel); another part is selected alone
+          if (this.multi.has(hit.kind + ':' + hit.ref.id)) this._sel = { kind: hit.kind, id: hit.ref.id }; else this.sel = { kind: hit.kind, id: hit.ref.id };
+          this.drag = { group: this.selection().map((s) => ({ ref: s.ref, x0: s.ref.x, y0: s.ref.y })), sx: x, sy: y, moved: false };
           this.renderPanel(); this.stage.redraw();
           return true;
         },
         move: (x, y) => {
           if (!this.drag) return;
           if (this.drag.handle) { this.resizeTo(this.drag.handle, x, y); this.drag.moved = true; this.stage.redraw(); return; }
-          this.drag.ref.x = Math.round((x - this.drag.ox) * 2) / 2; this.drag.ref.y = Math.round((y - this.drag.oy) * 2) / 2;
-          if (this.drag.ref.itemId) attachLocal(curBin(), this.drag.ref); // a tool's trough keeps its new place on the tool
-          this.drag.moved = true; this.stage.redraw();
+          // one part goes to 0.5 mm steps, several move by 0.5 mm steps and keep their places to each other
+          const d = this.drag, one = d.group.length === 1, dx = Math.round((x - d.sx) * 2) / 2, dy = Math.round((y - d.sy) * 2) / 2;
+          for (const g of d.group) {
+            g.ref.x = one ? Math.round((g.x0 + x - d.sx) * 2) / 2 : g.x0 + dx; g.ref.y = one ? Math.round((g.y0 + y - d.sy) * 2) / 2 : g.y0 + dy;
+            if (g.ref.itemId) attachLocal(curBin(), g.ref); // a tool's trough keeps its new place on the tool
+          }
+          d.moved = true; this.stage.redraw();
         },
         hover: (x, y) => { const hd = this.hitHandle(x, y); this.stage.cv.style.cursor = hd ? 'nwse-resize' : this.hit(curBin() || { items: [], fingers: [] }, x, y) ? 'move' : ''; },
         up: () => { const d = this.drag; this.drag = null; if (d && d.moved) { const b = curBin(); if (b && !d.handle) b.manual = true; if (b && d.handle) fitBin(b); this.changed(); } },
@@ -13728,8 +13739,19 @@ const BinUI = {
     document.addEventListener('keydown', (e) => this.key(e));
   },
   key(e) {
-    if (App.tab !== 'bin' || !this.sel || this.view !== '2d') return;
+    if (App.tab !== 'bin' || this.view !== '2d') return;
     if (/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName || '')) return;
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'A')) { e.preventDefault(); this.selectAll(); return; }
+    if (e.key === 'Escape' && this.multi.size) { this.sel = null; this.render(); return; }
+    if (this.multi.size > 1) {
+      const group = this.selection(), step = e.shiftKey ? 5 : 1, b = curBin();
+      const mv = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
+      if (mv) { for (const { ref } of group) { ref.x += mv[0]; ref.y += mv[1]; if (ref.itemId) attachLocal(b, ref); } b.manual = true; e.preventDefault(); this.changed(); return; }
+      if (e.key === 'r' || e.key === 'R') { this.turnGroup(group, e.shiftKey ? -90 : 90); b.manual = true; this.changed(); }
+      if (e.key === 'Delete' || e.key === 'Backspace') { this.removeSel(); e.preventDefault(); }
+      return;
+    }
+    if (!this.sel) return;
     const ref = this.selRef(); if (!ref) return;
     const step = e.shiftKey ? 5 : 1;
     const mv = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
@@ -13738,6 +13760,36 @@ const BinUI = {
     if (e.key === 'Delete' || e.key === 'Backspace') { this.removeSel(); e.preventDefault(); }
   },
   selRef() { const b = curBin(); if (!b || !this.sel) return null; return (this.sel.kind === 'item' ? b.items : b.fingers).find((x) => x.id === this.sel.id) || null; },
+  isSel(id) { return this.multi.has('item:' + id) || this.multi.has('finger:' + id); },
+  // what is selected, as {kind, ref}; a tool's trough selected together with its tool goes with the tool
+  selection() {
+    const b = curBin(); if (!b) return [];
+    const all = [...this.multi].map((k) => { const i = k.indexOf(':'), kind = k.slice(0, i), id = k.slice(i + 1); const ref = (kind === 'item' ? b.items : b.fingers).find((x) => x.id === id); return ref && { kind, ref }; }).filter(Boolean);
+    return all.filter((s) => !(s.kind === 'finger' && s.ref.itemId && this.multi.has('item:' + s.ref.itemId)));
+  },
+  // Shift-click: the part joins the selection, or leaves it
+  toggleSel(kind, ref) {
+    const k = kind + ':' + ref.id;
+    if (this.multi.has(k)) { this.multi.delete(k); if (this._sel && this._sel.id === ref.id) this._sel = null; } else { this.multi.add(k); this._sel = { kind, id: ref.id }; }
+    if (!this._sel && this.multi.size === 1) { const [one] = this.multi, i = one.indexOf(':'); this._sel = { kind: one.slice(0, i), id: one.slice(i + 1) }; }
+  },
+  // Strg+A: every tool and every shape set by hand (a tool's troughs go with it)
+  selectAll() {
+    const b = curBin(); if (!b) return;
+    const keys = [...b.items.map((it) => 'item:' + it.id), ...b.fingers.filter((f) => !f.itemId).map((f) => 'finger:' + f.id)];
+    if (keys.length === 1) { const i = keys[0].indexOf(':'); this.sel = { kind: keys[0].slice(0, i), id: keys[0].slice(i + 1) }; } else { this._sel = null; this.multi = new Set(keys); }
+    this.renderPanel(); this.stage.redraw();
+  },
+  // the selected parts turned together by deg about the middle of their pockets
+  turnGroup(group, deg) {
+    const b = curBin(), bb = polyBBox(group.map(({ kind, ref }) => (kind === 'item' ? itemPocket(b, ref) : fingerPoly(ref))).filter(Boolean));
+    const a = (deg * Math.PI) / 180, cs = Math.cos(a), sn = Math.sin(a);
+    for (const { ref } of group) {
+      const dx = ref.x - bb.cx, dy = ref.y - bb.cy;
+      ref.x = bb.cx + dx * cs - dy * sn; ref.y = bb.cy + dx * sn + dy * cs; ref.rot = ((((ref.rot || 0) + deg) % 360) + 360) % 360;
+      if (ref.itemId) attachLocal(b, ref);
+    }
+  },
   // the smallest pocket under the pointer: a tool lying in a larger rectangle is still reachable
   hit(b, x, y) {
     let best = null, bestA = Infinity;
@@ -13790,17 +13842,17 @@ const BinUI = {
     this.render(); if (sizeChanged) this.stage.fit();
   },
   removeSel() {
-    const b = curBin(); if (!b || !this.sel) return;
+    const b = curBin(), group = this.selection(); if (!b || !group.length) return;
     let note = '';
-    if (this.sel.kind === 'item') b.items = b.items.filter((x) => x.id !== this.sel.id);
-    else {
-      const f = this.selRef(); b.fingers = b.fingers.filter((x) => x.id !== this.sel.id);
+    for (const { kind, ref } of group) {
+      if (kind === 'item') { b.items = b.items.filter((x) => x !== ref); continue; }
+      b.fingers = b.fingers.filter((x) => x !== ref);
       // a tool's last trough deleted by hand stays deleted (the automatic troughs used to put it right back)
-      const it = f && f.itemId && b.items.find((x) => x.id === f.itemId);
+      const it = ref.itemId && b.items.find((x) => x.id === ref.itemId);
       if (it && !b.fingers.some((x) => x.itemId === it.id)) { it.noFinger = true; if (b.autoFingers) note = 'Griffmulde entfernt. Dieses Werkzeug bekommt keine automatische mehr; «Griffmulde dazu» setzt wieder eine.'; }
     }
     fitBin(b); this.sel = null; this.changed(true);
-    if (note) toast(note);
+    if (group.length > 1) toast(`${group.length} Teile entfernt. Strg+Z holt sie zurück.`); else if (note) toast(note);
   },
   // one more finger trough for this tool, at the best free spot (see autoFinger); it moves with the tool
   addFinger(it) {
@@ -13813,7 +13865,7 @@ const BinUI = {
     $('#bin-view-2d').setAttribute('aria-pressed', String(v === '2d')); $('#bin-view-3d').setAttribute('aria-pressed', String(v === '3d'));
     $('#cv-bin').hidden = v !== '2d'; $('#bin-3d').hidden = v !== '3d';
     $('#bin-fit').hidden = v !== '2d';
-    $('#bin-hint').textContent = v === '2d' ? 'Teile und Formen ziehen zum Verschieben, Griffe an einer Form ändern ihre Grösse. Pfeiltasten schieben um 1 mm, mit Shift um 5 mm. R dreht um 90°.' : 'Ziehen dreht, Mausrad zoomt. Die Ansicht zeigt die exakte CAD-Geometrie, wie sie exportiert wird.';
+    $('#bin-hint').textContent = v === '2d' ? 'Teile und Formen ziehen zum Verschieben, Griffe an einer Form ändern ihre Grösse. Pfeiltasten schieben um 1 mm, mit Shift um 5 mm. R dreht um 90°. Shift-Klick wählt mehrere Teile, Strg+A alle: sie bewegen sich dann zusammen.' : 'Ziehen dreht, Mausrad zoomt. Die Ansicht zeigt die exakte CAD-Geometrie, wie sie exportiert wird.';
     if (v === '3d') { this.update3d(); setTimeout(() => this.exact3d(curBin()), 250); } else this.stage.redraw();
   },
   // The exact CAD model for the 3D view, computed when the view opens (a few seconds; the page waits). The
@@ -13927,7 +13979,7 @@ const BinUI = {
     const items = $('#bin-items'); items.replaceChildren();
     for (const it of b.items) {
       const t = toolById(it.toolId);
-      items.append(h('div', { class: 'item' + (this.sel && this.sel.id === it.id ? ' sel' : ''), onclick: () => { this.sel = { kind: 'item', id: it.id }; this.renderPanel(); this.stage.redraw(); } },
+      items.append(h('div', { class: 'item' + (this.isSel(it.id) ? ' sel' : ''), onclick: (e) => { if (e.shiftKey) this.toggleSel('item', it); else this.sel = { kind: 'item', id: it.id }; this.renderPanel(); this.stage.redraw(); } },
         h('span', { class: 'swatch', style: { background: b.color } }),
         h('div', null, h('div', { class: 't', text: t ? t.name : 'fehlt' }), h('div', { class: 's', text: `Tiefe ${nf(Math.min(it.depth, maxDepth(b)), 1)} mm${t && t.height > Math.min(it.depth, maxDepth(b)) + 0.05 ? ` (Werkzeug ${nf(t.height, 1)} mm hoch)` : ''} · ${nf(it.rot, 0)}°${it.mirror ? ' · gespiegelt' : ''}${t && t.fit ? ' · ' + (toolLocked(t) ? '🔒 ' : '') + FIT_TEXT[t.fit] : ''}` })),
         // the tool as a body in the 3D view, to see how deep it sits (off unless ticked; a setting of this
@@ -13937,7 +13989,7 @@ const BinUI = {
     }
     for (const f of b.fingers) {
       const lb = shapeLabel(f);
-      items.append(h('div', { class: 'item' + (this.sel && this.sel.id === f.id ? ' sel' : ''), onclick: () => { this.sel = { kind: 'finger', id: f.id }; this.renderPanel(); this.stage.redraw(); } },
+      items.append(h('div', { class: 'item' + (this.isSel(f.id) ? ' sel' : ''), onclick: (e) => { if (e.shiftKey) this.toggleSel('finger', f); else this.sel = { kind: 'finger', id: f.id }; this.renderPanel(); this.stage.redraw(); } },
         h('span', { class: 'swatch', style: { background: 'transparent', border: '2px dashed ' + b.color } }),
         h('div', null, h('div', { class: 't', text: lb.name }), h('div', { class: 's', text: `${lb.size} mm · Tiefe ${nf(Math.min(f.depth, maxDepth(b)), 1)} mm` })), h('span')));
     }
@@ -13951,7 +14003,7 @@ const BinUI = {
         fitBin(b); this.changed(true); toast(`${off.length === 1 ? 'Eine Tasche' : off.length + ' Taschen'} an die Werkzeughöhe angepasst.`);
       } }, 'An Werkzeughöhen anpassen')));
     const card = $('#bin-sel-card'), body = $('#bin-sel-body'); body.replaceChildren();
-    const ref = this.selRef(); card.hidden = !ref;
+    const ref = this.selRef(); card.hidden = !ref || this.multi.size > 1;
     if (ref && this.sel.kind === 'item') {
       const t = toolById(ref.toolId);
       $('#bin-sel-title').textContent = t ? t.name : 'Teil';
@@ -14030,7 +14082,8 @@ const BinUI = {
     const all = binChecks(b);
     const checks = $('#bin-checks'); checks.replaceChildren(...all.map((c) => h('li', { class: c.level, text: c.text })));
     this.renderAlert(b, all.filter((c) => c.over));
-    $('#bin-overlay').replaceChildren(h('span', { class: 'chip-on-mat', text: `${b.gx} × ${b.gy} Felder · ${b.hu} u` }));
+    $('#bin-overlay').replaceChildren(h('span', { class: 'chip-on-mat', text: `${b.gx} × ${b.gy} Felder · ${b.hu} u` }),
+      ...(this.multi.size > 1 ? [h('span', { class: 'chip-on-mat', text: `${this.multi.size} ausgewählt: ziehen oder mit Pfeiltasten schieben, R dreht, Entf entfernt, Esc hebt auf` })] : []));
   },
   draw(c, st) {
     const b = curBin(); if (!b) return;
@@ -14080,17 +14133,19 @@ const BinUI = {
       for (const q of clipBool('diff', [p.poly], [innerB])) { pathPoly(c, q); c.fillStyle = 'rgba(226,82,95,0.62)'; c.fill(); }
     }
     for (const p of pockets) {
-      const sel = this.sel && this.sel.id === p.ref.id;
+      const sel = this.isSel(p.ref.id);
       if (p.kind === 'finger') c.setLineDash([st.px(4), st.px(3)]);
       pathPoly(c, p.poly);
-      c.lineWidth = st.px(sel ? 2.5 : 1.2); c.strokeStyle = bad.has(p.ref) ? cssVar('--bad') : sel ? cssVar('--accent') : 'rgba(0,0,0,0.55)'; c.stroke();
+      // selected: white on a dark edge, which shows on every bin colour (the accent is the bin's orange)
+      if (sel && !bad.has(p.ref)) { c.lineWidth = st.px(4.5); c.strokeStyle = 'rgba(0,0,0,0.7)'; c.stroke(); c.lineWidth = st.px(2); c.strokeStyle = '#fff'; c.stroke(); }
+      else { c.lineWidth = st.px(sel ? 2.5 : 1.2); c.strokeStyle = bad.has(p.ref) ? cssVar('--bad') : 'rgba(0,0,0,0.55)'; c.stroke(); }
       c.setLineDash([]);
     }
     for (const p of pockets) {
       const bb = polyBBox([p.poly]);
       // the pocket's depth; when the tool is taller (it stands out, or the bin is too low for it) both
       if (p.kind === 'item') { const t = toolById(p.ref.toolId); if (t && st.scale > 1.2) drawLabel(c, st, t.height > p.depth + 0.05 ? `${t.name} · Tasche ${nf(p.depth, 0)} von ${nf(t.height, 0)} mm` : `${t.name} · ${nf(p.depth, 0)} mm`, bb.cx, bb.cy, { size: 11 }); }
-      else if (st.scale > 1.2 && (this.sel && this.sel.id === p.ref.id || bb.w * st.scale > 70)) drawLabel(c, st, `${shapeLabel(p.ref).size} · ${nf(p.depth, 0)} mm`, bb.cx, bb.y1 + st.px(12), { size: 10 });
+      else if (st.scale > 1.2 && (this.isSel(p.ref.id) || bb.w * st.scale > 70)) drawLabel(c, st, `${shapeLabel(p.ref).size} · ${nf(p.depth, 0)} mm`, bb.cx, bb.y1 + st.px(12), { size: 10 });
     }
     // size handles of the selected shape
     for (const hd of this.handles()) {
