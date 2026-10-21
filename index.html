@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'c5e39e6c436d';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '211badc4ce06';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -232,6 +232,19 @@ button, input, select { font: inherit; color: inherit; }
   pointer-events: auto; background: rgba(10, 25, 18, 0.62); color: var(--mat-ink); border-radius: 999px;
   padding: 3px 10px; font-size: 12px; font-family: var(--font-mono); backdrop-filter: blur(4px);
 }
+/* the case's 3D view: which layers and bins it shows, over the picture at the top left */
+.layers3d {
+  position: absolute; top: 10px; left: 10px; z-index: 2; max-height: calc(100% - 20px); overflow: auto; min-width: 170px; max-width: 46%;
+  background: rgba(10, 25, 18, 0.74); color: var(--mat-ink); border-radius: 8px; padding: 8px 10px; font-size: 12px; backdrop-filter: blur(4px);
+}
+.layers3d[hidden] { display: none; }
+.layers3d .lh { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.layers3d .lh button { margin-left: auto; border: 0; background: transparent; color: var(--accent); font: inherit; letter-spacing: 0; text-transform: none; cursor: pointer; padding: 0; }
+.layers3d label { display: flex; align-items: center; gap: 6px; padding: 2px 0; cursor: pointer; white-space: nowrap; }
+.layers3d label.sub { padding-left: 20px; }
+.layers3d label > span:last-child { overflow: hidden; text-overflow: ellipsis; }
+.layers3d input { accent-color: var(--accent); margin: 0; flex: none; }
+.layers3d .sw { width: 10px; height: 10px; border-radius: 2px; flex: none; }
 /* over the outlines the notes let clicks through to the points below them */
 #trace-overlay .chip-on-mat { pointer-events: none; }
 /* settings opened on purpose (bin: tolerance, wall, floor): closed they show a line with the values */
@@ -713,7 +726,7 @@ label.f.sub-opt input { flex: none; }
         <span class="hint"></span>
         <div class="seg" role="group" aria-label="Ansicht"><button title="Draufsicht: Bins platzieren, verschieben, stapeln" type="button" id="case-view-2d" aria-pressed="true">Draufsicht</button><button title="3D-Ansicht mit Grundplatte; Werkzeuge mit Haken «3D» im Bin erscheinen darin" type="button" id="case-view-3d" aria-pressed="false">3D</button></div>
       </div>
-      <div class="stage" id="stage-case"><canvas id="cv-case"></canvas><div class="three-host" id="case-3d" hidden></div>
+      <div class="stage" id="stage-case"><canvas id="cv-case"></canvas><div class="three-host" id="case-3d" hidden></div><div class="layers3d" id="case-layers" hidden></div>
         <div class="stage-overlay" id="case-overlay"></div>
       </div>
       <div class="stage-bar"><span class="hint">Bins ziehen zum Verschieben, sie rasten auf den Feldern ein. ▲ ▼ neben dem gewählten Bin (oder Bild ↑ / Bild ↓) ändern die Höhe. Bins aus der Liste ins Raster ziehen; ein Rechteck auf freien Feldern legt einen neuen Bin an, Doppelklick öffnet ihn.</span>
@@ -12805,15 +12818,17 @@ function plateGroup(THREE, cs) {
   }
   return { grp, floor: F };
 }
-function caseGroup(THREE, cs, focusId) {
+// (hidden: ids of bins left out, and 'plate' for the baseplate; CaseUI's layer list)
+function caseGroup(THREE, cs, focusId, hidden = null) {
   const grp = new THREE.Group();
   const W = cs.gx * GF.pitch, D = cs.gy * GF.pitch, H = cs.hu * GF.unit;
   // the baseplate stands for the case's floor (no floor drawn under it, so turned to look from below one sees
   // its clips); the bins' feet sit in its sockets, on its floor
-  const plate = plateGroup(THREE, cs); grp.add(plate.grp);
+  const plate = plateGroup(THREE, cs); if (!hidden || !hidden.has('plate')) grp.add(plate.grp);
   const box = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(W + 6, D + 6, H)), new THREE.LineBasicMaterial({ color: 0x9fb3a7 }));
   box.position.set(W / 2, -D / 2, H / 2); grp.add(box);
   for (const b of placedIn(cs)) {
+    if (hidden && hidden.has(b.id)) continue;
     const g = fastBinGroup(THREE, b, { ghost: focusId && focusId !== b.id });
     g.add(toolsGroup(THREE, b)); // the tools ticked «3D» in the bin
     const fp = footprint(b);
@@ -14594,6 +14609,8 @@ const BinUI = {
 // ===== Tab 5: toolbox planner with stacking =====
 const CaseUI = {
   stage: null, sel: null, drag: null, rect: null, view: '2d', viewer: null, level: 'all', confirmDel: false,
+  // what the 3D view leaves out (bin ids, 'plate'): for this visit only
+  hide3d: new Set(),
   init() {
     this.stage = new Stage($('#cv-case'), {
       draw: (c, st) => this.draw(c, st),
@@ -14715,8 +14732,35 @@ const CaseUI = {
   setView(v) {
     this.view = v;
     $('#case-view-2d').setAttribute('aria-pressed', String(v === '2d')); $('#case-view-3d').setAttribute('aria-pressed', String(v === '3d'));
-    $('#cv-case').hidden = v !== '2d'; $('#case-3d').hidden = v !== '3d'; $('#case-fit').hidden = v !== '2d';
+    $('#cv-case').hidden = v !== '2d'; $('#case-3d').hidden = v !== '3d'; $('#case-layers').hidden = v !== '3d'; $('#case-fit').hidden = v !== '2d';
     this.render();
+  },
+  // The layers in the 3D view (Camille: hide layers, or bins): the bins in the case by the height they stand at,
+  // the top one first, each with a box; a layer of several bins has one for each as well. Then the baseplate
+  // and the bins in the storage area beside the case.
+  renderLayers(cs) {
+    const host = $('#case-layers'); if (!cs) { host.replaceChildren(); return; }
+    const hid = this.hide3d, bins = placedIn(cs), inside = bins.filter((b) => !isParked(b, cs)), parked = bins.filter((b) => isParked(b, cs));
+    const zs = [...new Set(inside.map((b) => b.place.z))].sort((p, q) => p - q);
+    const set = (ids, on) => { for (const id of ids) { if (on) hid.delete(id); else hid.add(id); } this.renderLayers(cs); this.update3d(); };
+    const box = (ids, title) => {
+      const shown = ids.filter((id) => !hid.has(id)).length;
+      const cb = h('input', { type: 'checkbox', checked: shown > 0, title, onchange: (e) => set(ids, e.target.checked) });
+      cb.indeterminate = shown > 0 && shown < ids.length;
+      return cb;
+    };
+    const sw = (b) => h('span', { class: 'sw', style: { background: b.color } });
+    const rows = [];
+    const group = (label, list, title) => {
+      const ids = list.map((b) => b.id);
+      rows.push(h('label', { title }, box(ids, title), ...(list.length === 1 ? [sw(list[0])] : []), h('span', { text: label + ' · ' + (list.length === 1 ? list[0].name : list.length + ' Bins') })));
+      if (list.length > 1) for (const b of list) rows.push(h('label', { class: 'sub', title: b.name }, box([b.id], b.name), sw(b), h('span', { text: b.name })));
+    };
+    zs.slice().reverse().forEach((z) => { const n = zs.indexOf(z) + 1; group(`Ebene ${n}`, inside.filter((b) => b.place.z === z), `Ebene ${n}${z ? `, ab ${z} u gestapelt` : ', am Boden'}: ein- oder ausblenden`); });
+    rows.push(h('label', { title: 'Die Grundplatte ein- oder ausblenden' }, box(['plate'], 'Die Grundplatte ein- oder ausblenden'), h('span', { text: 'Grundplatte' })));
+    if (parked.length) group('Ablage', parked, 'Die Bins in der Ablage neben dem Koffer ein- oder ausblenden');
+    const any = [...bins.map((b) => b.id), 'plate'].some((id) => hid.has(id));
+    host.replaceChildren(h('div', { class: 'lh' }, h('span', { text: 'Ebenen' }), ...(any ? [h('button', { type: 'button', title: 'Alles wieder zeigen', onclick: () => set([...bins.map((b) => b.id), 'plate'], true) }, 'Alle zeigen')] : [])), ...rows);
   },
   update3d: debounce(async function () {
     const self = CaseUI; if (self.view !== '3d') return;
@@ -14725,7 +14769,7 @@ const CaseUI = {
       if (!self.viewer) self.viewer = new Viewer3D($('#case-3d'));
       await self.viewer.ready;
       const { THREE } = await loadThree();
-      self.viewer.set(caseGroup(THREE, cs, null), self.viewer.lastCase === cs.id); self.viewer.lastCase = cs.id;
+      self.viewer.set(caseGroup(THREE, cs, null, self.hide3d), self.viewer.lastCase === cs.id); self.viewer.lastCase = cs.id;
     } catch (e) { console.error(e); toast('3D-Ansicht konnte nicht laden: ' + (e.message || e), 'bad'); }
   }, 150),
   async exportAll() {
@@ -14828,7 +14872,7 @@ const CaseUI = {
     // the baseplate's clips sit underneath: say where to look
     const nClips = plateClips(cs);
     if (this.view === '3d' && nClips) ov.append(h('span', { class: 'chip-on-mat', text: `${nClips} Klammern (orange) halten die Teile der Grundplatte zusammen: Ansicht nach unten drehen` }));    Undo.syncCase();
-    this.stage.redraw(); if (this.view === '3d') this.update3d();
+    this.stage.redraw(); if (this.view === '3d') { this.renderLayers(cs); this.update3d(); }
   },
   rotate(b) {
     const cs = curCase();
