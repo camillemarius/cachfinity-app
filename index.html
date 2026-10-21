@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '6a9a532ced2c';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'f75643aa8070';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -10906,8 +10906,8 @@ function crossings(poly, alongX, v) {
 // tool's length, preferring a narrow spot (a handle rather than the joint of pliers), where it meets no
 // other pocket (and, in a bin of fixed size, stays inside). FINGER_DEEPER mm deeper than the tool's pocket
 // (chosen defaults), so the fingers get under the tool; it keeps that relation when the pocket's depth
-// changes.
-const FINGER_REACH = 14, FINGER_W = 25, FINGER_DEEPER = 5;
+// changes. 20 mm wide since 2026-10-21 (Camille: no wider is needed; 25 before, v 3 marks the new width).
+const FINGER_REACH = 14, FINGER_W = 20, FINGER_DEEPER = 5;
 // the automatic trough of tool t at the place at (0 … 1) along it: across the tool and FINGER_REACH past
 // both sides (side 0), or past one side only (side 1 or -1; the other end at the pocket's edge, where there
 // is no room: one finger still gets under the tool), in tool coordinates (lx, ly, lrot, l), and the tool's
@@ -10929,7 +10929,7 @@ function autoFinger(b, it, allowOutside = b.autoFit !== false) {
   for (const at of [0.5, 0.45, 0.55, 0.4, 0.6, 0.35, 0.65, 0.3, 0.7]) {
     const a = fingerAcross(b, t, at); if (!a) continue;
     const across = a.across;
-    const f = { id: uid(), shape: 'slot', role: 'finger', profile: 'round', auto: true, style: 'across', v: 2, itemId: it.id,
+    const f = { id: uid(), shape: 'slot', role: 'finger', profile: 'round', auto: true, style: 'across', v: 3, itemId: it.id,
       w: W, l: a.l, depth, dplus: FINGER_DEEPER, lx: a.lx, ly: a.ly, lrot: a.lrot };
     Object.assign(f, fingerWorld(it, f));
     const poly = fingerPoly(f);
@@ -10967,6 +10967,8 @@ function ensureFingers(b) {
   b.fingers = b.fingers.filter((f) => !(f.auto && f.style !== 'across'));
   // the next ones were 20 mm wide and as deep as the pocket: now FINGER_W wide and FINGER_DEEPER deeper
   for (const f of b.fingers) if (f.auto && !f.v) { f.w = FINGER_W; f.l = Math.max(f.l, f.w); f.dplus = FINGER_DEEPER; f.v = 2; }
+  // then 25 mm wide: now FINGER_W (one set wider or narrower by hand stays)
+  for (const f of b.fingers) if (f.auto && f.v === 2) { if (Math.abs(f.w - 25) < 0.01) f.w = FINGER_W; f.v = 3; }
   let n = 0;
   for (const it of b.items) {
     if (it.noFinger || b.fingers.some((f) => f.itemId === it.id)) continue;
@@ -15804,6 +15806,17 @@ const App = {
       }
       S.ui.depthV = 4;
     }
+    // the tools' automatic troughs were 25 mm wide until 2026-10-21 and are FINGER_W (20) now: the ones at 25 take
+    // the new width once (one set to another width by hand stays)
+    let narrower = 0;
+    if (!S.ui.troughV) {
+      for (const b of S.bins) {
+        let n = 0;
+        for (const f of b.fingers) if (f.auto && (f.v || 0) <= 2 && Math.abs(f.w - 25) < 0.01) { f.w = FINGER_W; f.v = 3; n++; }
+        if (n) { b._rev = (b._rev || 0) + 1; Store.save('bin', b); narrower++; }
+      }
+      S.ui.troughV = 1;
+    }
     FotoUI.init(); TraceUI.init(); LibUI.init(); BinUI.init(); CaseUI.init(); Overview.init(); NewBin.init(); TestPrint.init(); DataUI.init(); Undo.init(); DataFolder.init(); GDrive.init();
     window.addEventListener('online', () => Store.sendAll());
     DataUI.takeStartData();
@@ -15815,6 +15828,7 @@ const App = {
     if (redepth) news.push(`Taschentiefen in ${redepth === 1 ? 'einem Bin' : redepth + ' Bins'} an die Werkzeughöhen angepasst, so tief, wie der Bin es zulässt.`);
     if (grown.length) news.push(`${grown.length === 1 ? `«${grown[0]}» ist` : `${grown.length} Bins sind`} jetzt so hoch, dass die Werkzeuge ganz in ihren Taschen liegen.`);
     if (deeper) news.push(`Taschen in ${deeper === 1 ? 'einem Bin' : deeper + ' Bins'} jetzt ${nf(DEPTH_EXTRA, 0)} mm tiefer als die Werkzeuge hoch sind (Reserve nach oben).`);
+    if (narrower) news.push(`Griffmulden der Werkzeuge jetzt ${nf(FINGER_W, 0)} mm breit statt 25 (in ${narrower === 1 ? 'einem Bin' : narrower + ' Bins'} angepasst).`);
     if (lower.length) news.push(`Griffmulden machen Bins nicht mehr höher: ${lower.join(', ')}.`);
     if (news.length) toast(news.join(' '));
     Store.connect(() => { this.renderAll(); this.show(this.tab); });
