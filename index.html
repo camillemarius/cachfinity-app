@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'f75643aa8070';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'c79ab09637a3';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -11198,21 +11198,20 @@ const DEPTH_EXTRA = 1;
 function fullDepths(b) { for (const it of b.items) { const t = toolById(it.toolId); if (t && followsHeight(it)) it.depth = Math.floor(Math.min(t.height + DEPTH_EXTRA, fullRoom(b)) * 10 + 1e-6) / 10; } }
 // «Bauteile versenken»: every tool fully in its pocket, flush with the top (its height and DEPTH_EXTRA, also
 // where a depth was set by hand), and the bin just as high as that needs, lower too where it was higher (its
-// width and length stay; up to 30 u). A tool locked because its test print fits keeps its pocket. Returns the
-// height before, and the tools that still stand out: locked ones (locked) and ones taller than 30 u allow
-// (tall).
+// width and length stay; up to 30 u). A tool locked because its test print fits is sunk as well: the lock keeps
+// its outline, height and status, and this button is asked for (Camille). Returns the height before, and the
+// tools taller than 30 u allow (tall).
 function sinkTools(b) {
-  const was = b.hu, locked = [], tall = [];
+  const was = b.hu, tall = [];
   for (const it of b.items) {
     const t = toolById(it.toolId); if (!t) continue;
-    if (toolLocked(t)) { if (t.height > Math.min(it.depth, fullRoom(b)) + 0.05) locked.push(t.name); continue; }
     it.depth = Math.floor(Math.min(t.height + DEPTH_EXTRA, fullRoom(b)) * 10 + 1e-6) / 10; delete it.depthSet;
     if (t.height > fullRoom(b) + 0.05) tall.push(t.name);
   }
   // (as autoSize works it out: the pockets and the shapes set by hand, not the troughs)
   const deepest = Math.max(...b.items.map((it) => it.depth), ...b.fingers.filter((f) => !f.itemId).map((f) => f.depth), 5);
   b.hu = clamp(Math.ceil((deepest + GF.base + b.floor) / GF.unit), 2, 30);
-  return { was, locked, tall };
+  return { was, tall };
 }
 // a pocket's depth from its tool's height (rounded down to 0.1 mm: rounded up it could pass the bin's
 // deepest pocket, 15.05 mm in a 3 u bin)
@@ -13713,7 +13712,7 @@ const LibUI = {
       } }, label);
       // the mark on the picture; with «passt» only a lock (Camille's choice), which opens and closes with a click
       const mark = !t.fit ? null : t.fit !== 'ok' ? h('span', { class: 'fit bad', title: FIT_TEXT.bad + (t.fitAt ? ', gesetzt am ' + new Date(t.fitAt).toLocaleDateString('de-CH') : ''), text: FIT_MARK.bad })
-        : h('button', { type: 'button', class: 'fit ok lock', 'aria-label': locked ? 'Gesperrt' : 'Entsperrt', title: locked ? 'Testdruck passt, darum gesperrt: Name, Höhe, Status, Umriss und die Taschentiefe in den Bins bleiben, wie sie sind. Klicken entsperrt.' : 'Testdruck passt, entsperrt: Änderungen sind möglich. Klicken sperrt wieder.',
+        : h('button', { type: 'button', class: 'fit ok lock', 'aria-label': locked ? 'Gesperrt' : 'Entsperrt', title: locked ? 'Testdruck passt, darum gesperrt: Name, Höhe, Status, Umriss und die Taschentiefe in den Bins bleiben, wie sie sind («Bauteile versenken» versenkt es trotzdem). Klicken entsperrt.' : 'Testdruck passt, entsperrt: Änderungen sind möglich. Klicken sperrt wieder.',
           onclick: () => { if (locked) this.unlocked.add(t.id); else this.unlocked.delete(t.id); this.render(); } }, locked ? '🔒' : '🔓');
       grid.append(h('article', { class: 'tool' + (picked ? ' picked' : '') },
         h('label', { class: 'pick', title: 'Werkzeuge auswählen, um sie zusammen in einen Bin zu legen oder einen Testdruck zu machen' }, h('input', { type: 'checkbox', checked: picked, onchange: toggle, 'aria-label': 'Auswählen' }), picked ? 'Ausgewählt' : 'Auswählen'),
@@ -13872,8 +13871,7 @@ const BinUI = {
     $('#bin-sink').onclick = () => {
       const b = curBin(); if (!b || !b.items.length) return;
       const r = sinkTools(b); this.changed();
-      const left = [...(r.locked.length ? [`Gesperrt, weil der Testdruck passt, und noch nicht ganz versenkt: ${r.locked.join(', ')}. Das Schloss auf der Werkzeugkarte öffnen und noch einmal drücken.`] : []),
-        ...(r.tall.length ? [`Höher als ein Bin sein kann (30 u): ${r.tall.join(', ')}.`] : [])].join(' ');
+      const left = r.tall.length ? `Höher als ein Bin sein kann (30 u): ${r.tall.join(', ')}.` : '';
       toast((r.was === b.hu ? `Alle Werkzeuge liegen bündig in ihren Taschen, der Bin bleibt ${b.hu} u hoch.` : `Höhe ${r.was} → ${b.hu} u: alle Werkzeuge liegen bündig in ihren Taschen.`) + (left ? ' ' + left : '') + ' Strg+Z macht es rückgängig.', left ? 'bad' : undefined);
     };
     // the tools nested by their real outlines (nestBin); a bin that fits its content takes the size it needs
