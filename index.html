@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '6d0a9b7e6dd5';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '2ce8ad51675b';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -325,7 +325,10 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
 .lib { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
 .tool { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
 .tool canvas { width: 100%; aspect-ratio: 16 / 10; display: block; background: var(--mat); max-width: 100%; }
-.tool .body { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.tool .body { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+/* the buttons at the bottom of a card, level across a row of cards whatever stands above them */
+.tool .actions { margin-top: auto; display: flex; flex-direction: column; gap: 8px; }
+.tool .row.actions { flex-direction: row; }
 .tool .dims { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
 .tool .ex { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
 .lib-empty { border: 1px dashed var(--line); border-radius: 10px; padding: 28px; text-align: center; color: var(--muted); }
@@ -467,6 +470,8 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
         <div class="row">
           <label title="Ein oder mehrere Fotos wählen: Werkzeuge auf weissem A4-Papier, von oben fotografiert" class="btn primary grow" for="foto-input">Foto hinzufügen</label>
           <input type="file" id="foto-input" accept="image/*" multiple hidden>
+        </div>
+        <div class="row">
           <button title="Ein erzeugtes Beispielfoto laden, zum Ausprobieren" class="btn" type="button" id="foto-sample1">Beispiel</button>
           <button title="Drei Beispielfotos derselben Teile aus verschiedenen Richtungen: die Umrisse werden geschnitten, das nimmt die Überhöhung hoher Teile weg" class="btn" type="button" id="foto-sample3">Beispiel ×3</button>
         </div>
@@ -507,14 +512,17 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
   <!-- 2 Umrisse -->
   <section class="pane" id="pane-trace" role="tabpanel" aria-labelledby="tab-btn-trace">
     <div class="stage-wrap">
+      <div class="stage-bar">
+        <div class="seg" role="group" aria-label="Werkzeug"><button type="button" id="trace-tool-edit" aria-pressed="true" title="Punkte ziehen, in der Linienmitte neue einfügen">Bearbeiten</button><button type="button" id="trace-tool-del" aria-pressed="false" title="Angetippte Punkte löschen">Löschen</button><button type="button" id="trace-tool-measure" aria-pressed="false" title="Auf dem Foto messen: von einem Punkt zum anderen ziehen, die Länge in mm erscheint an der Linie">Messen</button></div>
+        <button class="btn small ghost" type="button" id="trace-undo" title="Rückgängig (Strg+Z)" aria-label="Rückgängig">↶</button><button class="btn small ghost" type="button" id="trace-redo" title="Wiederholen (Strg+Y)" aria-label="Wiederholen">↷</button>
+        <span class="hint"></span>
+        <div class="seg" role="group" aria-label="Ansicht"><button type="button" id="trace-show-photo" aria-pressed="true" title="Das Foto unter den Umrissen zeigen">Foto</button><button type="button" id="trace-show-mask" aria-pressed="false" title="Zeigt orange über dem Foto, was die Erkennung als Teil gezählt hat">Maske</button></div>
+      </div>
       <div class="stage" id="stage-trace"><canvas id="cv-trace"></canvas>
         <div class="stage-empty" id="trace-empty" hidden><div><strong>Noch keine Umrisse</strong>Füge zuerst unter «Fotos» ein Foto hinzu.</div></div>
         <div class="stage-overlay" id="trace-overlay"></div>
       </div>
       <div class="stage-bar"><span class="hint" id="trace-hint">Teil anklicken zum Bearbeiten. Punkte ziehen, Doppelklick auf eine Kante fügt einen Punkt ein, Rechtsklick löscht ihn.</span>
-        <div class="seg" role="group" aria-label="Werkzeug"><button type="button" id="trace-tool-edit" aria-pressed="true" title="Punkte ziehen, in der Linienmitte neue einfügen">Bearbeiten</button><button type="button" id="trace-tool-del" aria-pressed="false" title="Angetippte Punkte löschen">Löschen</button></div>
-        <button class="btn small ghost" type="button" id="trace-undo" title="Rückgängig (Strg+Z)" aria-label="Rückgängig">↶</button><button class="btn small ghost" type="button" id="trace-redo" title="Wiederholen (Strg+Y)" aria-label="Wiederholen">↷</button>
-        <div class="seg" role="group" aria-label="Ansicht"><button type="button" id="trace-show-photo" aria-pressed="true" title="Das Foto unter den Umrissen zeigen">Foto</button><button type="button" id="trace-show-mask" aria-pressed="false" title="Zeigt orange über dem Foto, was die Erkennung als Teil gezählt hat">Maske</button></div>
         <button class="btn small ghost" type="button" id="trace-fit" title="Zoom so, dass alles zu sehen ist">Alles zeigen</button></div>
     </div>
     <div class="panel">
@@ -636,7 +644,7 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
         <label title="Stapelrand oben, damit ein weiterer Bin auf diesem stehen kann" class="check"><input type="checkbox" id="bin-lip"> Stapelrand</label>
         <label class="f inline-f" style="padding-left: 26px" title="Hebt den Stapelrand um ganze Einheiten an. Werkzeuge, die aus ihrer Tasche ragen, haben dann Platz unter dem Bin darüber."><span>Rand erhöhen</span><input type="number" id="bin-lift" min="0" max="10" step="1" style="width: 64px"><span class="unit">u (je 7 mm)</span></label>
         <label class="f" title="Löcher für Magnete 6 × 2 mm unten im Bin: keine, 4 unter jedem Feld, oder nur die 4 in den äussersten Ecken (spart Magnete, der Bin hält trotzdem)"><span>Magnetlöcher 6 × 2 mm</span><select id="bin-mag" title="Löcher für Magnete 6 × 2 mm unten im Bin: keine, 4 unter jedem Feld, oder nur die 4 in den äussersten Ecken (spart Magnete, der Bin hält trotzdem)"><option value="none">Keine</option><option value="all">4 pro Feld</option><option value="corners">Nur 4 in den äussersten Ecken</option></select></label>
-        <div class="row"><button class="btn small" type="button" id="bin-autosize" title="Breite, Länge und Höhe nach dem Inhalt; die Werkzeuge liegen danach ganz in ihren Taschen">Grösse anpassen</button><button class="btn small" type="button" id="bin-arrange" title="Die Werkzeuge neu und platzsparend anordnen">Teile anordnen</button><button class="btn small" type="button" id="bin-nest" title="Die Werkzeuge nach ihren echten Umrissen ineinander schieben, auch gedreht, so dass der Bin möglichst wenige Felder braucht. Werkzeuge unter einer gemeinsamen Form (etwa einem Langloch über mehrere Stangen) bleiben zusammen. Griffmulden wandern dabei entlang ihres Werkzeugs und ragen, wo nötig, nur auf einer Seite hinaus. Dauert ein paar Sekunden; Strg+Z macht es rückgängig">Platzsparend anordnen</button></div>
+        <div class="row"><button class="btn small" type="button" id="bin-autosize" title="Breite, Länge und Höhe nach dem Inhalt; die Werkzeuge liegen danach ganz in ihren Taschen">Grösse anpassen</button><button class="btn small" type="button" id="bin-arrange" title="Die Werkzeuge neu und platzsparend anordnen">Teile anordnen</button><button class="btn small" type="button" id="bin-nest" title="Die Werkzeuge nach ihren echten Umrissen ineinander schieben, auch gedreht, so dass der Bin möglichst wenige Felder braucht. Werkzeuge unter einer gemeinsamen Form (etwa einem Langloch über mehrere Stangen) bleiben zusammen. Griffmulden wandern dabei entlang ihres Werkzeugs und ragen, wo nötig, nur auf einer Seite hinaus. Dauert ein paar Sekunden; Strg+Z macht es rückgängig">Platzsparend anordnen</button><button class="btn small" type="button" id="bin-sink" title="Die Höhe so einstellen, dass alle Werkzeuge bündig in ihren Taschen liegen: jede Tasche so tief, wie ihr Werkzeug hoch ist (und 1 mm Reserve), auch wo eine Tiefe von Hand gesetzt war; der Bin wird so hoch wie nötig, auch niedriger. Breite und Länge bleiben. Strg+Z macht es rückgängig">Bauteile versenken</button></div>
       </div>
       <div class="card">
         <h2>Inhalt</h2>
@@ -11123,6 +11131,24 @@ const DEPTH_EXTRA = 1;
 // «Grösse anpassen» on any bin: the pockets get their tools' full height (a depth set by hand stays), so the
 // size worked out afterwards (autoSize) is high enough for the tools to lie fully in them
 function fullDepths(b) { for (const it of b.items) { const t = toolById(it.toolId); if (t && followsHeight(it)) it.depth = Math.floor(Math.min(t.height + DEPTH_EXTRA, fullRoom(b)) * 10 + 1e-6) / 10; } }
+// «Bauteile versenken»: every tool fully in its pocket, flush with the top (its height and DEPTH_EXTRA, also
+// where a depth was set by hand), and the bin just as high as that needs, lower too where it was higher (its
+// width and length stay; up to 30 u). A tool locked because its test print fits keeps its pocket. Returns the
+// height before, and the tools that still stand out: locked ones (locked) and ones taller than 30 u allow
+// (tall).
+function sinkTools(b) {
+  const was = b.hu, locked = [], tall = [];
+  for (const it of b.items) {
+    const t = toolById(it.toolId); if (!t) continue;
+    if (toolLocked(t)) { if (t.height > Math.min(it.depth, fullRoom(b)) + 0.05) locked.push(t.name); continue; }
+    it.depth = Math.floor(Math.min(t.height + DEPTH_EXTRA, fullRoom(b)) * 10 + 1e-6) / 10; delete it.depthSet;
+    if (t.height > fullRoom(b) + 0.05) tall.push(t.name);
+  }
+  // (as autoSize works it out: the pockets and the shapes set by hand, not the troughs)
+  const deepest = Math.max(...b.items.map((it) => it.depth), ...b.fingers.filter((f) => !f.itemId).map((f) => f.depth), 5);
+  b.hu = clamp(Math.ceil((deepest + GF.base + b.floor) / GF.unit), 2, 30);
+  return { was, locked, tall };
+}
 // a pocket's depth from its tool's height (rounded down to 0.1 mm: rounded up it could pass the bin's
 // deepest pocket, 15.05 mm in a 3 u bin)
 function defaultDepth(b, tool) { return Math.floor(Math.min(tool.height + DEPTH_EXTRA, depthRoom(b)) * 10 + 1e-6) / 10; }
@@ -12859,6 +12885,7 @@ const TraceUI = {
     document.addEventListener('keydown', (e) => this.key(e));
     $('#trace-tool-edit').onclick = () => this.setMode('edit');
     $('#trace-tool-del').onclick = () => this.setMode('delete');
+    $('#trace-tool-measure').onclick = () => this.setMode(this.mode === 'measure' ? 'edit' : 'measure');
     $('#trace-undo').onclick = () => this.undo();
     $('#trace-redo').onclick = () => this.redo();
     $('#trace-fit').onclick = () => this.stage.fit();
@@ -12943,9 +12970,27 @@ const TraceUI = {
   },
   hitMid(it, x, y) { let best = null, bd = this.tol(); for (const m of this.midpoints(it)) { const d = Math.hypot(m.x - x, m.y - y); if (d < bd) { bd = d; best = m; } } return best; },
   hitSeg(it, x, y) { let best = -1, bd = this.tol(); it.raw.forEach((p, i) => { const q = it.raw[(i + 1) % it.raw.length]; const d = segDist(x, y, p[0], p[1], q[0], q[1]).d; if (d < bd) { bd = d; best = i; } }); return best; },
-  setMode(m) { this.mode = m; this.hover = null; this.stage.cv.style.cursor = ''; this.render(); },
+  setMode(m) { this.mode = m; this.hover = null; if (m !== 'measure') this.meas = null; this.stage.cv.style.cursor = m === 'measure' ? 'crosshair' : ''; this.render(); },
+  // «Messen»: a line dragged on the photo (world units are mm on the paper), its ends caught by the outlines'
+  // points within reach (Alt: free) and kept level or upright with Shift; it stays until the next one
+  measAt(x, y, e) {
+    if (e && e.altKey) return [x, y];
+    let best = null, bd = this.tol();
+    for (const it of T.items) for (const p of it.raw) { const d = Math.hypot(p[0] - x, p[1] - y); if (d < bd) { bd = d; best = [p[0], p[1]]; } }
+    return best || [x, y];
+  },
+  drawMeasure(c, st) {
+    const { a, b } = this.meas, len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const ux = len ? (b[0] - a[0]) / len : 1, uy = len ? (b[1] - a[1]) / len : 0, t = st.px(7);
+    const line = () => { c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); for (const p of [a, b]) { c.moveTo(p[0] - uy * t, p[1] + ux * t); c.lineTo(p[0] + uy * t, p[1] - ux * t); } };
+    // yellow on a dark edge: it shows on paper, on tools and on the mat
+    line(); c.lineWidth = st.px(4); c.strokeStyle = 'rgba(0,0,0,0.6)'; c.stroke();
+    line(); c.lineWidth = st.px(2); c.strokeStyle = '#ffd400'; c.stroke();
+    if (len > 0.05) drawLabel(c, st, `${nf(len, 1)} mm`, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2 - st.px(14), { size: 12 });
+  },
   hoverAt(x, y, e) {
     this.touch = e.pointerType === 'touch';
+    if (this.mode === 'measure') { this.stage.cv.style.cursor = 'crosshair'; return; }
     const it = T.selItem; let hv = null, cursor = '';
     if (it && !this.merging) {
       const v = this.hitVertex(it, x, y), ah = v < 0 && this.mode === 'edit' ? this.hitAxis(it, x, y) : null;
@@ -12965,6 +13010,7 @@ const TraceUI = {
   },
   down(x, y, e) {
     this.touch = e.pointerType === 'touch';
+    if (this.mode === 'measure') { const p = this.measAt(x, y, e); this.meas = { a: p, b: p, on: true }; this.stage.redraw(); return true; }
     const it = T.selItem;
     if (it && !this.merging) {
       const v = this.hitVertex(it, x, y);
@@ -13002,6 +13048,11 @@ const TraceUI = {
     this.loupe = { x: p[0], y: p[1] }; this.stage.redraw();
   },
   dragTo(x, y, e) {
+    if (this.meas && this.meas.on) {
+      let p = this.measAt(x, y, e); const a = this.meas.a;
+      if (e.shiftKey) p = Math.abs(p[0] - a[0]) >= Math.abs(p[1] - a[1]) ? [p[0], a[1]] : [a[0], p[1]];
+      this.meas.b = p; this.stage.redraw(); return;
+    }
     if (this.axisDrag) { this.dragAxis(x, y, e); return; }
     const d = this.drag, it = T.selItem; if (!d || !it || this.dragV < 0) return;
     let px = x - d.gx, py = y - d.gy;
@@ -13142,6 +13193,7 @@ const TraceUI = {
     return [sx, sy];
   },
   endDrag(cancelled) {
+    if (this.meas && this.meas.on) { this.meas.on = false; if (cancelled) this.meas = null; this.stage.redraw(); return; }
     if (this.axisDrag) { this.axisDrag = null; this.stage.cv.style.cursor = ''; this.render(); return; }
     const d = this.drag, it = T.selItem;
     if (d && it) {
@@ -13158,6 +13210,7 @@ const TraceUI = {
   // the deletion failed before the menu was turned off. So it is turned off first.
   context(x, y, e) {
     e.preventDefault();
+    if (this.mode === 'measure') { this.meas = null; this.stage.redraw(); return; } // (a right-click clears the line)
     if (e.pointerType) this.touch = e.pointerType === 'touch';
     const it = T.selItem;
     if (this.drag) {
@@ -13205,7 +13258,7 @@ const TraceUI = {
     const mod = e.ctrlKey || e.metaKey;
     if (mod && (e.key === 'z' || e.key === 'Z')) { e.preventDefault(); if (e.shiftKey) this.redo(); else this.undo(); return; }
     if (mod && (e.key === 'y' || e.key === 'Y')) { e.preventDefault(); this.redo(); return; }
-    if (e.key === 'Escape') { if (this.mode === 'delete') this.setMode('edit'); else { T.selVertex = -1; this.render(); } return; }
+    if (e.key === 'Escape') { if (this.mode === 'delete' || this.mode === 'measure') this.setMode('edit'); else { T.selVertex = -1; this.render(); } return; }
     const it = T.selItem; if (!it || T.selVertex < 0 || T.selVertex >= it.raw.length) return;
     if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); this.deleteVertex(); return; }
     // arrow keys move the chosen point by 0.1 mm, with Shift by 1 mm
@@ -13331,12 +13384,13 @@ const TraceUI = {
     if (has && T.scenes.length > 1) ov.append(h('span', { class: 'chip-on-mat', text: `Motiv ${T.scene + 1} von ${T.scenes.length}` }));
     if (has && parallaxMode() === 'multi') ov.append(h('span', { class: 'chip-on-mat', text: `Umrisse aus ${P.length} Fotos. Im Hintergrund Foto ${T.photos.indexOf(P[0]) + 1}, darin wirken hohe Teile grösser.` }));
     if (has && T.items.some((i) => i.symPreview)) ov.append(h('span', { class: 'chip-on-mat', text: 'Strichpunkt: Spiegelachse · weiss gepunktet: so sähe der Umriss gespiegelt aus' }));
-    if (!this.merging) $('#trace-hint').textContent = !T.selItem ? 'Teil anklicken, um seinen Umriss zu bearbeiten.'
+    if (!this.merging) $('#trace-hint').textContent = this.mode === 'measure' ? 'Messen: von einem Punkt zum anderen ziehen, die Länge steht an der Linie. An Umrisspunkten rastet sie ein (Alt: frei), Shift hält sie waagrecht oder senkrecht. Gemessen auf Papierhöhe: hohe Teile wirken im Foto etwas grösser. Esc oder «Bearbeiten» beendet.' : !T.selItem ? 'Teil anklicken, um seinen Umriss zu bearbeiten.'
       : this.mode === 'delete' ? 'Löschen: Punkte antippen, die weg sollen. Esc oder «Bearbeiten» beendet.'
         : this.axisOn ? 'Achse: an den Enden ziehen dreht sie, an der Mitte verschiebt sie. Gezogene Punkte rasten auf den Spiegelbildern der Punkte gegenüber ein (Alt: frei). Rechtsklick löscht einen Punkt.'
           : 'Punkt ziehen verschiebt ihn, er rastet bei rechten Winkeln und Geraden ein (Alt: frei). Über eine Linie fahren: in der Mitte erscheint ein Punkt, ziehen fügt ihn ein. Rechtsklick oder Entf löscht, Strg+Z macht rückgängig.';
     $('#trace-tool-edit').setAttribute('aria-pressed', String(this.mode === 'edit'));
     $('#trace-tool-del').setAttribute('aria-pressed', String(this.mode === 'delete'));
+    $('#trace-tool-measure').setAttribute('aria-pressed', String(this.mode === 'measure'));
     $('#trace-undo').disabled = !this.undoStack.length; $('#trace-redo').disabled = !this.redoStack.length;
     if (has && !tool) {
       const th = P.map((p) => nf(clamp(p.otsu - T.params.sens, 0.05, 0.95), 2)).join(' / ');
@@ -13424,6 +13478,7 @@ const TraceUI = {
       c.beginPath(); c.arc(nx, ny, r, 0, Math.PI * 2); c.moveTo(nx - 2 * r, ny); c.lineTo(nx + 2 * r, ny); c.moveTo(nx, ny - 2 * r); c.lineTo(nx, ny + 2 * r); c.stroke();
       drawLabel(c, st, 'unter der Kamera', nx + 2.4 * r, ny, { align: 'left', size: 11 });
     }
+    if (this.meas) this.drawMeasure(c, st);
     this.drawLoupe(c, st);
   },
   drawHandles(c, st, it) {
@@ -13537,7 +13592,6 @@ const LibUI = {
       return;
     }
     S.tools.forEach((t, i) => {
-      const bb = polyBBox([t.outline]);
       const uses = S.bins.filter((b) => b.items.some((it) => it.toolId === t.id)).length;
       const del = this.confirmId === t.id
         ? h('span', { class: 'confirm' }, uses ? `Auch aus ${uses} Bin${uses > 1 ? 's' : ''} entfernen?` : 'Wirklich löschen?',
@@ -13567,18 +13621,19 @@ const LibUI = {
         h('div', { class: 'body' },
           t.example ? h('div', { class: 'ex', text: 'Beispiel' }) : null,
           h('input', { type: 'text', value: t.name, 'aria-label': 'Name', title: 'Name des Werkzeugs', onchange: (e) => { t.name = e.target.value.trim() || t.name; Store.save('tool', t); } }),
+          // (its size is left out: of little interest here, Camille)
           h('div', { class: 'row', style: { flexWrap: 'wrap', rowGap: '4px' } },
-            h('span', { class: 'dims', text: `${nf(bb.w, 1)} × ${nf(bb.h, 1)} mm`, style: { whiteSpace: 'nowrap' } }),
-            h('label', { class: 'f', title: 'Höhe des Werkzeugs, wie es im Bin liegt: daraus wird die Taschentiefe (1 mm Reserve); die Taschen in den Bins folgen', style: { flexDirection: 'row', alignItems: 'center', gap: '6px', marginLeft: 'auto' } }, h('span', { text: 'Höhe' }),
+            h('label', { class: 'f', title: 'Höhe des Werkzeugs, wie es im Bin liegt: daraus wird die Taschentiefe (1 mm Reserve); die Taschen in den Bins folgen', style: { flexDirection: 'row', alignItems: 'center', gap: '6px' } }, h('span', { text: 'Höhe' }),
               h('input', { type: 'number', value: t.height, min: 1, max: 300, step: 0.5, disabled: locked, style: { width: '70px' }, onchange: (e) => {
                 t.height = clamp(num(e.target, t.height), 1, 300); Store.save('tool', t);
                 // the pockets of this tool follow (see toolHeightChanged)
                 const bins = toolHeightChanged(t);
                 if (bins.length) toast(`Taschentiefe von «${t.name}» in ${bins.length === 1 ? `«${bins[0].name}»` : `${bins.length} Bins`} angepasst.`);
               } }), h('span', { class: 'unit', text: 'mm' }))),
-          h('div', { class: 'row fit-row', title: 'Ob der Testdruck dieses Werkzeugs gepasst hat; wird wieder «offen», wenn sich der Umriss ändert' }, h('span', { class: 'unit', text: 'Testdruck' }),
+          // the test print status only while it can be changed: a locked tool shows just its lock
+          locked ? null : h('div', { class: 'row fit-row', title: 'Ob der Testdruck dieses Werkzeugs gepasst hat; wird wieder «offen», wenn sich der Umriss ändert' }, h('span', { class: 'unit', text: 'Testdruck' }),
             h('div', { class: 'seg', role: 'group', 'aria-label': 'Testdruck' }, fitBtn('', 'offen'), fitBtn('ok', 'passt'), fitBtn('bad', 'passt nicht'))),
-          h('div', { class: 'row' },
+          h('div', { class: 'row actions' },
             h('button', { class: 'btn small primary', type: 'button', title: 'Das Werkzeug in den Bin legen, den du gerade bearbeitest (oder in einen neuen)', onclick: () => this.toBin(t) }, 'In Bin legen'),
             h('button', { class: 'btn small', type: 'button', disabled: locked, title: 'Umriss mit dem Punkte-Editor korrigieren, ohne Foto' + (locked ? ' (gesperrt, weil der Testdruck passt: das Schloss oben rechts entsperrt)' : ''), onclick: () => TraceUI.editTool(t) }, 'Umriss bearbeiten'), del))));
     });
@@ -13712,6 +13767,13 @@ const BinUI = {
     };
     // width, length and height from the content; the height so the tools lie fully in their pockets
     $('#bin-autosize').onclick = () => { const b = curBin(); if (!b) return; fullDepths(b); autoSize(b); this.changed(true); this.stage.fit(); };
+    $('#bin-sink').onclick = () => {
+      const b = curBin(); if (!b || !b.items.length) return;
+      const r = sinkTools(b); this.changed();
+      const left = [...(r.locked.length ? [`Gesperrt, weil der Testdruck passt, und noch nicht ganz versenkt: ${r.locked.join(', ')}. Das Schloss auf der Werkzeugkarte öffnen und noch einmal drücken.`] : []),
+        ...(r.tall.length ? [`Höher als ein Bin sein kann (30 u): ${r.tall.join(', ')}.`] : [])].join(' ');
+      toast((r.was === b.hu ? `Alle Werkzeuge liegen bündig in ihren Taschen, der Bin bleibt ${b.hu} u hoch.` : `Höhe ${r.was} → ${b.hu} u: alle Werkzeuge liegen bündig in ihren Taschen.`) + (left ? ' ' + left : '') + ' Strg+Z macht es rückgängig.', left ? 'bad' : undefined);
+    };
     // the tools nested by their real outlines (nestBin); a bin that fits its content takes the size it needs
     $('#bin-nest').onclick = async () => {
       const b = curBin(); if (!b) return;
@@ -14613,7 +14675,6 @@ const Overview = {
     $('#bin-all-count').textContent = S.bins.length ? `${S.bins.length} Bin${S.bins.length === 1 ? '' : 's'}, ${S.bins.filter((b) => b.place && caseById(b.place.caseId)).length} davon in Koffern` : '';
     if (!S.bins.length) { grid.append(h('div', { class: 'lib-empty' }, h('p', { text: 'Noch keine Bins. Wähle unter «Werkzeuge» Werkzeuge aus und lege daraus einen Bin an.' }))); return; }
     for (const b of S.bins) {
-      const tools = b.items.length, shapes = b.fingers.length;
       const bad = binChecks(b).filter((x) => x.level === 'bad');
       const caseSel = h('select', { 'aria-label': 'Koffer', title: 'In welchem Koffer dieser Bin liegt', onchange: (e) => { assignBin(b, caseById(e.target.value) || null); this.renderBins(); } },
         h('option', { value: '', text: 'Kein Koffer' }), ...S.cases.map((cs) => h('option', { value: cs.id, text: cs.name })));
@@ -14627,12 +14688,13 @@ const Overview = {
       grid.append(h('article', { class: 'tool' }, thumb,
         h('div', { class: 'body' },
           h('input', { type: 'text', value: b.name, 'aria-label': 'Name', title: 'Name des Bins', onchange: (e) => { b.name = e.target.value.trim() || b.name; Store.save('bin', b); } }),
-          h('div', { class: 'dims', text: `${b.gx} × ${b.gy} Felder · ${b.hu} u · Toleranz ${nf(b.clearance, 1)} mm · ` + [tools ? `${tools} Werkzeug${tools === 1 ? '' : 'e'}` : 'leer', shapes ? `${shapes} Form${shapes === 1 ? '' : 'en'}` : ''].filter(Boolean).join(', ') }),
+          h('div', { class: 'dims' }, h('div', { text: `${b.gx} × ${b.gy} Felder · ${b.hu} u` }), h('div', { text: `Toleranz ${nf(b.clearance, 1)} mm` })),
           bad.length ? h('span', { class: 'pill bad', style: { whiteSpace: 'normal', alignSelf: 'flex-start' }, text: bad[0].text + (bad.length > 1 ? ` (+${bad.length - 1} weitere)` : '') }) : null,
           h('label', { class: 'f' }, h('span', { text: 'Koffer' }), caseSel),
-          h('div', { class: 'row', style: { flexWrap: 'wrap', rowGap: '6px' } },
-            h('button', { class: 'btn small primary', type: 'button', title: 'Diesen Bin bearbeiten', onclick: () => this.open(b) }, 'Öffnen'),
-            h('button', { class: 'btn small', type: 'button', title: 'Eine Kopie dieses Bins anlegen', onclick: () => { BinUI.duplicate(b); this.renderBins(); } }, 'Duplizieren'), del))));
+          h('div', { class: 'actions' },
+            h('div', { class: 'row' }, h('button', { class: 'btn small primary', type: 'button', title: 'Diesen Bin bearbeiten', onclick: () => this.open(b) }, 'Öffnen')),
+            h('div', { class: 'row', style: { flexWrap: 'wrap', rowGap: '6px' } },
+              h('button', { class: 'btn small', type: 'button', title: 'Eine Kopie dieses Bins anlegen', onclick: () => { BinUI.duplicate(b); this.renderBins(); } }, 'Duplizieren'), del)))));
     }
   },
   // ---------- cases ----------
@@ -15663,7 +15725,7 @@ if (location.hash === '#selbsttest') setTimeout(async () => {
     document.title = 'SELBSTTEST OK ' + Math.round(r.measureVolume(s)) + ' mm3, Schrift ' + (document.fonts.check('600 14px Barlow') ? 'da' : 'fehlt');
   } catch (e) { document.title = 'SELBSTTEST FEHLER ' + (e && (e.message || e)); }
 }, 800);
-window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner, binSplit, halfCuts, binClipSpots, binMagnetSpots, BIN_CLIP, dogbonePoly };
+window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, sinkTools, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner, binSplit, halfCuts, binClipSpots, binMagnetSpots, BIN_CLIP, dogbonePoly };
 // The mouse wheel over a number field that has the focus changes its value: easily by accident while
 // scrolling the panel (a bin's tolerance, wall, floor). The field gives up the focus instead, and the page
 // scrolls on.
