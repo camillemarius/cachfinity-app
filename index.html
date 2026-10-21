@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '31e01385ddfe';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '4e703529cdef';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -262,6 +262,7 @@ details.adv > .fields { margin-top: 8px; }
 .fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .fields.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 label.f { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--muted); min-width: 0; }
+label.f[hidden] { display: none; }
 label.f > span { letter-spacing: 0.02em; }
 input[type="number"], input[type="text"], select {
   width: 100%; min-width: 0; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r);
@@ -633,7 +634,7 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
         <label title="Breite, Tiefe und Höhe folgen dem Inhalt; die Werkzeuge liegen ganz in ihren Taschen (1 mm Reserve nach oben)" class="check"><input type="checkbox" id="bin-autofit" checked> Grösse passt sich dem Inhalt an <span class="unit">(aus, sobald du Felder oder Höhe selbst einstellst)</span></label>
         <label title="Stapelrand oben, damit ein weiterer Bin auf diesem stehen kann" class="check"><input type="checkbox" id="bin-lip"> Stapelrand</label>
         <label class="f inline-f" style="padding-left: 26px" title="Hebt den Stapelrand um ganze Einheiten an. Werkzeuge, die aus ihrer Tasche ragen, haben dann Platz unter dem Bin darüber."><span>Rand erhöhen</span><input type="number" id="bin-lift" min="0" max="10" step="1" style="width: 64px"><span class="unit">u (je 7 mm)</span></label>
-        <label title="Löcher für Magnete 6 × 2 mm unter jedem Feld" class="check"><input type="checkbox" id="bin-mag"> Magnetlöcher 6 × 2 mm</label>
+        <label class="f" title="Löcher für Magnete 6 × 2 mm unten im Bin: keine, 4 unter jedem Feld, oder nur die 4 in den äussersten Ecken (spart Magnete, der Bin hält trotzdem)"><span>Magnetlöcher 6 × 2 mm</span><select id="bin-mag" title="Löcher für Magnete 6 × 2 mm unten im Bin: keine, 4 unter jedem Feld, oder nur die 4 in den äussersten Ecken (spart Magnete, der Bin hält trotzdem)"><option value="none">Keine</option><option value="all">4 pro Feld</option><option value="corners">Nur 4 in den äussersten Ecken</option></select></label>
         <div class="row"><button class="btn small" type="button" id="bin-autosize" title="Breite, Länge und Höhe nach dem Inhalt; die Werkzeuge liegen danach ganz in ihren Taschen">Grösse anpassen</button><button class="btn small" type="button" id="bin-arrange" title="Die Werkzeuge neu und platzsparend anordnen">Teile anordnen</button><button class="btn small" type="button" id="bin-nest" title="Die Werkzeuge nach ihren echten Umrissen ineinander schieben, auch gedreht, so dass der Bin möglichst wenige Felder braucht. Werkzeuge unter einer gemeinsamen Form (etwa einem Langloch über mehrere Stangen) bleiben zusammen. Dauert ein paar Sekunden; Strg+Z macht es rückgängig">Platzsparend anordnen</button></div>
       </div>
       <div class="card">
@@ -653,10 +654,11 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
       </div>
       <div class="card">
         <h2>Export</h2>
-        <p>ZIP mit <strong>STEP</strong> (exakte CAD-Geometrie) und <strong>STL</strong> für den Slicer.</p>
+        <p>ZIP mit <strong>STL</strong> zum Drucken, dazu <strong>STEP</strong> (exakte CAD-Geometrie) im Unterordner.</p>
         <div class="bed-ctl"></div>
+        <label class="f" id="bin-join-row" title="Wie die Teile eines Bins, der grösser ist als das Druckbett, zusammenkommen: mit Klammern von unten, geleimt, lose nebeneinander auf der Grundplatte, oder gar nicht geteilt"><span>Teile verbinden</span><select id="bin-join" title="Wie die Teile eines Bins, der grösser ist als das Druckbett, zusammenkommen: mit Klammern von unten, geleimt, lose nebeneinander auf der Grundplatte, oder gar nicht geteilt"></select></label>
         <p id="bin-split-info"></p>
-        <button title="Den Bin als STEP und STL herunterladen; was grösser ist als das Druckbett, wird an Feldgrenzen geteilt" class="btn primary block" type="button" id="bin-export">STEP + STL herunterladen</button>
+        <button title="Den Bin als STL und STEP herunterladen; was grösser ist als das Druckbett, wird geteilt, wie unter «Teile verbinden» gewählt" class="btn primary block" type="button" id="bin-export">STEP + STL herunterladen</button>
         <p id="bin-export-status"></p>
         <button class="btn block" type="button" id="bin-testprint" title="Alle Werkzeuge dieses Bins zum Anprobieren: dünne Rahmen (STL) oder 1:1 auf Papier (PDF), mit der Toleranz dieses Bins">Testdruck aller Werkzeuge…</button>
       </div>
@@ -10785,6 +10787,19 @@ function itemPocket(b, it) {
 // depth. They may overlap tool pockets (a tool lying in a shallow rectangle, a finger hole at its edge);
 // every pocket is cut to its own depth. Stored in b.fingers (the name of the first kind, finger holes).
 // w: width (across), l: length (along the angle rot), r: corner radius of a rectangle.
+// The magnet holes under bin b (b.magnets: false none, true 4 under every field, 'corners' only the 4 at the
+// bin's outermost corners; Camille's three): their centres in the bin's frame (centre 0, y down, mm).
+const magnetMode = (b) => (b.magnets === 'corners' ? 'corners' : b.magnets ? 'all' : 'none');
+const MAGNET_TEXT = { none: 'keine', all: '4 pro Feld', corners: '4 in den äussersten Ecken' };
+function binMagnetSpots(b) {
+  const mode = magnetMode(b), out = [];
+  if (mode === 'none') return out;
+  for (let i = 0; i < b.gx; i++) for (let j = 0; j < b.gy; j++) for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+    if (mode === 'corners' && !((sx < 0 ? i === 0 : i === b.gx - 1) && (sy < 0 ? j === 0 : j === b.gy - 1))) continue;
+    out.push([(i - (b.gx - 1) / 2) * GF.pitch + sx * GF.magnetOff, (j - (b.gy - 1) / 2) * GF.pitch + sy * GF.magnetOff]);
+  }
+  return out;
+}
 const shapeKind = (f) => f.shape || (f.l > f.w + 0.01 ? 'slot' : 'circle');
 function fingerPoly(f) {
   const k = shapeKind(f);
@@ -11768,6 +11783,52 @@ function partPlace(i, j, cols, rows) {
 // the folder in an export's zip for the STEP files (the same parts, for a CAD program; the STL files on top
 // are the ones to print)
 const STEP_DIR = 'STEP-fuer-CAD';
+// How the parts of a bin too large for the bed are joined (b.join, chosen per bin at its export; Camille's
+// four): 'clip' cut through the middle of fields, clips pressed in from below across the cut; 'glue' cut
+// the same way, to be glued; 'loose' cut on field lines, the parts stand side by side on the baseplate;
+// 'whole' not cut. Through the middle of a field the two halves of the foot there sit in one socket of the
+// baseplate, which holds them in line (and under that foot there is room for a clip, where a field line has
+// the baseplate's ridge).
+const BIN_JOINS = [
+  { id: 'clip', name: 'Geteilt mit Klammern', hint: 'Schnitt mitten durch die Felder, Klammern von unten über die Trennstelle (unsichtbar); der Bin lässt sich am Stück aus dem Koffer nehmen' },
+  { id: 'glue', name: 'Geteilt zum Leimen', hint: 'Schnitt mitten durch die Felder, ohne Klammern: die Schnittflächen leimen, am besten auf der Grundplatte, die richtet die Teile aus' },
+  { id: 'loose', name: 'Geteilt, lose', hint: 'Schnitt an den Feldgrenzen: die Teile stehen ohne Verbindung nebeneinander auf der Grundplatte' },
+  { id: 'whole', name: 'Am Stück', hint: 'Nicht teilen, etwa für einen Drucker mit grösserem Bett' },
+];
+const binJoin = (b) => (BIN_JOINS.some((j) => j.id === b.join) ? b.join : 'clip');
+// a length in fields, halves as ½: 4½
+const fieldsTxt = (n) => (n % 1 ? (n < 1 ? '½' : `${Math.floor(n)}½`) : String(n));
+// Cuts of n fields through the middle of fields (k + ½ from the start), as even as they go, no part longer
+// than max fields; null when there are none (a bed shorter than 1½ fields).
+function halfCuts(n, max) {
+  for (let k = Math.ceil(n / max - 1e-9); k <= 2 * n; k++) {
+    const cuts = [];
+    for (let i = 1; i < k; i++) {
+      const t = (n * i) / k, last = cuts.length ? cuts[cuts.length - 1] : 0;
+      const c = [Math.floor(t - 0.5) + 0.5, Math.floor(t) + 0.5].sort((p, q) => Math.abs(p - t) - Math.abs(q - t)).find((v) => v > last && v < n && v - last <= max + 1e-9);
+      if (c == null) break;
+      cuts.push(c);
+    }
+    if (cuts.length === k - 1 && n - (cuts.length ? cuts[cuts.length - 1] : 0) <= max + 1e-9) return cuts;
+  }
+  return null;
+}
+// How bin b is cut for printing, by its join: the lengths in fields of the columns and rows of parts
+// (halves where a cut runs through a field), the cuts xs, ys in fields from the left and the top, the number
+// of parts, and the join that applies ('loose' when the bed is too small for halves).
+function binSplit(b) {
+  const join = binJoin(b), at = (lens) => lens.slice(0, -1).map((_, i) => lens.slice(0, i + 1).reduce((s, n) => s + n, 0));
+  const loose = () => { const p = splitPlan(b.gx, b.gy); return { ...p, xs: at(p.cols), ys: at(p.rows), join: 'loose' }; };
+  if (join === 'whole') return { cols: [b.gx], rows: [b.gy], xs: [], ys: [], parts: 1, join };
+  if (join === 'loose') return loose();
+  const bd = bed(), mx = (bd.x - 2 * BED_MARGIN) / GF.pitch, my = (bd.y - 2 * BED_MARGIN) / GF.pitch;
+  // (a part may lie turned on the bed when that needs fewer parts)
+  const plan = (ax, ay) => { const xs = halfCuts(b.gx, ax), ys = halfCuts(b.gy, ay); return xs && ys ? { xs, ys, parts: (xs.length + 1) * (ys.length + 1) } : null; };
+  const a = plan(mx, my), t = plan(my, mx), p = a && (!t || a.parts <= t.parts) ? a : t;
+  if (!p) return loose();
+  const lens = (cuts, n) => [...cuts, n].map((c, i) => c - (i ? cuts[i - 1] : 0));
+  return { cols: lens(p.xs, b.gx), rows: lens(p.ys, b.gy), xs: p.xs, ys: p.ys, parts: p.parts, join };
+}
 const STEP_NOTE = `Zum Drucken: die STL-Dateien (eine pro Teil). Im Ordner ${STEP_DIR} liegen dieselben Teile noch einmal als STEP, zum Weiterbearbeiten in einem CAD-Programm, nicht zusätzlich drucken.`;
 
 // The printer, chosen once and shown wherever it matters (bin export, baseplate). el: a container.
@@ -11928,14 +11989,16 @@ async function buildBinSolid(b, onStep = () => {}) {
     solid = solid.cut(cutter);
     await frame();
   }
-  if (b.magnets) {
-    onStep('Magnetlöcher');
-    const holes = []; // all in one cut, they never overlap
-    for (let i = 0; i < b.gx; i++) for (let j = 0; j < b.gy; j++) {
-      const cx = (i - (b.gx - 1) / 2) * GF.pitch, cy = (j - (b.gy - 1) / 2) * GF.pitch;
-      for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) holes.push(r.drawCircle(GF.magnetR).translate(cx + sx * GF.magnetOff, cy + sy * GF.magnetOff).sketchOnPlane('XY', -1).extrude(GF.magnetD + 1));
-    }
-    solid = solid.cut(r.makeCompound(holes));
+  const holes = binMagnetSpots(b);
+  if (holes.length) {
+    onStep('Magnetlöcher'); // (all in one cut, they never overlap; the CAD frame has y up)
+    solid = solid.cut(r.makeCompound(holes.map(([x, y]) => r.drawCircle(GF.magnetR).translate(x, -y).sketchOnPlane('XY', -1).extrude(GF.magnetD + 1))));
+  }
+  // under the cuts of a bin printed in parts with clips: their recesses, in the feet the cuts run through
+  const clips = binClipSpots(b);
+  if (clips.length) {
+    onStep('Aussparungen für die Klammern');
+    solid = solid.cut(r.makeCompound(clips.map((s) => cadPolyDrawing(r, dogbonePoly(s.x, s.y, s.alongX, 0, BIN_CLIP)).sketchOnPlane('XY', -1).extrude(BIN_CLIP.dogDepth + 1))));
   }
   return solid;
 }
@@ -11943,16 +12006,17 @@ const BIN_CUT_GAP = 0.25; // taken off each face where a bin is cut into parts, 
 // a CAD kernel already loaded (exportBins and the baseplate wait for loadCAD first)
 let cadKernel = null;
 const r0 = () => cadKernel;
-// The bin cut into parts on field lines, each fitting the bed (see splitPlan); one part when it fits.
+// The bin cut into parts by its join (binSplit), each fitting the bed; one part when it fits or is printed
+// whole.
 async function binParts(r, b, solid) {
-  const plan = splitPlan(b.gx, b.gy);
+  const plan = binSplit(b);
   if (plan.parts === 1) return [{ label: '', nx: b.gx, ny: b.gy, solid }];
   const out = [], top = binTop(b) + binLift(b) * GF.unit + GF.lip + 10;
   let k = 0, y0 = 0;
   for (const [j, ny] of plan.rows.entries()) {
     let x0 = 0;
     for (const [i, nx] of plan.cols.entries()) {
-      // field lines in the bin's frame (x right, y down, centre 0); the CAD frame has y up
+      // the cuts in the bin's frame (x right, y down, centre 0); the CAD frame has y up
       const xa = (x0 - b.gx / 2) * GF.pitch, xb = (x0 + nx - b.gx / 2) * GF.pitch, ya = (y0 - b.gy / 2) * GF.pitch, yb = (y0 + ny - b.gy / 2) * GF.pitch;
       const ex = (i0, i1, n, lo, hi) => [i0 === 0 ? lo - 10 : lo + BIN_CUT_GAP, i1 === n ? hi + 10 : hi - BIN_CUT_GAP];
       const [bx0, bx1] = ex(x0, x0 + nx, b.gx, xa, xb), [by0, by1] = ex(y0, y0 + ny, b.gy, ya, yb);
@@ -11984,12 +12048,24 @@ async function exportBins(bins) {
       const suffix = pieces.length > 1 ? `_Teil-${pc.label}-von-${pieces.length}-${pc.place}` : '';
       files.push({ name: `${name}_${tag}${suffix}.stl`, data: stl }, { name: `${STEP_DIR}/${name}_${tag}${suffix}.step`, data: step });
     }
-    if (pieces.length > 1) splitNotes.push(`${b.name}: zu gross für ${bed().name} (${bed().x} × ${bed().y} mm), in ${pieces.length} Teile geteilt: ${pieces.map((p) => `${p.label} ${p.place} ${p.nx}×${p.ny} Felder`).join(', ')} (von oben gesehen wie im Plan). Die Teile stehen im Raster nebeneinander, die Grundplatte richtet sie aus; an den Trennstellen ist je ${BIN_CUT_GAP} mm Luft. Wer will, klebt sie dort zusammen.`);
+    const sp = binSplit(b), clips = binClipSpots(b, sp), bd = bed();
+    if (clips.length) {
+      setBusyText(`${b.name}: Klammer schreiben…`); await frame();
+      files.push({ name: `${name}_${tag}_Klammer_${clips.length}-mal-drucken.stl`, data: new Uint8Array(await clipSolid(r0(), BIN_CLIP).blobSTL({ tolerance: 0.01, angularTolerance: 0.1, binary: true }).arrayBuffer()) });
+    }
+    if (pieces.length > 1) {
+      const how = {
+        clip: `Der Schnitt läuft mitten durch die Felder: die halben Füsse an der Trennstelle sitzen zusammen in einem Fach der Grundplatte. Zusammenbau: die Teile mit der Unterseite nach oben aneinanderlegen und in jede Aussparung über der Trennstelle eine Klammer fest eindrücken (${clips.length} Stück, die Datei mit «Klammer» im Namen; flach drucken, 100 % Füllung). Sitzt eine locker, ein Tropfen Sekundenkleber in die Aussparung. Danach lässt sich der Bin am Stück aus dem Koffer nehmen.`,
+        glue: 'Der Schnitt läuft mitten durch die Felder: die halben Füsse an der Trennstelle sitzen zusammen in einem Fach der Grundplatte. Die Schnittflächen leimen (Sekundenkleber oder 2-Komponenten-Kleber), am besten mit den Teilen in der Grundplatte, die richtet sie aus.',
+        loose: `Geschnitten an den Feldgrenzen: die Teile stehen im Raster nebeneinander, die Grundplatte richtet sie aus; an den Trennstellen ist je ${BIN_CUT_GAP} mm Luft. Wer will, klebt sie dort zusammen.`,
+      }[sp.join];
+      splitNotes.push(`${b.name}: zu gross für ${bd.name} (${bd.x} × ${bd.y} mm), in ${pieces.length} Teile geteilt: ${pieces.map((p) => `${p.label} ${p.place} ${fieldsTxt(p.nx)}×${fieldsTxt(p.ny)} Felder`).join(', ')} (von oben gesehen wie im Plan). ${how}`);
+    } else if (splitPlan(b.gx, b.gy).parts > 1) splitNotes.push(`${b.name}: am Stück exportiert, obwohl grösser als das Bett des ${bd.name} (${bd.x} × ${bd.y} mm); nur für einen Drucker mit grösserem Bett.`);
     const vol = (() => { try { return solid.volume ? solid.volume : null; } catch { return null; } })();
     if (vol) b._volume = vol;
   }
-  const info = bins.map((b) => `${b.name}: ${b.gx} x ${b.gy} Felder, ${b.hu} u (${binTop(b)} mm${binLift(b) ? ` + ${binLift(b) * GF.unit} mm erhöhter Rand` : ''}${b.lip ? ' + 4.4 mm Stapelrand' : ''}), Spiel ${b.clearance} mm, Magnete ${b.magnets ? 'ja' : 'nein'}`).join('\r\n');
-  const notes = splitNotes.length ? '\r\n\r\nGeteilte Bins:\r\n' + splitNotes.join('\r\n') : '';
+  const info = bins.map((b) => `${b.name}: ${b.gx} x ${b.gy} Felder, ${b.hu} u (${binTop(b)} mm${binLift(b) ? ` + ${binLift(b) * GF.unit} mm erhöhter Rand` : ''}${b.lip ? ' + 4.4 mm Stapelrand' : ''}), Spiel ${b.clearance} mm, Magnete: ${MAGNET_TEXT[magnetMode(b)]}`).join('\r\n');
+  const notes = splitNotes.length ? '\r\n\r\nTeile und Zusammenbau:\r\n' + splitNotes.join('\r\n') : '';
   files.push({ name: 'LIESMICH.txt', data: enc.encode('Erzeugt mit Cachfinity.\r\n\r\n' + STEP_NOTE + '\r\n\r\n' + info + notes + '\r\n') });
   return { zip: makeZip(files), meshes, files };
 }
@@ -12007,6 +12083,8 @@ async function exportBins(bins) {
 // floor (two 6 mm circles 14 mm apart, a 3.5 mm bar, 2 mm deep).
 const PLATE = { h: 4.65, floor: 3, r: 4, dogR: 3, dogOff: 7, dogBar: 3.5, dogDepth: 2, clipGap: 0.15, clipH: 1.8 };
 const CLIP_OPEN = { dogR: 1.6, dogOff: 5, dogBar: 2.2, dogDepth: 2, clipGap: 0.15, clipH: 1.8 };
+// the clip under the cut of a bin: the larger one, snugger (it has to stay in when the bin is lifted out)
+const BIN_CLIP = { ...PLATE, clipGap: 0.1 };
 const clipDims = (opt) => (opt.type === 'light' && !opt.magnets ? CLIP_OPEN : PLATE);
 // what the plate puts under the sockets: the floor, or the layer of magnet pads; nothing for the open plate
 const plateFloorOf = (opt) => (opt.type === 'light' && !opt.magnets ? 0 : PLATE.floor);
@@ -12061,6 +12139,16 @@ async function buildPlatePart(r, nx, ny, opt, spots = []) {
 }
 function clipSolid(r, dims = PLATE) { return cadPolyDrawing(r, dogbonePoly(0, 0, true, dims.clipGap, dims)).sketchOnPlane('XY', 0).extrude(dims.clipH); }
 const plateOpts = (cs) => ({ type: 'light', magnets: false, ...(cs.plate || {}) });
+// Where the clips under the cuts of bin b go (join 'clip'): in the middle of every field a cut runs through,
+// across it; not in a field that another cut runs through as well (bin frame: centre 0, y down, mm). The
+// magnet holes are 13 mm from that middle, clear of the clip.
+function binClipSpots(b, sp = binSplit(b)) {
+  if (sp.join !== 'clip' || sp.parts < 2) return [];
+  const p = GF.pitch, out = [], crossed = (cuts, k) => cuts.some((c) => c > k && c < k + 1);
+  for (const c of sp.xs) for (let j = 0; j < b.gy; j++) if (!crossed(sp.ys, j)) out.push({ x: (c - b.gx / 2) * p, y: (j + 0.5 - b.gy / 2) * p, alongX: true });
+  for (const c of sp.ys) for (let i = 0; i < b.gx; i++) if (!crossed(sp.xs, i)) out.push({ x: (i + 0.5 - b.gx / 2) * p, y: (c - b.gy / 2) * p, alongX: false });
+  return out;
+}
 // Where the clips of a case's baseplate go, in the plate's coordinates (mm from its top left corner as seen
 // from above, y down); alongX: the clip lies across a seam that runs along y. With a floor: per field along
 // every seam. Open: at every grid corner inside a seam; where two seams cross only the one across the
@@ -13546,7 +13634,9 @@ const BinUI = {
     $('#bin-name').onchange = (e) => { const b = curBin(); if (!b) return; b.name = e.target.value.trim() || b.name; this.changed(); };
     $('#bin-lip').onchange = (e) => { const b = curBin(); if (!b) return; b.lip = e.target.checked; this.changed(); };
     $('#bin-lift').onchange = (e) => { const b = curBin(); if (!b) return; b.lift = Math.round(clamp(num(e.target, 0), 0, 10)); this.changed(); };
-    $('#bin-mag').onchange = (e) => { const b = curBin(); if (!b) return; b.magnets = e.target.checked; this.changed(); };
+    $('#bin-mag').onchange = (e) => { const b = curBin(); if (!b) return; b.magnets = { none: false, all: true, corners: 'corners' }[e.target.value]; this.changed(); };
+    $('#bin-join').replaceChildren(...BIN_JOINS.map((j) => h('option', { value: j.id, text: j.name, title: j.hint })));
+    $('#bin-join').onchange = (e) => { const b = curBin(); if (!b) return; b.join = e.target.value; this.changed(); };
     $('#bin-autofinger').onchange = (e) => {
       const b = curBin(); if (!b) return; b.autoFingers = e.target.checked;
       if (!b.autoFingers) { b.fingers = b.fingers.filter((f) => !f.auto); if (this.sel && this.sel.kind === 'finger' && !this.selRef()) this.sel = null; }
@@ -13789,7 +13879,7 @@ const BinUI = {
     const mm = (v) => nf(v, 1).replace(/\.0$/, '');
     $('#bin-adv-sum').textContent = `Toleranz ${mm(b.clearance)} mm · Rand ${mm(b.wall)} mm · Boden ${mm(b.floor)} mm`;
     if (this.advBin !== b.id) { $('#bin-adv').open = false; this.advBin = b.id; }
-    $('#bin-lip').checked = b.lip; $('#bin-mag').checked = b.magnets; $('#bin-autofit').checked = b.autoFit !== false; $('#bin-autofinger').checked = !!b.autoFingers;
+    $('#bin-lip').checked = b.lip; $('#bin-mag').value = magnetMode(b); $('#bin-autofit').checked = b.autoFit !== false; $('#bin-autofinger').checked = !!b.autoFingers;
     $('#bin-lift').value = b.lift || 0; $('#bin-lift').disabled = !b.lip;
     $('#bin-dims').textContent = `${nf(binW(b), 1)} × ${nf(binD(b), 1)} × ${nf(binTop(b), 0)} mm${binLift(b) ? ` + ${binLift(b) * GF.unit} mm erhöhter Rand` : ''}${b.lip ? ' + 4.4 Stapelrand' : ''} · Taschen bis ${nf(Math.floor(maxDepth(b) * 10 + 1e-6) / 10, 1)} mm tief`;
     const add = $('#bin-add-tool'); add.replaceChildren(...S.tools.map((t) => h('option', { value: t.id, text: t.name })));
@@ -13886,9 +13976,16 @@ const BinUI = {
           h('button', { class: 'btn small danger', type: 'button', title: 'Aus dem Bin nehmen (auch Entf); Rückgängig mit Strg+Z', onclick: () => this.removeSel() }, 'Entfernen'))].filter(Boolean));
     }
     for (const el of $$('#bin-panel .bed-ctl')) BedUI.render(el);
-    { const plan = splitPlan(b.gx, b.gy), bd = bed();
-      $('#bin-split-info').textContent = plan.parts === 1 ? `Passt auf das Druckbett (${bd.x} × ${bd.y} mm).`
-        : `Zu gross für das Druckbett (${bd.x} × ${bd.y} mm): wird beim Export an Feldgrenzen in ${plan.parts} Teile geteilt (${plan.rows.flatMap((ny) => plan.cols.map((nx) => `${nx}×${ny}`)).join(', ')}, in der Draufsicht gestrichelt). Im Raster stehen sie nebeneinander, die Grundplatte richtet sie aus.`; }
+    { const sp = binSplit(b), bd = bed(), big = splitPlan(b.gx, b.gy).parts > 1, clips = binClipSpots(b, sp).length;
+      $('#bin-join-row').hidden = !big; $('#bin-join').value = binJoin(b);
+      const sizes = sp.rows.flatMap((ny) => sp.cols.map((nx) => `${fieldsTxt(nx)}×${fieldsTxt(ny)}`)).join(', ');
+      $('#bin-split-info').textContent = !big ? `Passt auf das Druckbett (${bd.x} × ${bd.y} mm).`
+        : sp.parts === 1 ? `Grösser als das Druckbett (${bd.x} × ${bd.y} mm), wird trotzdem am Stück exportiert: nur für einen grösseren Drucker.`
+          : `Zu gross für das Druckbett (${bd.x} × ${bd.y} mm): ${sp.parts} Teile (${sizes}, in der Draufsicht gestrichelt). ` + {
+            clip: `Der Schnitt läuft mitten durch die Felder; ${clips} Klammern von unten halten die Teile zusammen, auch ausserhalb des Koffers.`,
+            glue: 'Der Schnitt läuft mitten durch die Felder; die Teile werden geleimt, die Grundplatte richtet sie dabei aus.',
+            loose: 'Geschnitten an den Feldgrenzen; die Teile stehen nebeneinander, die Grundplatte richtet sie aus.',
+          }[sp.join]; }
     const all = binChecks(b);
     const checks = $('#bin-checks'); checks.replaceChildren(...all.map((c) => h('li', { class: c.level, text: c.text })));
     this.renderAlert(b, all.filter((c) => c.over));
@@ -13908,13 +14005,17 @@ const BinUI = {
     c.stroke();
     c.setLineDash([st.px(5), st.px(4)]); c.strokeStyle = 'rgba(0,0,0,0.38)'; pathPoly(c, binInner(b)); c.stroke(); c.setLineDash([]);
     // where the bin is cut into printable parts
-    { const plan = splitPlan(b.gx, b.gy);
-      if (plan.parts > 1) {
-        c.save(); c.setLineDash([st.px(8), st.px(5)]); c.lineWidth = st.px(2); c.strokeStyle = 'rgba(240,120,46,0.9)'; c.beginPath();
-        let x = 0; for (const n of plan.cols.slice(0, -1)) { x += n; const X = -W / 2 + x * GF.pitch - GF.gap / 2; c.moveTo(X, -D / 2 - 8); c.lineTo(X, D / 2 + 8); }
-        let y = 0; for (const n of plan.rows.slice(0, -1)) { y += n; const Y = -D / 2 + y * GF.pitch - GF.gap / 2; c.moveTo(-W / 2 - 8, Y); c.lineTo(W / 2 + 8, Y); }
-        c.stroke(); c.restore();
-        drawLabel(c, st, `Druckteile: ${plan.parts}`, 0, D / 2 + st.px(16), { size: 10 });
+    { const sp = binSplit(b);
+      if (sp.parts > 1) {
+        c.save(); c.setLineDash([st.px(8), st.px(5)]); c.lineWidth = st.px(2); c.strokeStyle = 'rgba(0,0,0,0.55)'; c.beginPath(); // (dark: the bin itself is often orange)
+        for (const x of sp.xs) { const X = (x - b.gx / 2) * GF.pitch; c.moveTo(X, -D / 2 - 8); c.lineTo(X, D / 2 + 8); }
+        for (const y of sp.ys) { const Y = (y - b.gy / 2) * GF.pitch; c.moveTo(-W / 2 - 8, Y); c.lineTo(W / 2 + 8, Y); }
+        c.stroke();
+        // the clips under the cut, faint (they sit in the bottom)
+        c.setLineDash([st.px(2), st.px(2)]); c.lineWidth = st.px(1); c.strokeStyle = 'rgba(0,0,0,0.4)';
+        for (const s of binClipSpots(b, sp)) { pathPoly(c, dogbonePoly(s.x, s.y, s.alongX, 0, BIN_CLIP)); c.stroke(); }
+        c.restore();
+        drawLabel(c, st, `Druckteile: ${sp.parts}`, 0, D / 2 + st.px(16), { size: 10 });
       }
     }
     const bad = new Set(binChecks(b).filter((x) => x.level === 'bad' && x.ref).map((x) => x.ref));
@@ -13955,12 +14056,10 @@ const BinUI = {
       const r = st.px(this.touch ? 7 : 5.5);
       c.beginPath(); c.arc(hd.x, hd.y, r, 0, Math.PI * 2); c.fillStyle = '#fff'; c.fill(); c.lineWidth = st.px(1.6); c.strokeStyle = cssVar('--accent'); c.stroke();
     }
-    if (b.magnets) {
-      c.fillStyle = 'rgba(0,0,0,0.0)'; c.strokeStyle = 'rgba(0,0,0,0.22)'; c.lineWidth = st.px(1); c.setLineDash([st.px(2), st.px(2)]);
-      for (let i = 0; i < b.gx; i++) for (let j = 0; j < b.gy; j++) for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
-        const cx = (i - (b.gx - 1) / 2) * GF.pitch + sx * GF.magnetOff, cy = (j - (b.gy - 1) / 2) * GF.pitch + sy * GF.magnetOff;
-        c.beginPath(); c.arc(cx, cy, GF.magnetR, 0, Math.PI * 2); c.stroke();
-      }
+    const magnetHoles = binMagnetSpots(b);
+    if (magnetHoles.length) {
+      c.strokeStyle = 'rgba(0,0,0,0.22)'; c.lineWidth = st.px(1); c.setLineDash([st.px(2), st.px(2)]);
+      for (const [cx, cy] of magnetHoles) { c.beginPath(); c.arc(cx, cy, GF.magnetR, 0, Math.PI * 2); c.stroke(); }
       c.setLineDash([]);
     }
     drawLabel(c, st, `${nf(W, 1)} mm`, 0, -D / 2 - st.px(14), { size: 11 });
@@ -15446,7 +15545,7 @@ if (location.hash === '#selbsttest') setTimeout(async () => {
     document.title = 'SELBSTTEST OK ' + Math.round(r.measureVolume(s)) + ' mm3, Schrift ' + (document.fonts.check('600 14px Barlow') ? 'da' : 'fehlt');
   } catch (e) { document.title = 'SELBSTTEST FEHLER ' + (e && (e.message || e)); }
 }, 800);
-window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner };
+window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner, binSplit, halfCuts, binClipSpots, binMagnetSpots, BIN_CLIP, dogbonePoly };
 // The mouse wheel over a number field that has the focus changes its value: easily by accident while
 // scrolling the panel (a bin's tolerance, wall, floor). The field gives up the focus instead, and the page
 // scrolls on.
