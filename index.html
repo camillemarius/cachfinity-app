@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '717acda21aca';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'acf577b4570d';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -12084,22 +12084,23 @@ async function exportBins(bins) {
     const tag = `Bin-${b.gx}x${b.gy}-${b.hu}u`;
     meshes.set(b.id, solid.mesh({ tolerance: 0.08, angularTolerance: 0.3 }));
     const pieces = await binParts(r0(), b, solid);
+    // the clips, all in one file, are the last part: Schraubendreher_Bin-4x8-5u_Teil-1-von-3, -2-von-3, and the
+    // clips -3-von-3
+    const sp = binSplit(b), clips = binClipSpots(b, sp), bd = bed(), total = pieces.length + (clips.length ? 1 : 0);
     for (const pc of pieces) {
       setBusyText(`${b.name}: ${pieces.length > 1 ? `Teil ${pc.label}, ` : ''}STEP und STL schreiben…`); await frame();
       const step = new Uint8Array(await pc.solid.blobSTEP().arrayBuffer());
       const stl = new Uint8Array(await pc.solid.blobSTL({ tolerance: 0.02, angularTolerance: 0.15, binary: true }).arrayBuffer());
-      // e.g. Schraubendreher_Bin-4x8-5u_Teil-1-von-2.stl
-      const suffix = pieces.length > 1 ? `_Teil-${pc.label}-von-${pieces.length}` : '';
+      const suffix = pieces.length > 1 ? `_Teil-${pc.label}-von-${total}` : '';
       files.push({ name: `${name}_${tag}${suffix}.stl`, data: stl }, { name: `${STEP_DIR}/${name}_${tag}${suffix}.step`, data: step });
     }
-    const sp = binSplit(b), clips = binClipSpots(b, sp), bd = bed();
     if (clips.length) {
-      setBusyText(`${b.name}: Klammer schreiben…`); await frame();
-      files.push({ name: `${name}_${tag}_Klammer_${clips.length}-mal-drucken.stl`, data: new Uint8Array(await clipSolid(r0(), BIN_CLIP).blobSTL({ tolerance: 0.01, angularTolerance: 0.1, binary: true }).arrayBuffer()) });
+      setBusyText(`${b.name}: Klammern schreiben…`); await frame();
+      files.push({ name: `${name}_${tag}_Teil-${total}-von-${total}.stl`, data: new Uint8Array(await clipSet(r0(), BIN_CLIP, clips.length).blobSTL({ tolerance: 0.01, angularTolerance: 0.1, binary: true }).arrayBuffer()) });
     }
     if (pieces.length > 1) {
       const how = {
-        clip: `Der Schnitt läuft mitten durch die Felder: die halben Füsse an der Trennstelle sitzen zusammen in einem Fach der Grundplatte. Zusammenbau: die Teile mit der Unterseite nach oben aneinanderlegen und in jede Aussparung über der Trennstelle eine Klammer fest eindrücken (${clips.length} Stück, die Datei mit «Klammer» im Namen; flach drucken, 100 % Füllung). Sitzt eine locker, ein Tropfen Sekundenkleber in die Aussparung. Die Klammern halten die Trennstelle unten: so lässt sich der Bin an beiden Enden gefasst am Stück herausnehmen. Wer ihn an einem Ende anhebt (das andere in der Luft), leimt zusätzlich die Schnittflächen (Sekundenkleber oder 2-Komponenten-Kleber), sonst klappt die Trennstelle oben auf.`,
+        clip: `Der Schnitt läuft mitten durch die Felder: die halben Füsse an der Trennstelle sitzen zusammen in einem Fach der Grundplatte. Zusammenbau: die Teile mit der Unterseite nach oben aneinanderlegen und in jede Aussparung über der Trennstelle eine Klammer fest eindrücken (Teil ${total}: alle ${clips.length} Klammern in einer Datei; flach drucken, 100 % Füllung). Sitzt eine locker, ein Tropfen Sekundenkleber in die Aussparung. Die Klammern halten die Trennstelle unten: so lässt sich der Bin an beiden Enden gefasst am Stück herausnehmen. Wer ihn an einem Ende anhebt (das andere in der Luft), leimt zusätzlich die Schnittflächen (Sekundenkleber oder 2-Komponenten-Kleber), sonst klappt die Trennstelle oben auf.`,
         glue: 'Der Schnitt läuft mitten durch die Felder: die halben Füsse an der Trennstelle sitzen zusammen in einem Fach der Grundplatte. Die Schnittflächen leimen (Sekundenkleber oder 2-Komponenten-Kleber), am besten mit den Teilen in der Grundplatte, die richtet sie aus.',
         loose: `Geschnitten an den Feldgrenzen: die Teile stehen im Raster nebeneinander, die Grundplatte richtet sie aus; an den Trennstellen ist je ${BIN_CUT_GAP} mm Luft. Wer will, klebt sie dort zusammen.`,
       }[sp.join];
@@ -12182,6 +12183,12 @@ async function buildPlatePart(r, nx, ny, opt, spots = []) {
   return solid;
 }
 function clipSolid(r, dims = PLATE) { return cadPolyDrawing(r, dogbonePoly(0, 0, true, dims.clipGap, dims)).sketchOnPlane('XY', 0).extrude(dims.clipH); }
+// n clips lying flat side by side, 3 mm apart, in rows of up to five: one print for all of them
+function clipSet(r, dims, n) {
+  const L = 2 * (dims.dogOff + dims.dogR) + 3, w = 2 * dims.dogR + 3, cols = Math.min(5, n), rows = Math.ceil(n / cols);
+  const one = (k) => clipSolid(r, dims).translate([((k % cols) - (cols - 1) / 2) * L, (Math.floor(k / cols) - (rows - 1) / 2) * w, 0]);
+  return n === 1 ? one(0) : r.makeCompound(Array.from({ length: n }, (_, k) => one(k)));
+}
 const plateOpts = (cs) => ({ type: 'light', magnets: false, ...(cs.plate || {}) });
 // Where the clips under the cuts of bin b go (join 'clip'): in the middle of every field a cut runs through,
 // across it; not in a field that another cut runs through as well (bin frame: centre 0, y down, mm). The
@@ -12212,6 +12219,7 @@ async function exportPlate(cs) {
   const files = [], enc = new TextEncoder(), name = exportName(cs.name), map = [];
   let k = 0;
   const spots = plateClipSpots(cs), reach = clipDims(opt).dogOff + clipDims(opt).dogR + 1, p = GF.pitch;
+  const total = plan.parts + (spots.length ? 1 : 0); // (the clips, all in one file, are the last part)
   let y0 = 0;
   for (let j = 0; j < plan.rows.length; j++) {
     const line = [];
@@ -12221,12 +12229,12 @@ async function exportPlate(cs) {
       // the clips that reach into this part, from its middle
       const X0 = x0 * p, Y0 = y0 * p, X1 = (x0 + nx) * p, Y1 = (y0 + ny) * p;
       const mine = spots.filter((s) => s.x > X0 - reach && s.x < X1 + reach && s.y > Y0 - reach && s.y < Y1 + reach).map((s) => ({ ...s, x: s.x - (X0 + X1) / 2, y: s.y - (Y0 + Y1) / 2 }));
-      setBusyText(`Grundplatte ${plan.parts > 1 ? `Teil ${L} von ${plan.parts}` : ''}…`); await frame();
+      setBusyText(`Grundplatte ${plan.parts > 1 ? `Teil ${L} von ${total}` : ''}…`); await frame();
       const solid = await buildPlatePart(r, nx, ny, opt, mine);
       x0 += nx;
       setBusyText(`Grundplatte ${plan.parts > 1 ? `Teil ${L}: ` : ''}STEP und STL schreiben…`); await frame();
-      // e.g. Koffer_Grundplatte-8x7_Teil-1-von-4.stl
-      const file = `${name}_Grundplatte-${cs.gx}x${cs.gy}` + (plan.parts > 1 ? `_Teil-${L}-von-${plan.parts}` : '');
+      // e.g. Koffer_Grundplatte-8x7_Teil-1-von-5.stl (the clips are Teil-5-von-5)
+      const file = `${name}_Grundplatte-${cs.gx}x${cs.gy}` + (plan.parts > 1 ? `_Teil-${L}-von-${total}` : '');
       files.push({ name: `${file}.stl`, data: new Uint8Array(await solid.blobSTL({ tolerance: 0.02, angularTolerance: 0.15, binary: true }).arrayBuffer()) },
         { name: `${STEP_DIR}/${file}.step`, data: new Uint8Array(await solid.blobSTEP().arrayBuffer()) });
       line.push(`Teil ${L} ${where} (${nx} x ${ny})`);
@@ -12235,7 +12243,7 @@ async function exportPlate(cs) {
     y0 += plan.rows[j];
   }
   const clips = spots.length;
-  if (clips) files.push({ name: `${name}_Klammer_${clips}-mal-drucken.stl`, data: new Uint8Array(await clipSolid(r, clipDims(opt)).blobSTL({ tolerance: 0.01, angularTolerance: 0.1, binary: true }).arrayBuffer()) });
+  if (clips) files.push({ name: `${name}_Grundplatte-${cs.gx}x${cs.gy}_Teil-${total}-von-${total}.stl`, data: new Uint8Array(await clipSet(r, clipDims(opt), clips).blobSTL({ tolerance: 0.01, angularTolerance: 0.1, binary: true }).arrayBuffer()) });
   const txt = [
     `Grundplatte für «${cs.name}»: ${cs.gx} x ${cs.gy} Felder (${cs.gx * GF.pitch} x ${cs.gy * GF.pitch} mm), ${opt.type !== 'light' ? `mit ${PLATE.floor} mm Boden, ${PLATE.floor + PLATE.h} mm hoch` : opt.magnets ? `offen, auf ${PLATE.floor} mm hohen Inseln in den Ecken der Felder, ${PLATE.floor + PLATE.h} mm hoch` : `offen (ohne Boden), ${PLATE.h} mm hoch`}${opt.magnets ? ', mit Magnetlöchern 6 x 2 mm (4 je Feld)' : ''}.`,
     `Drucker: ${b.name}, Bett ${b.x} x ${b.y} mm.`,
@@ -12247,7 +12255,7 @@ async function exportPlate(cs) {
     '',
     'Drucken: mit der Unterseite aufs Bett, ohne Stützen.',
     ...(clips ? [
-      `Klammern: die Datei mit der Klammer ${clips} Mal drucken (flach, 100 % Füllung).`,
+      `Klammern: Teil ${total} enthält alle ${clips} Klammern (flach drucken, 100 % Füllung).`,
       'Zusammenbau: die Teile mit der Unterseite nach oben so hinlegen, wie oben gezeigt (dabei spiegelt sich die Anordnung links/rechts).',
       opt.type === 'light' ? 'In jede Aussparung an den Ecken der Stossstellen (unten in den Stegen) eine Klammer drücken, dann umdrehen.' : 'In jede Aussparung an den Stossstellen eine Klammer drücken, dann umdrehen.',
     ] : plan.parts > 1 ? ['Diese Teilung hat keine inneren Ecken für Klammern: die Teile nebeneinander in den Koffer legen, seine Wände halten sie zusammen.'] : []),
