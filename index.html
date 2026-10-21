@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '2ce8ad51675b';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'd2ec0aada952';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -329,6 +329,8 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
 /* the buttons at the bottom of a card, level across a row of cards whatever stands above them */
 .tool .actions { margin-top: auto; display: flex; flex-direction: column; gap: 8px; }
 .tool .row.actions { flex-direction: row; }
+/* «In «…» legen»: a long bin name is cut short (the hint has it whole) */
+.tool .to-bin { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tool .dims { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
 .tool .ex { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
 .lib-empty { border: 1px dashed var(--line); border-radius: 10px; padding: 28px; text-align: center; color: var(--muted); }
@@ -13591,6 +13593,9 @@ const LibUI = {
       grid.append(h('div', { class: 'lib-empty' }, h('p', { text: 'Noch keine Werkzeuge. Fotografiere sie unter «Fotos» und übernimm die Umrisse.' }), h('button', { class: 'btn primary', type: 'button', onclick: () => App.show('foto') }, 'Zu den Fotos')));
       return;
     }
+    // «In Bin legen» goes into the bin last open in «Bin bearbeiten» (a new one when there is none): the button
+    // names it (Camille found it unclear)
+    const target = curBin();
     S.tools.forEach((t, i) => {
       const uses = S.bins.filter((b) => b.items.some((it) => it.toolId === t.id)).length;
       const del = this.confirmId === t.id
@@ -13612,7 +13617,7 @@ const LibUI = {
       } }, label);
       // the mark on the picture; with «passt» only a lock (Camille's choice), which opens and closes with a click
       const mark = !t.fit ? null : t.fit !== 'ok' ? h('span', { class: 'fit bad', title: FIT_TEXT.bad + (t.fitAt ? ', gesetzt am ' + new Date(t.fitAt).toLocaleDateString('de-CH') : ''), text: FIT_MARK.bad })
-        : h('button', { type: 'button', class: 'fit ok lock', 'aria-label': locked ? 'Gesperrt' : 'Entsperrt', title: locked ? 'Testdruck passt, darum gesperrt: Höhe, Status, Umriss und die Taschentiefe in den Bins bleiben, wie sie sind. Klicken entsperrt.' : 'Testdruck passt, entsperrt: Änderungen sind möglich. Klicken sperrt wieder.',
+        : h('button', { type: 'button', class: 'fit ok lock', 'aria-label': locked ? 'Gesperrt' : 'Entsperrt', title: locked ? 'Testdruck passt, darum gesperrt: Name, Höhe, Status, Umriss und die Taschentiefe in den Bins bleiben, wie sie sind. Klicken entsperrt.' : 'Testdruck passt, entsperrt: Änderungen sind möglich. Klicken sperrt wieder.',
           onclick: () => { if (locked) this.unlocked.add(t.id); else this.unlocked.delete(t.id); this.render(); } }, locked ? '🔒' : '🔓');
       grid.append(h('article', { class: 'tool' + (picked ? ' picked' : '') },
         h('label', { class: 'pick', title: 'Werkzeuge auswählen, um sie zusammen in einen Bin zu legen oder einen Testdruck zu machen' }, h('input', { type: 'checkbox', checked: picked, onchange: toggle, 'aria-label': 'Auswählen' }), picked ? 'Ausgewählt' : 'Auswählen'),
@@ -13620,7 +13625,7 @@ const LibUI = {
         thumb,
         h('div', { class: 'body' },
           t.example ? h('div', { class: 'ex', text: 'Beispiel' }) : null,
-          h('input', { type: 'text', value: t.name, 'aria-label': 'Name', title: 'Name des Werkzeugs', onchange: (e) => { t.name = e.target.value.trim() || t.name; Store.save('tool', t); } }),
+          h('input', { type: 'text', value: t.name, 'aria-label': 'Name', disabled: locked, title: 'Name des Werkzeugs' + (locked ? ' (gesperrt, weil der Testdruck passt: das Schloss oben rechts entsperrt)' : ''), onchange: (e) => { t.name = e.target.value.trim() || t.name; Store.save('tool', t); } }),
           // (its size is left out: of little interest here, Camille)
           h('div', { class: 'row', style: { flexWrap: 'wrap', rowGap: '4px' } },
             h('label', { class: 'f', title: 'Höhe des Werkzeugs, wie es im Bin liegt: daraus wird die Taschentiefe (1 mm Reserve); die Taschen in den Bins folgen', style: { flexDirection: 'row', alignItems: 'center', gap: '6px' } }, h('span', { text: 'Höhe' }),
@@ -13634,7 +13639,7 @@ const LibUI = {
           locked ? null : h('div', { class: 'row fit-row', title: 'Ob der Testdruck dieses Werkzeugs gepasst hat; wird wieder «offen», wenn sich der Umriss ändert' }, h('span', { class: 'unit', text: 'Testdruck' }),
             h('div', { class: 'seg', role: 'group', 'aria-label': 'Testdruck' }, fitBtn('', 'offen'), fitBtn('ok', 'passt'), fitBtn('bad', 'passt nicht'))),
           h('div', { class: 'row actions' },
-            h('button', { class: 'btn small primary', type: 'button', title: 'Das Werkzeug in den Bin legen, den du gerade bearbeitest (oder in einen neuen)', onclick: () => this.toBin(t) }, 'In Bin legen'),
+            h('button', { class: 'btn small primary to-bin', type: 'button', title: target ? `Das Werkzeug in «${target.name}» legen: den Bin, der zuletzt unter «Bin bearbeiten» offen war. Einen anderen wählst du dort oben in der Liste.` : 'Einen neuen Bin mit diesem Werkzeug anlegen', onclick: () => this.toBin(t) }, target ? `In «${target.name}» legen` : 'In neuen Bin legen'),
             h('button', { class: 'btn small', type: 'button', disabled: locked, title: 'Umriss mit dem Punkte-Editor korrigieren, ohne Foto' + (locked ? ' (gesperrt, weil der Testdruck passt: das Schloss oben rechts entsperrt)' : ''), onclick: () => TraceUI.editTool(t) }, 'Umriss bearbeiten'), del))));
     });
   },
