@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '631d3d5f7a60';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '981e3d0e825c';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -14730,7 +14730,8 @@ const BinUI = {
       const bb = polyBBox([p.poly]);
       // the pocket's depth; when the tool is taller (it stands out, or the bin is too low for it) both
       if (p.kind === 'item') { const t = toolById(p.ref.toolId); if (t && st.scale > 1.2) drawLabel(c, st, t.height > p.depth + 0.05 ? `${t.name} · Tasche ${nf(p.depth, 0)} von ${nf(t.height, 0)} mm` : `${t.name} · ${nf(p.depth, 0)} mm`, bb.cx, bb.cy, { size: 11 }); }
-      else if (st.scale > 1.2 && (this.isSel(p.ref.id) || bb.w * st.scale > 70)) drawLabel(c, st, `${shapeLabel(p.ref).size} · ${nf(p.depth, 0)} mm`, bb.cx, bb.y1 + st.px(12), { size: 10 });
+      // a shape's size only on the one chosen (Camille: shown on some and not on others by their width, irritating)
+      else if (this.isSel(p.ref.id)) drawLabel(c, st, `${shapeLabel(p.ref).size} · ${nf(p.depth, 0)} mm`, bb.cx, bb.y1 + st.px(12), { size: 10 });
     }
     // size handles of the selected shape
     for (const hd of this.handles()) {
