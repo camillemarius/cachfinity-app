@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '0f1b6269f7fc';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '6d0a9b7e6dd5';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -10789,7 +10789,8 @@ function itemPocket(b, it) {
 // every pocket is cut to its own depth. Stored in b.fingers (the name of the first kind, finger holes).
 // w: width (across), l: length (along the angle rot), r: corner radius of a rectangle.
 // The magnet holes under bin b (b.magnets: false none, true 4 under every field, 'corners' only the 4 at the
-// bin's outermost corners; Camille's three): their centres in the bin's frame (centre 0, y down, mm).
+// bin's outermost corners, the default for new bins; Camille's three): their centres in the bin's frame
+// (centre 0, y down, mm).
 const magnetMode = (b) => (b.magnets === 'corners' ? 'corners' : b.magnets ? 'all' : 'none');
 const MAGNET_TEXT = { none: 'keine', all: '4 pro Feld', corners: '4 in den äussersten Ecken' };
 function binMagnetSpots(b) {
@@ -11253,7 +11254,7 @@ function newBin(props = {}) {
   const used = new Set(S.bins.map((b) => b.color));
   return {
     id: uid(), name: 'Bin ' + (S.bins.length + 1), gx: 2, gy: 2, hu: 4,
-    clearance: toolTol(), wall: 3, floor: 1.2, lip: true, magnets: true, autoFit: true, autoFingers: true,
+    clearance: toolTol(), wall: 3, floor: 1.2, lip: true, magnets: 'corners', autoFit: true, autoFingers: true,
     color: BIN_COLORS.find((c) => !used.has(c)) || BIN_COLORS[S.bins.length % BIN_COLORS.length],
     items: [], fingers: [], place: null, ...props,
   };
@@ -11505,7 +11506,8 @@ const NEST_SQUEEZE = 1.5; // mm the best arrangement is asked to get shorter, ag
 const normDeg = (a) => (((Math.round(a * 10) / 10) % 360) + 360) % 360;
 // The units of bin b. A shape set by hand over one or several tools (a slot across rods, a rectangle a tool
 // lies in) holds them together as they lie now; a shape over no tool is a unit of its own. Each part keeps
-// its place relative to the unit's first part (a tool, whose straight turn gives the unit's turns). A tool
+// its place relative to the unit's first part (a tool, whose straight turn and the turn it lies in now give
+// the unit's turns, each in 90° steps: a tool laid aslant by hand keeps that angle as a choice). A tool
 // on its own with one automatic trough has the trough's places in troughs (the first: where it is now).
 function nestUnits(b) {
   const parts = [
@@ -11533,7 +11535,7 @@ function nestUnits(b) {
       }
       troughs.push(...at.slice(1));
     }
-    return { id: 'u' + n, parts: ps, ax: a.x, ay: a.y, tools: ps.filter((p) => p.kind === 'item').length, trough, troughs, turns: round ? [0] : [0, 90, 180, 270].map((d) => normDeg(s + d)) };
+    return { id: 'u' + n, parts: ps, ax: a.x, ay: a.y, tools: ps.filter((p) => p.kind === 'item').length, trough, troughs, turns: round ? [0] : [...new Set([0, 90, 180, 270].flatMap((d) => [normDeg(s + d), normDeg(d)]))] };
   });
 }
 // where part p of unit u lies when the unit is turned by d with its origin at 0,0
@@ -13713,11 +13715,19 @@ const BinUI = {
     // the tools nested by their real outlines (nestBin); a bin that fits its content takes the size it needs
     $('#bin-nest').onclick = async () => {
       const b = curBin(); if (!b) return;
+      // the arrangement as it is, kept when the search finds nothing better (one laid out by hand may well be)
+      const was = JSON.parse(JSON.stringify({ items: b.items, fingers: b.fingers, gx: b.gx, gy: b.gy, hu: b.hu, manual: b.manual })), fitted = !binChecks(b).some((c) => c.over);
       let r;
       try { r = await busy('Ordne die Werkzeuge platzsparend an…', () => nestBin(b)); } catch (e) { console.error(e); toast('Das Anordnen ging nicht: ' + (e.message || e), 'bad'); return; }
       if (!r.ok) {
-        toast(r.why === 'fixed' ? 'So passen die Werkzeuge nicht in diesen Bin. Mit «Grösse passt sich dem Inhalt an» sucht die App die kleinste passende Grösse.'
-          : r.why === 'empty' ? 'Im Bin liegt noch kein Werkzeug.' : 'Keine Anordnung gefunden.', 'bad');
+        Object.assign(b, was); this.render();
+        if (r.why === 'fixed') toast(fitted ? 'Keine andere Anordnung gefunden, die in diesen Bin passt. Deine bleibt, wie sie ist.' : 'Auch so passen die Werkzeuge nicht in diesen Bin. Mit «Grösse passt sich dem Inhalt an» sucht die App die kleinste passende Grösse.', fitted ? undefined : 'bad');
+        else toast(r.why === 'empty' ? 'Im Bin liegt noch kein Werkzeug.' : 'Keine Anordnung gefunden.', 'bad');
+        return;
+      }
+      if (b.autoFit !== false && fitted && r.gx * r.gy > was.gx * was.gy) {
+        Object.assign(b, was); this.render();
+        toast(`Keine Anordnung mit weniger Feldern gefunden: deine braucht ${was.gx} × ${was.gy} = ${was.gx * was.gy} Felder, die beste gefundene ${r.gx} × ${r.gy} = ${r.gx * r.gy}. Deine bleibt.`);
         return;
       }
       this.sel = null; this.changed(true); this.stage.fitted = false; this.stage.fit();
