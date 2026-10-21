@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'c79ab09637a3';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '307fcf0a1c5a';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -274,6 +274,15 @@ label.check { display: flex; align-items: center; gap: 8px; font-size: 14px; cur
 label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
 .unit { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
 .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+/* a line explaining the checkbox above it, under its text; a group of settings in a card, under a line */
+.card p.check-note { margin: -6px 0 0 24px; font-size: 12px; }
+.card h3.sub {
+  margin: 2px 0 0; padding-top: 10px; border-top: 1px solid var(--line); font-family: var(--font-display); font-size: 12px;
+  font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+}
+label.f.sub-opt { flex-direction: row; align-items: center; gap: 8px; padding-left: 24px; }
+label.f.sub-opt input { flex: none; }
+#bin-dims { white-space: pre-line; }
 
 .btn {
   border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); padding: 7px 12px; cursor: pointer;
@@ -632,6 +641,8 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
           <label title="Tiefe in Gridfinity-Feldern zu 42 mm" class="f"><span>Tiefe Felder</span><input type="number" id="bin-gy" min="1" max="12" step="1"></label>
           <label title="Höhe in Einheiten zu 7 mm, ohne Stapelrand; die Taschen werden höchstens so tief, wie diese Höhe erlaubt" class="f"><span>Höhe u (7 mm)</span><input type="number" id="bin-hu" min="2" max="30" step="1"></label>
         </div>
+        <label title="Breite, Tiefe und Höhe folgen den Werkzeugen; sie liegen ganz in ihren Taschen (1 mm Reserve nach oben)" class="check"><input type="checkbox" id="bin-autofit" checked> Grösse automatisch anpassen</label>
+        <p class="check-note">Felder und Höhe richten sich nach den Werkzeugen. Stellst du sie selbst ein, schaltet sich das aus.</p>
         <p id="bin-dims" class="mono"></p>
         <!-- settings that change every pocket and are rarely touched: a line with the values, opened on purpose -->
         <details class="adv" id="bin-adv">
@@ -642,12 +653,12 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
             <label title="Material unter der tiefsten Tasche" class="f"><span>Boden mm</span><input type="number" id="bin-floor" min="0.8" max="10" step="0.1"></label>
           </div>
         </details>
-        <label title="Breite, Tiefe und Höhe folgen dem Inhalt; die Werkzeuge liegen ganz in ihren Taschen (1 mm Reserve nach oben)" class="check"><input type="checkbox" id="bin-autofit" checked> Grösse passt sich dem Inhalt an <span class="unit">(aus, sobald du Felder oder Höhe selbst einstellst)</span></label>
-        <label title="Stapelrand oben, damit ein weiterer Bin auf diesem stehen kann" class="check"><input type="checkbox" id="bin-lip"> Stapelrand</label>
-        <label class="f" title="Griffmulden an den kurzen Seiten, damit sich ein Bin, der den Koffer ganz füllt, herausheben lässt. Kugel: Ø 30 mm, oben ein Loch von 24 mm, die Fingerkuppe hakt unter den Rand (braucht wenig Platz). Breite Mulde: 40 mm für zwei Finger, unter die Kante ausgehöhlt (hält am besten). Nur die Mulde selbst bleibt frei; ein Bin, der sich dem Inhalt anpasst, wird wenn nötig grösser"><span>Griffmulden zum Herausheben</span><select id="bin-grips" title="Griffmulden an den kurzen Seiten, damit sich ein Bin, der den Koffer ganz füllt, herausheben lässt. Kugel: Ø 30 mm, oben ein Loch von 24 mm, die Fingerkuppe hakt unter den Rand (braucht wenig Platz). Breite Mulde: 40 mm für zwei Finger, unter die Kante ausgehöhlt (hält am besten). Nur die Mulde selbst bleibt frei; ein Bin, der sich dem Inhalt anpasst, wird wenn nötig grösser"><option value="none">Keine</option><option value="ball">Kugel</option><option value="slot">Breite Mulde</option></select></label>
-        <label class="f inline-f" style="padding-left: 26px" title="Hebt den Stapelrand um ganze Einheiten an. Werkzeuge, die aus ihrer Tasche ragen, haben dann Platz unter dem Bin darüber."><span>Rand erhöhen</span><input type="number" id="bin-lift" min="0" max="10" step="1" style="width: 64px"><span class="unit">u (je 7 mm)</span></label>
-        <label class="f" title="Löcher für Magnete 6 × 2 mm unten im Bin: keine, 4 unter jedem Feld, oder nur die 4 in den äussersten Ecken (spart Magnete, der Bin hält trotzdem)"><span>Magnetlöcher 6 × 2 mm</span><select id="bin-mag" title="Löcher für Magnete 6 × 2 mm unten im Bin: keine, 4 unter jedem Feld, oder nur die 4 in den äussersten Ecken (spart Magnete, der Bin hält trotzdem)"><option value="none">Keine</option><option value="all">4 pro Feld</option><option value="corners">Nur 4 in den äussersten Ecken</option></select></label>
         <div class="row"><button class="btn small" type="button" id="bin-autosize" title="Breite, Länge und Höhe nach dem Inhalt; die Werkzeuge liegen danach ganz in ihren Taschen">Grösse anpassen</button><button class="btn small" type="button" id="bin-arrange" title="Die Werkzeuge neu und platzsparend anordnen">Teile anordnen</button><button class="btn small" type="button" id="bin-nest" title="Die Werkzeuge nach ihren echten Umrissen ineinander schieben, auch gedreht, so dass der Bin möglichst wenige Felder braucht. Werkzeuge unter einer gemeinsamen Form (etwa einem Langloch über mehrere Stangen) bleiben zusammen. Griffmulden wandern dabei entlang ihres Werkzeugs und ragen, wo nötig, nur auf einer Seite hinaus. Dauert ein paar Sekunden; Strg+Z macht es rückgängig">Platzsparend anordnen</button><button class="btn small" type="button" id="bin-sink" title="Die Höhe so einstellen, dass alle Werkzeuge bündig in ihren Taschen liegen: jede Tasche so tief, wie ihr Werkzeug hoch ist (und 1 mm Reserve), auch wo eine Tiefe von Hand gesetzt war; der Bin wird so hoch wie nötig, auch niedriger. Breite und Länge bleiben. Strg+Z macht es rückgängig">Bauteile versenken</button></div>
+        <h3 class="sub">Optionen</h3>
+        <label title="Stapelrand oben, damit ein weiterer Bin auf diesem stehen kann" class="check"><input type="checkbox" id="bin-lip"> Stapelrand</label>
+        <label class="f inline-f sub-opt" title="Hebt den Stapelrand um ganze Einheiten an. Werkzeuge, die aus ihrer Tasche ragen, haben dann Platz unter dem Bin darüber"><span>Stapelrand erhöhen</span><input type="number" id="bin-lift" min="0" max="10" step="1" style="width: 64px"><span class="unit">u (je 7 mm)</span></label>
+        <label class="f" title="Griffmulden an den kurzen Seiten, damit sich ein Bin, der den Koffer ganz füllt, herausheben lässt. Kugel: Ø 30 mm, oben ein Loch von 24 mm, die Fingerkuppe hakt unter den Rand. Rechteckige Mulde: 20 mm breit und 18 mm nach innen, unter die Kante ausgehöhlt. Nur die Mulde selbst bleibt frei; ein Bin, der seine Grösse automatisch anpasst, wird wenn nötig grösser"><span>Griffmulden zum Herausheben</span><select id="bin-grips" title="Griffmulden an den kurzen Seiten, damit sich ein Bin, der den Koffer ganz füllt, herausheben lässt. Kugel: Ø 30 mm, oben ein Loch von 24 mm, die Fingerkuppe hakt unter den Rand. Rechteckige Mulde: 20 mm breit und 18 mm nach innen, unter die Kante ausgehöhlt. Nur die Mulde selbst bleibt frei; ein Bin, der seine Grösse automatisch anpasst, wird wenn nötig grösser"><option value="none">Keine</option><option value="ball">Kugel</option><option value="slot">Rechteckige Mulde</option></select></label>
+        <label class="f" title="Löcher für Magnete 6 × 2 mm unten im Bin: keine, 4 unter jedem Feld, oder nur die 4 in den äussersten Ecken (spart Magnete, der Bin hält trotzdem)"><span>Magnetlöcher 6 × 2 mm</span><select id="bin-mag" title="Löcher für Magnete 6 × 2 mm unten im Bin: keine, 4 unter jedem Feld, oder nur die 4 in den äussersten Ecken (spart Magnete, der Bin hält trotzdem)"><option value="none">Keine</option><option value="all">4 pro Feld</option><option value="corners">Nur 4 in den äussersten Ecken</option></select></label>
       </div>
       <div class="card">
         <h2>Inhalt</h2>
@@ -10906,8 +10917,9 @@ function crossings(poly, alongX, v) {
 // tool's length, preferring a narrow spot (a handle rather than the joint of pliers), where it meets no
 // other pocket (and, in a bin of fixed size, stays inside). FINGER_DEEPER mm deeper than the tool's pocket
 // (chosen defaults), so the fingers get under the tool; it keeps that relation when the pocket's depth
-// changes. 20 mm wide since 2026-10-21 (Camille: no wider is needed; 25 before, v 3 marks the new width).
-const FINGER_REACH = 14, FINGER_W = 20, FINGER_DEEPER = 5;
+// changes. 25 mm wide (on 2026-10-21 20 mm for a few hours by mistake, v 3; Camille wanted the lift grip
+// narrower, not these; v 4 marks them back at 25).
+const FINGER_REACH = 14, FINGER_W = 25, FINGER_DEEPER = 5;
 // the automatic trough of tool t at the place at (0 … 1) along it: across the tool and FINGER_REACH past
 // both sides (side 0), or past one side only (side 1 or -1; the other end at the pocket's edge, where there
 // is no room: one finger still gets under the tool), in tool coordinates (lx, ly, lrot, l), and the tool's
@@ -10929,7 +10941,7 @@ function autoFinger(b, it, allowOutside = b.autoFit !== false) {
   for (const at of [0.5, 0.45, 0.55, 0.4, 0.6, 0.35, 0.65, 0.3, 0.7]) {
     const a = fingerAcross(b, t, at); if (!a) continue;
     const across = a.across;
-    const f = { id: uid(), shape: 'slot', role: 'finger', profile: 'round', auto: true, style: 'across', v: 3, itemId: it.id,
+    const f = { id: uid(), shape: 'slot', role: 'finger', profile: 'round', auto: true, style: 'across', v: 4, itemId: it.id,
       w: W, l: a.l, depth, dplus: FINGER_DEEPER, lx: a.lx, ly: a.ly, lrot: a.lrot };
     Object.assign(f, fingerWorld(it, f));
     const poly = fingerPoly(f);
@@ -10967,8 +10979,8 @@ function ensureFingers(b) {
   b.fingers = b.fingers.filter((f) => !(f.auto && f.style !== 'across'));
   // the next ones were 20 mm wide and as deep as the pocket: now FINGER_W wide and FINGER_DEEPER deeper
   for (const f of b.fingers) if (f.auto && !f.v) { f.w = FINGER_W; f.l = Math.max(f.l, f.w); f.dplus = FINGER_DEEPER; f.v = 2; }
-  // then 25 mm wide: now FINGER_W (one set wider or narrower by hand stays)
-  for (const f of b.fingers) if (f.auto && f.v === 2) { if (Math.abs(f.w - 25) < 0.01) f.w = FINGER_W; f.v = 3; }
+  // then 25 mm wide, for a few hours 20 (v 3): those back to FINGER_W (one set to another width by hand stays)
+  for (const f of b.fingers) if (f.auto && (f.v === 2 || f.v === 3)) { if (f.v === 3 && Math.abs(f.w - 20) < 0.01) { f.w = FINGER_W; f.l = Math.max(f.l, f.w); } f.v = 4; }
   let n = 0;
   for (const it of b.items) {
     if (it.noFinger || b.fingers.some((f) => f.itemId === it.id)) continue;
@@ -11084,10 +11096,10 @@ function arrangeItems(b, turn = 0) {
 // «Griffmulden zum Herausheben» (b.grips, off unless chosen; Camille): a bin that fills its case is lifted out by
 // two finger grips in the middle of its short ends: an opening GRIP.open mm wide (inwards) and GRIP.width mm
 // long, GRIP.depth mm deep, hollowed GRIP.under mm towards the wall under a ledge GRIP.lip mm thick (the hollow
-// rises at 45°, so it prints without support). Sized for two fingertips (the first ones, 60 × 20 × 18 mm, took
-// Camille too much room). A bin that fits its content keeps each grip's band free, gripZone(b) mm deep; pockets
-// beside it may reach to the end.
-const GRIP = { width: 40, open: 18, under: 5, lip: 4, depth: 15 };
+// rises at 45°, so it prints without support). 20 mm wide on Camille's word (the first ones were 60, then 40;
+// they took her too much room). A bin that fits its content keeps each grip's band free, gripZone(b) mm deep;
+// pockets beside it may reach to the end.
+const GRIP = { width: 20, open: 18, under: 5, lip: 4, depth: 15 };
 // The smaller grip (b.grips 'ball', Camille's idea, 30 mm across; true is the slot above): a ball GRIP_BALL.r mm in
 // radius whose centre lies GRIP_BALL.sink mm under the top, at the inside's edge. From above a round opening
 // (24 mm); under it a rim of 3 mm all round to hook a fingertip under, rising at no more than 37° (it prints
@@ -11310,7 +11322,7 @@ function caseChecks(cs, b) {
   const above = placedIn(cs).find((o) => o !== b && o.place.z === b.place.z + stackU(b) && overlapsCells(o, b));
   if (above) {
     const out = Math.max(0, ...binPockets(b).filter((p) => p.kind === 'item').map((p) => { const t = toolById(p.ref.toolId); return t ? t.height - p.depth : 0; }));
-    if (out > binLift(b) * GF.unit + 0.5) res.push({ level: 'bad', text: `Werkzeuge stehen ${nf(out, 0)} mm vor und stossen an «${above.name}» darüber. Im Bin «Rand erhöhen» auf ${Math.ceil(out / GF.unit)} u stellen.` });
+    if (out > binLift(b) * GF.unit + 0.5) res.push({ level: 'bad', text: `Werkzeuge stehen ${nf(out, 0)} mm vor und stossen an «${above.name}» darüber. Im Bin «Stapelrand erhöhen» auf ${Math.ceil(out / GF.unit)} u stellen.` });
   }
   const sup = supportOf(b);
   if (!sup.full) res.push({ level: 'warn', text: sup.on.length ? `liegt nur teilweise auf (${sup.gaps} Feld${sup.gaps === 1 ? '' : 'er'} frei)` : 'schwebt, darunter ist nichts' });
@@ -14157,8 +14169,8 @@ const BinUI = {
     $('#bin-adv-sum').textContent = `Toleranz ${mm(b.clearance)} mm · Rand ${mm(b.wall)} mm · Boden ${mm(b.floor)} mm`;
     if (this.advBin !== b.id) { $('#bin-adv').open = false; this.advBin = b.id; }
     $('#bin-lip').checked = b.lip; $('#bin-grips').value = gripKind(b) || 'none'; $('#bin-mag').value = magnetMode(b); $('#bin-autofit').checked = b.autoFit !== false; $('#bin-autofinger').checked = !!b.autoFingers;
-    $('#bin-lift').value = b.lift || 0; $('#bin-lift').disabled = !b.lip;
-    $('#bin-dims').textContent = `${nf(binW(b), 1)} × ${nf(binD(b), 1)} × ${nf(binTop(b), 0)} mm${binLift(b) ? ` + ${binLift(b) * GF.unit} mm erhöhter Rand` : ''}${b.lip ? ' + 4.4 Stapelrand' : ''} · Taschen bis ${nf(Math.floor(maxDepth(b) * 10 + 1e-6) / 10, 1)} mm tief`;
+    $('#bin-lift').value = b.lift || 0; $('#bin-lift').closest('label').hidden = !b.lip;
+    $('#bin-dims').textContent = `${nf(binW(b), 1)} × ${nf(binD(b), 1)} × ${nf(binTop(b), 0)} mm${binLift(b) ? ` + ${binLift(b) * GF.unit} mm erhöhter Rand` : ''}${b.lip ? ' + 4.4 Stapelrand' : ''}\nTaschen bis ${nf(Math.floor(maxDepth(b) * 10 + 1e-6) / 10, 1)} mm tief`;
     const add = $('#bin-add-tool'); add.replaceChildren(...S.tools.map((t) => h('option', { value: t.id, text: t.name })));
     const items = $('#bin-items'); items.replaceChildren();
     for (const it of b.items) {
@@ -15804,16 +15816,16 @@ const App = {
       }
       S.ui.depthV = 4;
     }
-    // the tools' automatic troughs were 25 mm wide until 2026-10-21 and are FINGER_W (20) now: the ones at 25 take
-    // the new width once (one set to another width by hand stays)
-    let narrower = 0;
-    if (!S.ui.troughV) {
+    // the tools' automatic troughs were 20 mm wide for a few hours on 2026-10-21 (v 3, by mistake): back to
+    // FINGER_W (25) once (one set to another width by hand stays)
+    let wider = 0;
+    if ((S.ui.troughV || 0) < 2) {
       for (const b of S.bins) {
         let n = 0;
-        for (const f of b.fingers) if (f.auto && (f.v || 0) <= 2 && Math.abs(f.w - 25) < 0.01) { f.w = FINGER_W; f.v = 3; n++; }
-        if (n) { b._rev = (b._rev || 0) + 1; Store.save('bin', b); narrower++; }
+        for (const f of b.fingers) if (f.auto && f.v === 3 && Math.abs(f.w - 20) < 0.01) { f.w = FINGER_W; f.l = Math.max(f.l, f.w); f.v = 4; n++; }
+        if (n) { b._rev = (b._rev || 0) + 1; Store.save('bin', b); wider++; }
       }
-      S.ui.troughV = 1;
+      S.ui.troughV = 2;
     }
     FotoUI.init(); TraceUI.init(); LibUI.init(); BinUI.init(); CaseUI.init(); Overview.init(); NewBin.init(); TestPrint.init(); DataUI.init(); Undo.init(); DataFolder.init(); GDrive.init();
     window.addEventListener('online', () => Store.sendAll());
@@ -15826,7 +15838,7 @@ const App = {
     if (redepth) news.push(`Taschentiefen in ${redepth === 1 ? 'einem Bin' : redepth + ' Bins'} an die Werkzeughöhen angepasst, so tief, wie der Bin es zulässt.`);
     if (grown.length) news.push(`${grown.length === 1 ? `«${grown[0]}» ist` : `${grown.length} Bins sind`} jetzt so hoch, dass die Werkzeuge ganz in ihren Taschen liegen.`);
     if (deeper) news.push(`Taschen in ${deeper === 1 ? 'einem Bin' : deeper + ' Bins'} jetzt ${nf(DEPTH_EXTRA, 0)} mm tiefer als die Werkzeuge hoch sind (Reserve nach oben).`);
-    if (narrower) news.push(`Griffmulden der Werkzeuge jetzt ${nf(FINGER_W, 0)} mm breit statt 25 (in ${narrower === 1 ? 'einem Bin' : narrower + ' Bins'} angepasst).`);
+    if (wider) news.push(`Griffmulden der Werkzeuge wieder ${nf(FINGER_W, 0)} mm breit (in ${wider === 1 ? 'einem Bin' : wider + ' Bins'} angepasst).`);
     if (lower.length) news.push(`Griffmulden machen Bins nicht mehr höher: ${lower.join(', ')}.`);
     if (news.length) toast(news.join(' '));
     Store.connect(() => { this.renderAll(); this.show(this.tab); });
