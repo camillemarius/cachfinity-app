@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '66e65bd432e7';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'b7605909f64c';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -644,7 +644,7 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
         </details>
         <label title="Breite, Tiefe und Höhe folgen dem Inhalt; die Werkzeuge liegen ganz in ihren Taschen (1 mm Reserve nach oben)" class="check"><input type="checkbox" id="bin-autofit" checked> Grösse passt sich dem Inhalt an <span class="unit">(aus, sobald du Felder oder Höhe selbst einstellst)</span></label>
         <label title="Stapelrand oben, damit ein weiterer Bin auf diesem stehen kann" class="check"><input type="checkbox" id="bin-lip"> Stapelrand</label>
-        <label title="Zwei Griffmulden in der Mitte der kurzen Seiten, unter die Oberkante ausgehöhlt: die Finger haken ein, und ein Bin, der den Koffer ganz füllt, lässt sich herausheben. An beiden kurzen Seiten bleibt dafür ein Streifen von 28 mm frei; ein Bin, der sich dem Inhalt anpasst, wird entsprechend grösser" class="check"><input type="checkbox" id="bin-grips"> Griffmulden zum Herausheben</label>
+        <label title="Zwei Griffmulden in der Mitte der kurzen Seiten, unter die Oberkante ausgehöhlt: die Finger haken ein, und ein Bin, der den Koffer ganz füllt, lässt sich herausheben. Die Mulden sind 40 mm breit und brauchen an jeder kurzen Seite 25 mm; daneben dürfen Werkzeuge bis an die Wand reichen. Ein Bin, der sich dem Inhalt anpasst, wird wenn nötig grösser" class="check"><input type="checkbox" id="bin-grips"> Griffmulden zum Herausheben</label>
         <label class="f inline-f" style="padding-left: 26px" title="Hebt den Stapelrand um ganze Einheiten an. Werkzeuge, die aus ihrer Tasche ragen, haben dann Platz unter dem Bin darüber."><span>Rand erhöhen</span><input type="number" id="bin-lift" min="0" max="10" step="1" style="width: 64px"><span class="unit">u (je 7 mm)</span></label>
         <label class="f" title="Löcher für Magnete 6 × 2 mm unten im Bin: keine, 4 unter jedem Feld, oder nur die 4 in den äussersten Ecken (spart Magnete, der Bin hält trotzdem)"><span>Magnetlöcher 6 × 2 mm</span><select id="bin-mag" title="Löcher für Magnete 6 × 2 mm unten im Bin: keine, 4 unter jedem Feld, oder nur die 4 in den äussersten Ecken (spart Magnete, der Bin hält trotzdem)"><option value="none">Keine</option><option value="all">4 pro Feld</option><option value="corners">Nur 4 in den äussersten Ecken</option></select></label>
         <div class="row"><button class="btn small" type="button" id="bin-autosize" title="Breite, Länge und Höhe nach dem Inhalt; die Werkzeuge liegen danach ganz in ihren Taschen">Grösse anpassen</button><button class="btn small" type="button" id="bin-arrange" title="Die Werkzeuge neu und platzsparend anordnen">Teile anordnen</button><button class="btn small" type="button" id="bin-nest" title="Die Werkzeuge nach ihren echten Umrissen ineinander schieben, auch gedreht, so dass der Bin möglichst wenige Felder braucht. Werkzeuge unter einer gemeinsamen Form (etwa einem Langloch über mehrere Stangen) bleiben zusammen. Griffmulden wandern dabei entlang ihres Werkzeugs und ragen, wo nötig, nur auf einer Seite hinaus. Dauert ein paar Sekunden; Strg+Z macht es rückgängig">Platzsparend anordnen</button><button class="btn small" type="button" id="bin-sink" title="Die Höhe so einstellen, dass alle Werkzeuge bündig in ihren Taschen liegen: jede Tasche so tief, wie ihr Werkzeug hoch ist (und 1 mm Reserve), auch wo eine Tiefe von Hand gesetzt war; der Bin wird so hoch wie nötig, auch niedriger. Breite und Länge bleiben. Strg+Z macht es rückgängig">Bauteile versenken</button></div>
@@ -11082,9 +11082,10 @@ function arrangeItems(b, turn = 0) {
 // «Griffmulden zum Herausheben» (b.grips, off unless chosen; Camille): a bin that fills its case is lifted out by
 // two finger grips in the middle of its short ends: an opening GRIP.open mm wide (inwards) and GRIP.width mm
 // long, GRIP.depth mm deep, hollowed GRIP.under mm towards the wall under a ledge GRIP.lip mm thick (the hollow
-// rises at 45°, so it prints without support). A bin that fits its content keeps a strip gripZone() mm deep
-// free of pockets at both short ends.
-const GRIP = { width: 60, open: 20, under: 6, lip: 4, depth: 18 };
+// rises at 45°, so it prints without support). Sized for two fingertips (the first ones, 60 × 20 × 18 mm, took
+// Camille too much room). A bin that fits its content keeps each grip's band free, gripZone() mm deep; pockets
+// beside it may reach to the end.
+const GRIP = { width: 40, open: 18, under: 5, lip: 4, depth: 15 };
 const gripZone = () => GRIP.under + GRIP.open + 2; // (2: the material kept between pockets, as NEST_GAP)
 const gripAxis = (b) => (b.gy >= b.gx ? 'y' : 'x');
 // the grips in plan (bin frame: centre 0, y down, mm): the opening, the ledge over the hollow, both together
@@ -11098,13 +11099,20 @@ function gripShapes(b) {
     return ax === 'y' ? [[-w / 2, lo], [w / 2, lo], [w / 2, hi], [-w / 2, hi]] : [[lo, -w / 2], [hi, -w / 2], [hi, w / 2], [lo, w / 2]]; };
   return [-1, 1].map((s) => ({ s, ax, w, half, ledge: box(s, 0, GRIP.under), open: box(s, GRIP.under, GRIP.under + GRIP.open), poly: box(s, 0, GRIP.under + GRIP.open) }));
 }
-// the fields a bin needs for pockets spanning w × h mm; with grips also the free strips at its short ends,
-// along y where that is the long side, else along x
-function fieldsFor(b, w, h) {
+// The fields a bin needs for pockets in the boxes given ({x0, x1, y0, y1}, mm, the pockets centred in the bin
+// afterwards); with grips also their room at the short ends, along y where that is the long side, else along
+// x: only the pockets in a grip's band (its width and 2 mm each side, in the middle) have to stay clear of it.
+function fieldsFor(b, boxes) {
   const n = (len) => clamp(Math.ceil((len + 2 * b.wall + GF.gap) / GF.pitch), 1, 12);
+  const x0 = Math.min(...boxes.map((q) => q.x0)), x1 = Math.max(...boxes.map((q) => q.x1)), y0 = Math.min(...boxes.map((q) => q.y0)), y1 = Math.max(...boxes.map((q) => q.y1));
+  const w = x1 - x0, h = y1 - y0, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
   if (!b.grips) return [n(w), n(h)];
-  const z = 2 * gripZone(), ys = [n(w), n(h + z)], xs = [n(w + z), n(h)];
-  const okY = ys[1] >= ys[0], okX = xs[0] > xs[1];
+  const z = gripZone(), half = GRIP.width / 2 + 2;
+  // the length along an axis for the grips at its ends: the pockets in the band reach this far from the middle
+  const need = (c, len, inBand, lo, hi) => { const s = boxes.filter(inBand); return Math.max(len, (s.length ? 2 * Math.max(c - Math.min(...s.map(lo)), Math.max(...s.map(hi)) - c) : 0) + 2 * z); };
+  const needY = need(cy, h, (q) => q.x1 > cx - half && q.x0 < cx + half, (q) => q.y0, (q) => q.y1);
+  const needX = need(cx, w, (q) => q.y1 > cy - half && q.y0 < cy + half, (q) => q.x0, (q) => q.x1);
+  const ys = [n(w), n(needY)], xs = [n(needX), n(h)], okY = ys[1] >= ys[0], okX = xs[0] > xs[1];
   return okY && (!okX || ys[0] * ys[1] <= xs[0] * xs[1]) ? ys : xs;
 }
 function centerItems(b) {
@@ -11115,8 +11123,7 @@ function centerItems(b) {
 }
 function autoSize(b) {
   const polys = binPockets(b).map((p) => p.poly); if (!polys.length) return;
-  const bb = polyBBox(polys);
-  [b.gx, b.gy] = fieldsFor(b, bb.w, bb.h);
+  [b.gx, b.gy] = fieldsFor(b, polys.map((p) => polyBBox([p])));
   // the height comes from the pockets and the shapes set by hand; a tool's finger trough does not make the
   // bin higher, it goes as deep as the bin is anyway (Camille's choice; binPockets stops it at maxDepth)
   const deepest = Math.max(...b.items.map((it) => it.depth), ...b.fingers.filter((f) => !f.itemId).map((f) => f.depth), 5);
@@ -11695,7 +11702,7 @@ function nestSpot(u, poses, placed, W, T, foot, nfp, side = 1, by = 'end') {
     for (const ring of free) for (const [x, y] of ring) {
       const lx = side > 0 ? x + box.x0 : -(x + box.x1);
       const key = by === 'col' ? lx * 1000 + y + box.y1 : (y + (by === 'top' ? box.y0 : box.y1)) * 1000 + lx;
-      if (!best || key < best.key - 1e-6) best = { key, u, d, v, x, y, end: y + box.y1, l: x + box.x0, r: x + box.x1 };
+      if (!best || key < best.key - 1e-6) best = { key, u, d, v, x, y, top: y + box.y0, end: y + box.y1, l: x + box.x0, r: x + box.x1 };
     }
   }
   return best;
@@ -11745,7 +11752,7 @@ async function nestBin(b, budget = 7000) {
     : [1, 2, 3, 4, 5, 6, 7, 8].filter((n) => inner(n) >= minSide).map((n) => ({ n, W: inner(n), T: Infinity, turned: false })));
   // a result as fields (as autoSize counts them), fitting the case first
   const rate = (res) => {
-    const [gx, gy] = fixed ? [b.gx, b.gy] : fieldsFor(b, res.width, res.length);
+    const [gx, gy] = fixed ? [b.gx, b.gy] : fieldsFor(b, res.placed.map((p) => ({ x0: p.l, x1: p.r, y0: p.top, y1: p.end })));
     const fits = !cs || (gx <= cs.gx && gy <= cs.gy) || (gy <= cs.gx && gx <= cs.gy);
     return { fields: gx * gy, score: fixed ? 0 : (fits ? 0 : 1e6) + gx * gy * 100 + Math.abs(gx - gy) + res.length / 1000 };
   };
