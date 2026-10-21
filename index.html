@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '981e3d0e825c';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '7fae4866bc2a';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -298,7 +298,7 @@ label.f.sub-opt { flex-direction: row; align-items: center; gap: 8px; padding-le
 label.f.sub-opt input { flex: none; }
 #bin-dims { white-space: pre-line; }
 /* a locked bin: its settings shown, greyed, not to be touched */
-#bin-panel.locked { opacity: 0.55; }
+#bin-panel .card.locked { opacity: 0.55; }
 #bin-lock[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
 .row[hidden], .btn[hidden], p[hidden] { display: none; }
 
@@ -687,7 +687,7 @@ label.f.sub-opt input { flex: none; }
         <h3 class="sub">Optionen</h3>
         <label title="Stapelrand oben, damit ein weiterer Bin auf diesem stehen kann" class="check"><input type="checkbox" id="bin-lip"> Stapelrand <span class="unit">(+4.4 mm)</span></label>
         <label class="f inline-f sub-opt" title="Hebt den Stapelrand um ganze Einheiten an. Werkzeuge, die aus ihrer Tasche ragen, haben dann Platz unter dem Bin darüber"><span>Zusätzlich erhöhen um</span><input type="number" id="bin-lift" min="0" max="10" step="1" style="width: 64px"><span class="unit">u (je 7 mm)</span></label>
-        <label class="f" title="Griffmulden an den kurzen Seiten, damit sich ein Bin, der den Koffer ganz füllt, herausheben lässt. Kugel: Ø 30 mm, oben ein Loch von 24 mm, die Fingerkuppe hakt unter den Rand. Rechteckige Mulde: 20 mm breit und 18 mm nach innen, unter die Kante ausgehöhlt. Sie kommen in Lücken am Rand; ist keine frei, liegen sie mittig an den kurzen Seiten unter einem Werkzeug (zum Herausheben dieses zuerst herausnehmen). Der Bin wird dafür nicht grösser"><span>Griffmulden zum Herausheben</span><select id="bin-grips" title="Griffmulden an den kurzen Seiten, damit sich ein Bin, der den Koffer ganz füllt, herausheben lässt. Kugel: Ø 30 mm, oben ein Loch von 24 mm, die Fingerkuppe hakt unter den Rand. Rechteckige Mulde: 20 mm breit und 18 mm nach innen, unter die Kante ausgehöhlt. Sie kommen in Lücken am Rand; ist keine frei, liegen sie mittig an den kurzen Seiten unter einem Werkzeug (zum Herausheben dieses zuerst herausnehmen). Der Bin wird dafür nicht grösser"><option value="none">Keine</option><option value="ball">Kugel</option><option value="slot">Rechteckige Mulde</option></select></label>
+        <label class="f" title="Griffmulden an zwei gegenüberliegenden Seiten (zuerst an den kurzen), damit sich ein Bin, der den Koffer ganz füllt, herausheben lässt. Kugel: Ø 30 mm, oben ein Loch von 24 mm, die Fingerkuppe hakt unter den Rand. Rechteckige Mulde: 20 mm breit und 18 mm nach innen, unter die Kante ausgehöhlt. Sie kommen in Lücken am Rand; ist keine frei, liegen sie mittig an den kurzen Seiten unter einem Werkzeug (zum Herausheben dieses zuerst herausnehmen). Der Bin wird dafür nicht grösser"><span>Griffmulden zum Herausheben</span><select id="bin-grips" title="Griffmulden an zwei gegenüberliegenden Seiten (zuerst an den kurzen), damit sich ein Bin, der den Koffer ganz füllt, herausheben lässt. Kugel: Ø 30 mm, oben ein Loch von 24 mm, die Fingerkuppe hakt unter den Rand. Rechteckige Mulde: 20 mm breit und 18 mm nach innen, unter die Kante ausgehöhlt. Sie kommen in Lücken am Rand; ist keine frei, liegen sie mittig an den kurzen Seiten unter einem Werkzeug (zum Herausheben dieses zuerst herausnehmen). Der Bin wird dafür nicht grösser"><option value="none">Keine</option><option value="ball">Kugel</option><option value="slot">Rechteckige Mulde</option></select></label>
         <p class="unit" id="bin-grip-row">Im Bild an der Wand entlang verschieben. «Griffmulden optimieren» legt sie in Lücken am Rand, sonst mittig unter ein Werkzeug.</p>
         <label class="f" title="Löcher für Magnete 6 × 2 mm unten im Bin: keine, 4 unter jedem Feld, oder nur die 4 in den äussersten Ecken (spart Magnete, der Bin hält trotzdem)"><span>Magnetlöcher 6 × 2 mm</span><select id="bin-mag" title="Löcher für Magnete 6 × 2 mm unten im Bin: keine, 4 unter jedem Feld, oder nur die 4 in den äussersten Ecken (spart Magnete, der Bin hält trotzdem)"><option value="none">Keine</option><option value="all">4 pro Feld</option><option value="corners">Nur 4 in den äussersten Ecken</option></select></label>
         <label title="Rundet die oberen Kanten um 1 mm ab: an den Taschen, den Griffmulden und, ohne Stapelrand, am äusseren Rand. Angenehmer zum Greifen; im Druck aus fünf Schichten zu 0.2 mm" class="check"><input type="checkbox" id="bin-round" checked> Kanten oben abrunden <span class="unit">(1 mm)</span></label>
@@ -707,7 +707,7 @@ label.f.sub-opt input { flex: none; }
         <h2>Prüfung</h2>
         <ul class="warnlist" id="bin-checks"></ul>
       </div>
-      <div class="card">
+      <div class="card" id="bin-export-card">
         <h2>Export</h2>
         <p>ZIP mit <strong>STL</strong> zum Drucken, dazu <strong>STEP</strong> (exakte CAD-Geometrie) im Unterordner.</p>
         <div class="bed-ctl"></div>
@@ -724,7 +724,7 @@ label.f.sub-opt input { flex: none; }
   <section class="pane" id="pane-cases" role="tabpanel" aria-labelledby="tab-btn-cases">
     <div class="lib-wrap" id="case-all">
       <div class="lib-bar">
-        <p>Bins auf einen Koffer ziehen oder dort auswählen; sie landen auf dem ersten freien Platz. Ein Klick auf die Draufsicht öffnet den Koffer zum Einrichten.</p>
+        <p>Bins auf einen Koffer ziehen oder dort auswählen; sie landen auf dem ersten freien Platz. Ein Klick auf die Draufsicht öffnet ihn unter «Koffer bearbeiten».</p>
         <button title="Einen neuen Koffer anlegen" class="btn" type="button" id="case-all-new">Neuer Koffer</button>
       </div>
       <div class="case-board" id="case-all-grid"></div>
@@ -10841,7 +10841,8 @@ function lockBin(b, on) {
   b.frozen = { tools, grip: { GRIP: { ...GRIP }, BALL: { ...GRIP_BALL } }, edge: EDGE_ROUND };
   b.locked = true; b.lockedAt = Date.now();
 }
-function itemPoly(it) { const t = toolById(it.toolId); return t ? placePoly(t.outline, it.x, it.y, it.rot, it.mirror) : null; }
+// (with the bin: a locked one draws the tool as it was when locked)
+function itemPoly(it, b = null) { const t = b ? binTool(b, it.toolId) : toolById(it.toolId); return t ? placePoly(t.outline, it.x, it.y, it.rot, it.mirror) : null; }
 const pocketCache = new WeakMap();
 function itemPocket(b, it) {
   const t = binTool(b, it.toolId); if (!t) return null;
@@ -11144,7 +11145,7 @@ function binChecks(b) {
   const res = [];
   const pockets = binPockets(b), inner = binInner(b);
   for (const p of pockets) {
-    const name = p.kind === 'item' ? (toolById(p.ref.toolId) || {}).name || 'Teil' : shapeLabel(p.ref).name;
+    const name = p.kind === 'item' ? (binTool(b, p.ref.toolId) || {}).name || 'Teil' : shapeLabel(p.ref).name;
     const out = polysArea(clipBool('diff', [p.poly], [inner]));
     if (out > 0.5) {
       const beyond = polysArea(clipBool('diff', [p.poly], [binOutline(b)])) > 0.5;
@@ -11154,7 +11155,7 @@ function binChecks(b) {
     const want = p.ref.depth, trough = p.kind === 'finger' && p.ref.itemId;
     if (want > maxDepth(b) + 0.01 && !trough) res.push({ level: 'warn', text: `${name}: Tiefe ${nf(want, 1)} mm passt nicht, wird auf ${nf(maxDepth(b), 1)} mm begrenzt.`, ref: p.ref });
   }
-  const troughName = (p) => { const it = p.ref.itemId && b.items.find((x) => x.id === p.ref.itemId), t = it && toolById(it.toolId); return t ? `Griffmulde von «${t.name}»` : shapeLabel(p.ref).name; };
+  const troughName = (p) => { const it = p.ref.itemId && b.items.find((x) => x.id === p.ref.itemId), t = it && binTool(b, it.toolId); return t ? `Griffmulde von «${t.name}»` : shapeLabel(p.ref).name; };
   const fings = pockets.filter((p) => p.kind === 'finger');
   for (let i = 0; i < fings.length; i++) {
     for (let j = i + 1; j < fings.length; j++) {
@@ -11171,12 +11172,12 @@ function binChecks(b) {
     if (a > 1) res.push({ level: 'warn', text: `${toolById(items[i].ref.toolId)?.name} und ${toolById(items[j].ref.toolId)?.name} überlappen, die Taschen fliessen ineinander.` });
   }
   for (const p of items) {
-    const t = toolById(p.ref.toolId); if (!t) continue;
+    const t = binTool(b, p.ref.toolId); if (!t) continue;
     if (t.height > p.depth + 3) {
       const out = t.height - p.depth, room = binLift(b) * GF.unit, need = Math.ceil(out / GF.unit);
       // limited by the bin's height rather than chosen: say which height would take the whole tool
       const capped = p.ref.depth >= maxDepth(b) - 0.05, huFull = Math.ceil((t.height + GF.base + b.floor) / GF.unit - 1e-6);
-      res.push({ level: 'ok', text: `${t.name} steht ${nf(out, 0)} mm vor, gut zum Greifen.` + (capped && huFull <= 30 ? ` Tiefer geht die Tasche erst mit einem höheren Bin: Höhe ${huFull} u für das ganze Werkzeug.` : '') + (b.lip && out > room + 0.5 ? ` Zum Stapeln «Rand erhöhen» auf ${need} u stellen, sonst stösst der Bin darüber an.` : '') });
+      res.push({ level: 'ok', text: `${t.name} steht ${nf(out, 0)} mm vor, gut zum Greifen.` + (capped && huFull <= 30 ? ` Tiefer geht die Tasche erst mit einem höheren Bin: Höhe ${huFull} u für das ganze Werkzeug.` : '') + (b.lip && out > room + 0.5 ? ` Zum Stapeln unter «Stapelrand» «Zusätzlich erhöhen um» auf ${need} u stellen, sonst stösst der Bin darüber an.` : '') });
     }
   }
   // the grips to lift the bin out: no pocket within 2 mm of one (a bin of fixed size, or moved by hand)
@@ -11189,7 +11190,7 @@ function binChecks(b) {
     for (const p of pockets) {
       if (polysArea(clipBool('intersect', [p.poly], zone)) <= 0.5) continue;
       // (Camille: a grip may lie under a tool, which then comes out first: a note, not an error)
-      if (p.kind === 'item') over.add((toolById(p.ref.toolId) || {}).name || 'Teil');
+      if (p.kind === 'item') over.add((binTool(b, p.ref.toolId) || {}).name || 'Teil');
     }
   }
   if (over.size) { const on = [...over].join(' und '); res.push({ level: 'ok', text: `Die Griffmulden zum Herausheben liegen unter ${on}: zuerst ${on} herausnehmen, dann den Bin.` }); }
@@ -11340,7 +11341,7 @@ function gripCovers(b) {
   const out = new Set();
   for (const g of gripShapes(b)) {
     const zone = offsetPolys([g.poly], 2);
-    for (const p of binPockets(b)) if (p.kind === 'item' && polysArea(clipBool('intersect', [p.poly], zone)) > 0.5) out.add((toolById(p.ref.toolId) || {}).name || 'Teil');
+    for (const p of binPockets(b)) if (p.kind === 'item' && polysArea(clipBool('intersect', [p.poly], zone)) > 0.5) out.add((binTool(b, p.ref.toolId) || {}).name || 'Teil');
   }
   return [...out];
 }
@@ -11401,6 +11402,7 @@ function autoSize(b) {
 // bin (fewest fields, preferably fitting the current case, then the squarer one). The size kept is the
 // one the rows need (autoSize), which is wider than the width tried when a tool is longer than that.
 function packBin(b) {
+  if (binLocked(b)) return;
   if (!b.items.length) { autoSize(b); return; }
   const cs = curCase(), maxGx = 8;
   let best = null;
@@ -11565,11 +11567,12 @@ function caseChecks(cs, b) {
   // case planner offers to tick it
   if (above && !b.lip) {
     const on = placedIn(cs).filter((o) => o !== b && o.place.z === b.place.z + stackU(b) && overlapsCells(o, b)).map((o) => `«${o.name}»`);
-    res.push({ level: 'bad', fix: 'lip', text: `trägt ${on.join(' und ')}, hat aber keinen Stapelrand` });
+    // (a locked bin keeps it as printed: no button, the reason said)
+    res.push({ level: 'bad', fix: binLocked(b) ? null : 'lip', text: `trägt ${on.join(' und ')}, hat aber keinen Stapelrand` + (binLocked(b) ? ' (gesperrt)' : '') });
   }
   if (above) {
-    const out = Math.max(0, ...binPockets(b).filter((p) => p.kind === 'item').map((p) => { const t = toolById(p.ref.toolId); return t ? t.height - p.depth : 0; }));
-    if (out > binLift(b) * GF.unit + 0.5) res.push({ level: 'bad', text: `Werkzeuge stehen ${nf(out, 0)} mm vor und stossen an «${above.name}» darüber. Im Bin «Stapelrand erhöhen» auf ${Math.ceil(out / GF.unit)} u stellen.` });
+    const out = Math.max(0, ...binPockets(b).filter((p) => p.kind === 'item').map((p) => { const t = binTool(b, p.ref.toolId); return t ? t.height - p.depth : 0; }));
+    if (out > binLift(b) * GF.unit + 0.5) res.push({ level: 'bad', text: `Werkzeuge stehen ${nf(out, 0)} mm vor und stossen an «${above.name}» darüber. Im Bin unter «Stapelrand» «Zusätzlich erhöhen um» auf ${Math.ceil(out / GF.unit)} u stellen.` });
   }
   const sup = supportOf(b);
   if (!sup.full) res.push({ level: 'warn', text: sup.on.length ? `liegt nur teilweise auf (${sup.gaps} Feld${sup.gaps === 1 ? '' : 'er'} frei)` : 'schwebt, darunter ist nichts' });
@@ -12406,7 +12409,10 @@ function roundCutters(r, b, rims, zTop) {
   const pos = (p) => (polyArea(p) < 0 ? p.slice().reverse() : p);
   for (let k = 0; k < EDGE_STEPS; k++) {
     const d = (k + 0.5) * h, w = R - Math.sqrt(Math.max(0, R * R - (R - d) ** 2));
-    const z0 = zTop - (k + 1) * h, tall = h + (k === 0 ? 1 : 0);
+    // (a step under 0.1 mm wide lies almost on the pocket's wall: such slivers left the solid unfit for cutting into
+    // parts and writing STL; the layers overlap a little, so no two faces meet exactly)
+    if (w < 0.1) continue;
+    const z0 = zTop - (k + 1) * h - 0.02, tall = h + 0.02 + (k === 0 ? 1 : 0);
     const { outer, holes } = splitRings(clipBool('intersect', clipBool('union', offsetPolys(rims.map(pos), w)), [inner]));
     for (const o of outer) {
       let c = cadPolyDrawing(r, o).sketchOnPlane('XY', z0).extrude(tall);
@@ -12418,7 +12424,7 @@ function roundCutters(r, b, rims, zTop) {
       rings.push(ring.sketchOnPlane('XY', z0).extrude(tall));
     }
   }
-  // (the outer rings cut one by one: in one go with the rest the kernel lost the whole bin)
+  // (cut one by one, see buildBinSolid)
   return { cutters: out, rings };
 }
 async function buildBinSolid(b, onStep = () => {}) {
@@ -12456,7 +12462,9 @@ async function buildBinSolid(b, onStep = () => {}) {
   if (b.round === true) {
     onStep('Kanten abrunden');
     const rc = roundCutters(r, b, [...pockets.map((p) => p.poly), ...grips.map((g) => g.open)], zTop);
-    if (rc.cutters.length) solid = solid.cut(r.makeCompound(rc.cutters));
+    // (one after the other: cut in one go the solid looked whole but broke when cut into parts, and no STL could be
+    // written for a bin printed in parts)
+    for (const c of rc.cutters) solid = solid.cut(c);
     for (const ring of rc.rings) solid = solid.cut(ring);
     await frame();
   }
@@ -12818,7 +12826,7 @@ function toolsGroup(THREE, b) {
   const mat = new THREE.MeshStandardMaterial({ color: 0xc3ccd2, roughness: 0.38, metalness: 0.5 });
   for (const it of b.items) {
     if (!show.has(it.id)) continue;
-    const t = toolById(it.toolId), poly = itemPoly(it); if (!t || !poly) continue;
+    const t = binTool(b, it.toolId), poly = itemPoly(it, b); if (!t || !poly) continue;
     const z0 = zTop - Math.min(it.depth, maxDepth(b)) + 0.05; // (just above the floor, so the two do not flicker)
     const m = slab(THREE, [threeShape(THREE, poly)], z0, z0 + t.height, mat); if (m) grp.add(m);
   }
@@ -13727,7 +13735,7 @@ const TraceUI = {
     Store.save('tool', t);
     // bins with this tool: new pockets (and depths when the height changed); a bin set to fit its content adapts
     if (t.height !== oldH) toolHeightChanged(t);
-    const bins = S.bins.filter((b) => b.items.some((x) => x.toolId === t.id));
+    const bins = S.bins.filter((b) => !binLocked(b) && b.items.some((x) => x.toolId === t.id)); // (locked ones keep the old outline)
     for (const b of bins) { fitBin(b); b._rev = (b._rev || 0) + 1; Store.save('bin', b); }
     toast(`Umriss von «${t.name}» gespeichert` + (bins.length ? `, ${bins.length} Bin${bins.length === 1 ? '' : 's'} angepasst.` : '.') + (reset ? ' Der Testdruck-Status steht wieder auf «offen».' : ''));
     this.leaveTool(true);
@@ -14009,12 +14017,14 @@ const LibUI = {
     }
     // «In Bin legen» goes into the bin last open in «Bin bearbeiten» (a new one when there is none): the button
     // names it (Camille found it unclear)
-    const target = curBin();
+    // (a locked bin takes nothing in: then a new one)
+    const cur = curBin(), target = binLocked(cur) ? null : cur;
     const binsOf = (t) => S.bins.filter((b) => b.items.some((it) => it.toolId === t.id));
     const card = (t, i) => {
-      const inBins = binsOf(t), uses = inBins.length;
+      const inBins = binsOf(t), uses = inBins.length, free = inBins.filter((b) => !binLocked(b)).length;
+      // (locked bins keep their pocket: only the others are counted)
       const del = this.confirmId === t.id
-        ? h('span', { class: 'confirm' }, uses ? `Auch aus ${uses} Bin${uses > 1 ? 's' : ''} entfernen?` : 'Wirklich löschen?',
+        ? h('span', { class: 'confirm' }, (free ? `Auch aus ${free} Bin${free > 1 ? 's' : ''} entfernen?` : 'Wirklich löschen?') + (free < uses ? ' Gesperrte Bins behalten es.' : ''),
           h('button', { class: 'btn small danger', type: 'button', onclick: () => this.remove(t) }, 'Löschen'),
           h('button', { class: 'btn small', type: 'button', onclick: () => { this.confirmId = null; this.render(); } }, 'Abbrechen'))
         : h('button', { class: 'btn small ghost danger', type: 'button', disabled: toolLocked(t), title: 'Dieses Werkzeug aus der Sammlung löschen (mit Rückfrage; auch aus den Bins)' + (toolLocked(t) ? ' (gesperrt, weil der Testdruck passt: das Schloss oben rechts entsperrt)' : ''), onclick: () => { this.confirmId = t.id; this.render(); } }, 'Löschen');
@@ -14057,7 +14067,7 @@ const LibUI = {
           locked ? null : h('div', { class: 'row fit-row', title: 'Ob der Testdruck dieses Werkzeugs gepasst hat; wird wieder «offen», wenn sich der Umriss ändert' }, h('span', { class: 'unit', text: 'Testdruck' }),
             h('div', { class: 'seg', role: 'group', 'aria-label': 'Testdruck' }, fitBtn('', 'offen'), fitBtn('ok', 'passt'), fitBtn('bad', 'passt nicht'))),
           h('div', { class: 'row actions' },
-            h('button', { class: 'btn small primary to-bin', type: 'button', title: target ? `Das Werkzeug in «${target.name}» legen: den Bin, der zuletzt unter «Bin bearbeiten» offen war. Einen anderen wählst du dort oben in der Liste.` : 'Einen neuen Bin mit diesem Werkzeug anlegen', onclick: () => this.toBin(t) }, target ? `In «${target.name}» legen` : 'In neuen Bin legen'),
+            h('button', { class: 'btn small primary to-bin', type: 'button', title: target ? `Das Werkzeug in «${target.name}» legen: den Bin, der zuletzt unter «Bin bearbeiten» offen war. Einen anderen wählst du dort oben in der Liste.` : cur ? `Einen neuen Bin mit diesem Werkzeug anlegen: «${cur.name}» ist gesperrt` : 'Einen neuen Bin mit diesem Werkzeug anlegen', onclick: () => this.toBin(t) }, target ? `In «${target.name}» legen` : 'In neuen Bin legen'),
             h('button', { class: 'btn small', type: 'button', disabled: locked, title: 'Umriss mit dem Punkte-Editor korrigieren, ohne Foto' + (locked ? ' (gesperrt, weil der Testdruck passt: das Schloss oben rechts entsperrt)' : ''), onclick: () => TraceUI.editTool(t) }, 'Umriss bearbeiten'), del)));
     };
     // The tools under their case (Camille: tidier), a tool in several cases under each; then those in a bin
@@ -14083,7 +14093,7 @@ const LibUI = {
   renderPick() {
     const bar = $('#lib-pick'), n = this.picked.size; bar.hidden = !n; bar.replaceChildren();
     if (!n) return;
-    const cur = curBin();
+    const cur = binLocked(curBin()) ? null : curBin(); // (a locked bin takes nothing in)
     bar.append(h('strong', { text: `${n} Werkzeug${n === 1 ? '' : 'e'} ausgewählt` }),
       h('button', { class: 'btn small primary', type: 'button', title: 'Einen neuen Bin mit den ausgewählten Werkzeugen anlegen', onclick: () => this.binFromPicked() }, 'Neuer Bin daraus'),
       cur ? h('button', { class: 'btn small', type: 'button', title: 'Die ausgewählten Werkzeuge in den Bin legen, den du gerade bearbeitest', onclick: () => this.addPickedTo(cur) }, `In «${cur.name}» legen`) : null,
@@ -14103,6 +14113,7 @@ const LibUI = {
     toast(`Neuer Bin ${b.gx} × ${b.gy} × ${b.hu} u mit ${tools.length} Werkzeug${tools.length === 1 ? '' : 'en'}.`);
   },
   addPickedTo(b) {
+    if (binLocked(b)) return;
     const tools = S.tools.filter((t) => this.picked.has(t.id));
     for (const t of tools) addToolToBin(b, t);
     fitBin(b); this.picked.clear(); Store.save('bin', b);
@@ -14111,7 +14122,7 @@ const LibUI = {
   },
   toBin(t) {
     let b = curBin();
-    if (!b) { b = newBin(); S.bins.push(b); S.ui.binId = b.id; }
+    if (!b || binLocked(b)) { b = newBin(); S.bins.push(b); S.ui.binId = b.id; }
     const it = addToolToBin(b, t);
     fitBin(b);
     BinUI.sel = { kind: 'item', id: it.id }; BinUI.stage.fitted = false;
@@ -14175,7 +14186,7 @@ const BinUI = {
           d.moved = true; this.stage.redraw();
         },
         hover: (x, y) => { const hd = this.hitHandle(x, y), b = curBin() || { items: [], fingers: [] }; this.stage.cv.style.cursor = hd ? 'nwse-resize' : this.hit(b, x, y) ? 'move' : b.grips && this.hitGrip(b, x, y) >= 0 ? 'grab' : ''; },
-        up: () => { const d = this.drag; this.drag = null; if (d && d.moved) { const b = curBin(); if (b && !d.handle) b.manual = true; if (b && d.handle) fitBin(b); this.changed(); } },
+        up: () => { const d = this.drag; this.drag = null; if (d && d.moved) { const b = curBin(); if (b && !d.handle && d.grip === undefined) b.manual = true; if (b && d.handle) fitBin(b); this.changed(); } },
         cancel: () => { this.drag = null; },
         dblclick: () => { },
       },
@@ -14499,8 +14510,12 @@ const BinUI = {
   },
   // a locked bin: its settings greyed and out of reach, no undo
   renderLock() {
-    const lb = binLocked(curBin()), panel = $('#bin-panel');
-    panel.inert = lb; panel.classList.toggle('locked', lb);
+    const lb = binLocked(curBin());
+    // (the checks and the export stay open: a locked bin is exported as it is)
+    for (const card of $('#bin-panel').querySelectorAll(':scope > .card')) {
+      const open = card.id === 'bin-export-card' || !!card.querySelector('#bin-checks');
+      card.inert = lb && !open; card.classList.toggle('locked', lb && !open);
+    }
     if (lb) { $('#bin-undo').disabled = true; $('#bin-redo').disabled = true; }
   },
   renderTop() {
@@ -14522,11 +14537,13 @@ const BinUI = {
     const names = [...new Set(over.map((c) => c.name))], beyond = over.some((c) => c.beyond);
     const who = names.length === 1 ? `«${names[0]}»` : names.length === 2 ? `«${names[0]}» und «${names[1]}»` : `«${names[0]}» und ${names.length - 1} weitere`;
     box.append(h('span', { class: 'ic', text: '⚠' }),
-      h('span', { text: `${who} ${names.length === 1 ? 'ragt' : 'ragen'} ${beyond ? 'über den Bin hinaus' : 'in die Wand'}. So lässt sich der Bin nicht drucken.` }),
-      h('button', { class: 'btn small', type: 'button', onclick: () => this.growToFit(b) }, 'Bin vergrössern'),
-      h('button', { class: 'btn small ghost', type: 'button', onclick: () => { b.manual = false; packBin(b); this.changed(true); } }, 'Neu anordnen'));
+      h('span', { text: `${who} ${names.length === 1 ? 'ragt' : 'ragen'} ${beyond ? 'über den Bin hinaus' : 'in die Wand'}. So lässt sich der Bin nicht drucken.` + (binLocked(b) ? ' Der Bin ist gesperrt.' : '') }),
+      // (a locked bin is not changed from here either)
+      ...(binLocked(b) ? [] : [h('button', { class: 'btn small', type: 'button', onclick: () => this.growToFit(b) }, 'Bin vergrössern'),
+        h('button', { class: 'btn small ghost', type: 'button', onclick: () => { b.manual = false; packBin(b); this.changed(true); } }, 'Neu anordnen')]));
   },
   growToFit(b) {
+    if (binLocked(b)) return;
     autoSize(b); this.changed(true);
     if (binChecks(b).some((c) => c.over)) toast('Auch mit 12 Feldern passt nicht alles. Ordne die Teile neu an oder verteile sie auf zwei Bins.', 'bad');
     else toast(`Bin jetzt ${b.gx} × ${b.gy} Felder.`);
@@ -14556,7 +14573,7 @@ const BinUI = {
     const add = $('#bin-add-tool'); add.replaceChildren(...S.tools.map((t) => h('option', { value: t.id, text: t.name })));
     const items = $('#bin-items'); items.replaceChildren();
     for (const it of b.items) {
-      const t = toolById(it.toolId);
+      const t = binTool(b, it.toolId);
       items.append(h('div', { class: 'item' + (this.isSel(it.id) ? ' sel' : ''), onclick: (e) => { if (e.shiftKey) this.toggleSel('item', it); else this.sel = { kind: 'item', id: it.id }; this.renderPanel(); this.stage.redraw(); } },
         h('span', { class: 'swatch', style: { background: b.color } }),
         h('div', null, h('div', { class: 't', text: t ? t.name : 'fehlt' }), h('div', { class: 's', text: `Tiefe ${nf(Math.min(it.depth, maxDepth(b)), 1)} mm${t && t.height > Math.min(it.depth, maxDepth(b)) + 0.05 ? ` (Werkzeug ${nf(t.height, 1)} mm hoch)` : ''} · ${nf(it.rot, 0)}°${it.mirror ? ' · gespiegelt' : ''}${t && t.fit ? ' · ' + (t.fit === 'ok' ? (toolLocked(t) ? '🔒' : '🔓') : FIT_TEXT[t.fit]) : ''}` })),
@@ -14583,7 +14600,7 @@ const BinUI = {
     const card = $('#bin-sel-card'), body = $('#bin-sel-body'); body.replaceChildren();
     const ref = this.selRef(); card.hidden = !ref || this.multi.size > 1;
     if (ref && this.sel.kind === 'item') {
-      const t = toolById(ref.toolId);
+      const t = binTool(b, ref.toolId);
       $('#bin-sel-title').textContent = t ? t.name : 'Teil';
       const rotIn = h('input', { type: 'number', value: ref.rot, step: 1, onchange: (e) => { ref.rot = ((num(e.target, 0) % 360) + 360) % 360; this.changed(); } });
       body.append(
@@ -14648,7 +14665,7 @@ const BinUI = {
     }
     for (const el of $$('#bin-panel .bed-ctl')) BedUI.render(el);
     { const sp = binSplit(b), bd = bed(), big = splitPlan(b.gx, b.gy).parts > 1, clips = binClipSpots(b, sp).length;
-      $('#bin-join-row').hidden = !big; $('#bin-join').value = binJoin(b);
+      $('#bin-join-row').hidden = !big; $('#bin-join').value = binJoin(b); $('#bin-join').disabled = binLocked(b); // (as printed, for a locked bin)
       const sizes = sp.rows.flatMap((ny) => sp.cols.map((nx) => `${fieldsTxt(nx)}×${fieldsTxt(ny)}`)).join(', ');
       $('#bin-split-info').textContent = !big ? `Passt auf das Druckbett (${bd.x} × ${bd.y} mm).`
         : sp.parts === 1 ? `Grösser als das Druckbett (${bd.x} × ${bd.y} mm), wird trotzdem am Stück exportiert: nur für einen grösseren Drucker.`
@@ -14706,7 +14723,7 @@ const BinUI = {
     }
     for (const p of pockets) {
       if (p.kind !== 'item') continue;
-      const tp = itemPoly(p.ref);
+      const tp = itemPoly(p.ref, b);
       if (tp) { pathPoly(c, tp); c.fillStyle = 'rgba(214,222,226,0.92)'; c.fill(); c.lineWidth = st.px(1); c.strokeStyle = 'rgba(0,0,0,0.4)'; c.stroke(); }
     }
     // the grips' outlines over the tools, dashed (one may lie under a tool: no room for it at the edge)
@@ -14729,7 +14746,7 @@ const BinUI = {
     for (const p of pockets) {
       const bb = polyBBox([p.poly]);
       // the pocket's depth; when the tool is taller (it stands out, or the bin is too low for it) both
-      if (p.kind === 'item') { const t = toolById(p.ref.toolId); if (t && st.scale > 1.2) drawLabel(c, st, t.height > p.depth + 0.05 ? `${t.name} · Tasche ${nf(p.depth, 0)} von ${nf(t.height, 0)} mm` : `${t.name} · ${nf(p.depth, 0)} mm`, bb.cx, bb.cy, { size: 11 }); }
+      if (p.kind === 'item') { const t = binTool(b, p.ref.toolId); if (t && st.scale > 1.2) drawLabel(c, st, t.height > p.depth + 0.05 ? `${t.name} · Tasche ${nf(p.depth, 0)} von ${nf(t.height, 0)} mm` : `${t.name} · ${nf(p.depth, 0)} mm`, bb.cx, bb.cy, { size: 11 }); }
       // a shape's size only on the one chosen (Camille: shown on some and not on others by their width, irritating)
       else if (this.isSel(p.ref.id)) drawLabel(c, st, `${shapeLabel(p.ref).size} · ${nf(p.depth, 0)} mm`, bb.cx, bb.y1 + st.px(12), { size: 10 });
     }
@@ -14961,7 +14978,7 @@ const CaseUI = {
     const F = plateFloor(cs), top = F + inside.reduce((m, b) => Math.max(m, stackTopMm(b)), 0);
     $('#case-stats').replaceChildren(
       h('strong', { text: `${floorCells.size} von ${cs.gx * cs.gy}` }), ' Feldern am Boden belegt. Innenhöhe ', h('strong', { text: `${cs.hu * GF.unit} mm` }),
-      inside.length ? `, höchster Stapel ${nf(top, 1)} mm` + (F ? ` (mit ${nf(F, 0)} mm Boden der Grundplatte).` : '.') : '.');
+      inside.length ? `, höchster Stapel ${nf(top, Math.abs(top - Math.round(top)) < 0.05 ? 0 : 1)} mm` + (F ? ` (mit ${nf(F, 0)} mm Boden der Grundplatte).` : '.') : '.');
     const list = $('#case-bins'); list.replaceChildren();
     // the bins in the case, then those in the storage area
     const sorted = bins.slice().sort((a, b) => isParked(a, cs) - isParked(b, cs) || a.place.z - b.place.z || a.place.y - b.place.y || a.place.x - b.place.x);
@@ -15175,7 +15192,7 @@ function assignBin(b, cs) {
   if (!cs) { if (b.place) { b.place = null; Store.save('bin', b); } return true; }
   if (b.place && b.place.caseId === cs.id && caseById(cs.id)) return true;
   const ok = freePlace(cs, b); Store.save('bin', b);
-  if (!ok) toast(`In «${cs.name}» ist kein freier Platz für «${b.name}». Er liegt jetzt oben links, verschiebe ihn unter «Einrichten».`, 'bad');
+  if (!ok) toast(`In «${cs.name}» ist kein freier Platz für «${b.name}». Er liegt jetzt oben links, verschiebe ihn unter «Koffer bearbeiten».`, 'bad');
   return ok;
 }
 const binWhere = (b) => { const cs = b.place && caseById(b.place.caseId); return cs ? cs.name : 'ohne Koffer'; };
@@ -15189,8 +15206,10 @@ const Overview = {
     $('#bin-all-tol').onchange = (e) => { S.ui.tol = Math.round(clamp(num(e.target, TOL_DEFAULT), 0, 5) * 10) / 10; e.target.value = S.ui.tol; Store.saveUi(); };
     $('#bin-all-tol-apply').onclick = () => {
       const t = toolTol();
-      for (const b of S.bins) { if (b.clearance === t) continue; b.clearance = t; fitBin(b); b._rev = (b._rev || 0) + 1; Store.save('bin', b); }
-      toast(`Toleranz ${nf(t, 1)} mm für alle ${S.bins.length} Bins übernommen.`); this.renderBins();
+      // (locked bins keep theirs: they are printed)
+      const locked = S.bins.filter((b) => binLocked(b)).length;
+      for (const b of S.bins) { if (binLocked(b) || b.clearance === t) continue; b.clearance = t; fitBin(b); b._rev = (b._rev || 0) + 1; Store.save('bin', b); }
+      toast(`Toleranz ${nf(t, 1)} mm für ${locked ? `${S.bins.length - locked} Bins übernommen; ${locked === 1 ? 'ein gesperrter behält seine' : locked + ' gesperrte behalten ihre'}.` : `alle ${S.bins.length} Bins übernommen.`}`); this.renderBins();
     };
     $('#bin-all-new').onclick = () => NewBin.open();
     $('#case-all-new').onclick = () => { const cs = { id: uid(), name: 'Koffer ' + (S.cases.length + 1), gx: 5, gy: 8, hu: 15 }; S.cases.push(cs); Store.save('case', cs); this.renderCases(); };
@@ -15285,7 +15304,7 @@ const Overview = {
         h('div', { class: 'body' },
           h('input', { type: 'text', value: cs.name, 'aria-label': 'Name', title: 'Name des Koffers', onchange: (e) => { cs.name = e.target.value.trim() || cs.name; Store.save('case', cs); this.renderCases(); } }),
           h('div', { class: 'dims', text: `${cs.gx} × ${cs.gy} Felder · ${cs.hu} u · ${bins.length} Bin${bins.length === 1 ? '' : 's'} · ${floor.size} von ${cs.gx * cs.gy} Feldern am Boden belegt · Grundplatte ${splitPlan(cs.gx, cs.gy).parts === 1 ? 'in einem Stück' : `in ${splitPlan(cs.gx, cs.gy).parts} Teilen`}` }),
-          problems ? h('span', { class: 'pill bad', text: `${problems} Problem${problems === 1 ? '' : 'e'}, siehe «Einrichten»` }) : null,
+          problems ? h('span', { class: 'pill bad', text: `${problems} Problem${problems === 1 ? '' : 'e'}, siehe «Bearbeiten»` }) : null,
           h('div', { class: 'chips' }, ...(bins.length ? bins.map((b) => this.chip(b, true)) : [h('span', { class: 'unit', text: 'Leer. Bins hierher ziehen oder unten auswählen.' })])),
           add,
           h('div', { class: 'row', style: { flexWrap: 'wrap', rowGap: '6px' } },
@@ -16316,7 +16335,7 @@ if (location.hash === '#selbsttest') setTimeout(async () => {
     document.title = 'SELBSTTEST OK ' + Math.round(r.measureVolume(s)) + ' mm3, Schrift ' + (document.fonts.check('600 14px Barlow') ? 'da' : 'fehlt');
   } catch (e) { document.title = 'SELBSTTEST FEHLER ' + (e && (e.message || e)); }
 }, 800);
-window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, sinkTools, gripShapes, gripGaps, placeGrips, gripCovers, settleGrips, unreachTrough, FINGER_REACH, lockBin, binLocked, binTool, gripDims, roundCutters, EDGE_ROUND, optimizeTroughs, fingerEdges, fingerEdgePicks, gripPlaces, gripRoom, fieldsFor, GRIP, GRIP_BALL, loadThree, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner, binSplit, halfCuts, binClipSpots, binMagnetSpots, BIN_CLIP, dogbonePoly };
+window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, sinkTools, gripShapes, gripGaps, placeGrips, itemPoly, gripCovers, settleGrips, unreachTrough, FINGER_REACH, lockBin, binLocked, binTool, gripDims, roundCutters, EDGE_ROUND, optimizeTroughs, fingerEdges, fingerEdgePicks, gripPlaces, gripRoom, fieldsFor, GRIP, GRIP_BALL, loadThree, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner, binSplit, halfCuts, binClipSpots, binMagnetSpots, BIN_CLIP, dogbonePoly };
 // The mouse wheel over a number field that has the focus changes its value: easily by accident while
 // scrolling the panel (a bin's tolerance, wall, floor). The field gives up the focus instead, and the page
 // scrolls on.
