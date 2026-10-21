@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'd2ec0aada952';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '9dde4e5d7c55';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -10774,6 +10774,8 @@ const curCase = () => caseById(S.ui.caseId) || S.cases[0] || null;
 const binW = (b) => b.gx * GF.pitch - GF.gap;
 const binD = (b) => b.gy * GF.pitch - GF.gap;
 const binTop = (b) => b.hu * GF.unit;
+// a bin's size in short, the same everywhere: fields across, fields deep, height units (Camille: 5x7x5u)
+const sizeTag = (w, d, hu) => `${w}x${d}x${hu}u`, binTag = (b) => sizeTag(b.gx, b.gy, b.hu);
 // A raised rim (b.lift height units of wall under the stacking lip) gives tools standing out of their
 // pockets room under a bin stacked on top. Height units a bin takes up when stacked, and how much a tool
 // may stand out then.
@@ -14019,7 +14021,7 @@ const BinUI = {
   },
   renderTop() {
     const sel = $('#bin-select'); sel.replaceChildren();
-    for (const b of S.bins) sel.append(h('option', { value: b.id, text: `${b.name} · ${b.gx}×${b.gy}×${b.hu}u` }));
+    for (const b of S.bins) sel.append(h('option', { value: b.id, text: `${b.name} · ${binTag(b)}` }));
     const b = curBin(); if (b) sel.value = b.id;
     sel.disabled = !S.bins.length; $('#bin-dup').disabled = !b;
     const wrap = $('#bin-del-wrap'); wrap.replaceChildren();
@@ -14171,7 +14173,7 @@ const BinUI = {
     const all = binChecks(b);
     const checks = $('#bin-checks'); checks.replaceChildren(...all.map((c) => h('li', { class: c.level, text: c.text })));
     this.renderAlert(b, all.filter((c) => c.over));
-    $('#bin-overlay').replaceChildren(h('span', { class: 'chip-on-mat', text: `${b.gx} × ${b.gy} Felder · ${b.hu} u` }),
+    $('#bin-overlay').replaceChildren(h('span', { class: 'chip-on-mat', text: binTag(b) }),
       ...(this.multi.size > 1 ? [h('span', { class: 'chip-on-mat', text: `${this.multi.size} ausgewählt: ziehen oder mit Pfeiltasten schieben, R dreht, Entf entfernt, Esc hebt auf` })] : []));
   },
   draw(c, st) {
@@ -14451,7 +14453,7 @@ const CaseUI = {
         h('span', { class: 'swatch', style: { background: b.color } }),
         h('div', null,
           h('div', { class: 't', text: b.name }),
-          h('div', { class: 's', text: `${fp.w}×${fp.h} · Ebene ${b.place.z}–${b.place.z + stackU(b)} u · ${where}` }),
+          h('div', { class: 's', text: `${sizeTag(fp.w, fp.h, b.hu)}${b.place.z ? ` · ab ${b.place.z} u gestapelt` : ''} · ${where}` }),
           parked ? h('span', { class: 'pill mute', text: 'Ablage' }) : worst ? h('span', { class: 'pill ' + worst.level, text: worst.text }) : h('span', { class: 'pill ok', text: 'passt' })),
         h('span'));
       if (this.sel === b.id) {
@@ -14474,7 +14476,7 @@ const CaseUI = {
       ondragstart: (e) => { this.dnd = b; e.dataTransfer.setData('text/plain', b.id); e.dataTransfer.effectAllowed = 'move'; },
       ondragend: () => { this.dnd = null; if (this.ghost) { this.ghost = null; this.stage.redraw(); } } },
       h('span', { class: 'swatch', style: { background: b.color } }),
-      h('div', null, h('div', { class: 't', text: b.name }), h('div', { class: 's', text: `${b.gx}×${b.gy}×${b.hu}u` })),
+      h('div', null, h('div', { class: 't', text: b.name }), h('div', { class: 's', text: binTag(b) })),
       h('button', { class: 'btn small', type: 'button', title: 'An den ersten freien, abgestützten Platz im Koffer setzen', onclick: () => { const ok = freePlace(cs, b); Store.save('bin', b); this.sel = b.id; this.render(); if (!ok) toast('Kein freier, abgestützter Platz gefunden. Der Bin liegt jetzt oben links, verschiebe ihn.'); } }, 'Platzieren')));
     const others = S.bins.filter((b) => b.place && caseById(b.place.caseId) && b.place.caseId !== cs.id);
     if (!unplaced.length) free.append(h('p', { text: others.length ? `Alle Bins sind platziert, ${others.length} davon in anderen Koffern.` : 'Alle Bins sind platziert.' }));
@@ -14693,7 +14695,7 @@ const Overview = {
       grid.append(h('article', { class: 'tool' }, thumb,
         h('div', { class: 'body' },
           h('input', { type: 'text', value: b.name, 'aria-label': 'Name', title: 'Name des Bins', onchange: (e) => { b.name = e.target.value.trim() || b.name; Store.save('bin', b); } }),
-          h('div', { class: 'dims' }, h('div', { text: `${b.gx} × ${b.gy} Felder · ${b.hu} u` }), h('div', { text: `Toleranz ${nf(b.clearance, 1)} mm` })),
+          h('div', { class: 'dims' }, h('div', { text: binTag(b) }), h('div', { text: `Toleranz ${nf(b.clearance, 1)} mm` })),
           bad.length ? h('span', { class: 'pill bad', style: { whiteSpace: 'normal', alignSelf: 'flex-start' }, text: bad[0].text + (bad.length > 1 ? ` (+${bad.length - 1} weitere)` : '') }) : null,
           h('label', { class: 'f' }, h('span', { text: 'Koffer' }), caseSel),
           h('div', { class: 'actions' },
@@ -14718,7 +14720,7 @@ const Overview = {
       ondragend: () => { this.dnd = null; for (const el of $$('.case-card.drop')) el.classList.remove('drop'); } },
     h('span', { class: 'sw', style: { background: b.color } }),
     h('span', { class: 'n', text: b.name }),
-    h('span', { class: 'unit', text: `${fp.w}×${fp.h}·${b.hu}u` + (inCase && b.place.x >= (caseById(b.place.caseId) || { gx: 1e9 }).gx ? ' · Ablage' : inCase && b.place.z ? ` · Ebene ${b.place.z}` : '') }),
+    h('span', { class: 'unit', text: sizeTag(fp.w, fp.h, b.hu) + (inCase && b.place.x >= (caseById(b.place.caseId) || { gx: 1e9 }).gx ? ' · Ablage' : '') }),
     inCase ? h('button', { class: 'x', type: 'button', title: 'Aus dem Koffer nehmen', 'aria-label': `${b.name} aus dem Koffer nehmen`, onclick: () => { assignBin(b, null); this.renderCases(); } }, '✕')
       : h('button', { class: 'x', type: 'button', title: 'Öffnen', 'aria-label': `${b.name} öffnen`, onclick: () => { S.ui.binId = b.id; BinUI.sel = null; S.ui.binView = 'edit'; App.show('bin'); } }, '↗'));
   },
@@ -15024,7 +15026,7 @@ const NewBin = {
     const what = { empty: 'Ohne Ausschnitte. Formen und Werkzeuge fügst du danach im Editor hinzu.', one: 'Ein grosses Fach mit gerundeten Ecken.',
       grid: b.fingers.length ? `${b.fingers.length} Fächer, je ${nf(b.fingers[0].l, 1)} × ${nf(b.fingers[0].w, 1)} mm.` : 'Zu viele Fächer für diese Grösse.',
       ball: b.fingers.length ? `Eine runde Mulde, Ø ${nf(b.fingers[0].w, 1)} mm, ${nf(b.fingers[0].depth, 1)} mm tief.` : '' }[this.kind];
-    $('#nb-info').textContent = `${b.gx} × ${b.gy} Felder · ${b.hu} u · ${inner}. ${what}`;
+    $('#nb-info').textContent = `${binTag(b)} · ${inner}. ${what}`;
   },
   create() {
     const b = this.build();
