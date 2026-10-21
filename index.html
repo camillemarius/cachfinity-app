@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '864f8498fb59';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '838c6f0c4f76';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -10934,8 +10934,25 @@ function crossings(poly, alongX, v) {
 // other pocket (and, in a bin of fixed size, stays inside). FINGER_DEEPER mm deeper than the tool's pocket
 // (chosen defaults), so the fingers get under the tool; it keeps that relation when the pocket's depth
 // changes. 25 mm wide (on 2026-10-21 20 mm for a few hours by mistake, v 3; Camille wanted the lift grip
-// narrower, not these; v 4 marks them back at 25).
-const FINGER_REACH = 14, FINGER_W = 25, FINGER_DEEPER = 5;
+// narrower, not these; v 4 marks them back at 25). Reaching 15 mm past the tool since her first printed bin
+// (2026-10-21: 25 wide is right, 15 out fits; 14 before; 20 for a moment): v 5.
+const FINGER_REACH = 15, FINGER_W = 25, FINGER_DEEPER = 5, FINGER_V = 5;
+// An automatic trough from before (v 4, reaching 14 mm) made as long as FINGER_REACH asks: across the tool on
+// the same side or sides as it was, at the same place along it; at the tool's edge, pushed out (the slot's
+// length stays). true when it was one.
+function reachTrough(b, f) {
+  if (!f.auto || f.v !== 4) return false;
+  f.v = FINGER_V;
+  const it = b.items.find((x) => x.id === f.itemId), t = it && toolById(it.toolId); if (!t) return true;
+  if (f.style === 'edge') { const a = (f.lrot * Math.PI) / 180, d = FINGER_REACH - 14; f.lx += Math.cos(a) * d; f.ly += Math.sin(a) * d; return true; }
+  const bb = polyBBox([t.outline]), alongX = bb.w >= bb.h, len = Math.max(1, alongX ? bb.w : bb.h);
+  const at = clamp(((alongX ? f.lx : f.ly) - (alongX ? bb.x0 : bb.y0)) / len, 0, 1), mid = fingerAcross(b, t, at, 0); if (!mid) return true;
+  // (one past one side only lay 7 mm off the middle: half the old reach)
+  const off = (alongX ? f.ly : f.lx) - (alongX ? mid.ly : mid.lx), side = Math.abs(off) < 2 ? 0 : Math.sign(off);
+  const a = fingerAcross(b, t, at, side); if (!a) return true;
+  Object.assign(f, { lx: a.lx, ly: a.ly, lrot: a.lrot, l: Math.max(f.w, a.l) });
+  return true;
+}
 // the automatic trough of tool t at the place at (0 … 1) along it: across the tool and FINGER_REACH past
 // both sides (side 0), or past one side only (side 1 or -1; the other end at the pocket's edge, where there
 // is no room: one finger still gets under the tool), in tool coordinates (lx, ly, lrot, l), and the tool's
@@ -10996,7 +11013,7 @@ function autoFinger(b, it, allowOutside = b.autoFit !== false) {
   for (const at of [0.5, 0.45, 0.55, 0.4, 0.6, 0.35, 0.65, 0.3, 0.7]) {
     const a = fingerAcross(b, t, at); if (!a) continue;
     const across = a.across;
-    const f = { id: uid(), shape: 'slot', role: 'finger', profile: 'round', auto: true, style: 'across', v: 4, itemId: it.id,
+    const f = { id: uid(), shape: 'slot', role: 'finger', profile: 'round', auto: true, style: 'across', v: FINGER_V, itemId: it.id,
       w: W, l: a.l, depth, dplus: FINGER_DEEPER, lx: a.lx, ly: a.ly, lrot: a.lrot };
     Object.assign(f, fingerWorld(it, f));
     const poly = fingerPoly(f);
@@ -11045,7 +11062,7 @@ function optimizeTroughs(b) {
       const score = gx * gy * 1e7 + area + a.pen + 2000 * Math.abs(at - 0.5);
       if (!best || score < best.score) best = { score, a };
     }
-    if (best) { Object.assign(f, { lx: best.a.lx, ly: best.a.ly, lrot: best.a.lrot, l: best.a.l, style: best.a.style }); Object.assign(f, fingerWorld(it, f)); } else if (pass) stuck++;
+    if (best) { Object.assign(f, { lx: best.a.lx, ly: best.a.ly, lrot: best.a.lrot, l: best.a.l, style: best.a.style, v: FINGER_V }); Object.assign(f, fingerWorld(it, f)); } else if (pass) stuck++;
   }
   let moved = 0;
   for (const f of auto) if (key(f) !== was.get(f)) { f.manual = true; moved++; }
@@ -11078,6 +11095,8 @@ function ensureFingers(b) {
   for (const f of b.fingers) if (f.auto && !f.v) { f.w = FINGER_W; f.l = Math.max(f.l, f.w); f.dplus = FINGER_DEEPER; f.v = 2; }
   // then 25 mm wide, for a few hours 20 (v 3): those back to FINGER_W (one set to another width by hand stays)
   for (const f of b.fingers) if (f.auto && (f.v === 2 || f.v === 3)) { if (f.v === 3 && Math.abs(f.w - 20) < 0.01) { f.w = FINGER_W; f.l = Math.max(f.l, f.w); } f.v = 4; }
+  // then reaching 14 mm past the tool: now FINGER_REACH (v 5)
+  for (const f of b.fingers) reachTrough(b, f);
   let n = 0;
   for (const it of b.items) {
     if (it.noFinger || b.fingers.some((f) => f.itemId === it.id)) continue;
@@ -12086,7 +12105,7 @@ async function nestCore(b, budget, free = false) {
       if (best.lane.turned) [x, y, rot] = [y, -x, normDeg(rot + 270)];
       Object.assign(p.ref, { x, y, rot });
     }
-    if (pl.v && pl.u.trough) Object.assign(pl.u.trough, pl.u.troughs[pl.v], { manual: true });
+    if (pl.v && pl.u.trough) Object.assign(pl.u.trough, pl.u.troughs[pl.v], { manual: true, v: FINGER_V });
   }
   syncFingers(b);
   if (!fixed) { const g = b.grips; if (free) b.grips = false; autoSize(b); b.grips = g; }
@@ -16118,6 +16137,16 @@ const App = {
       }
       S.ui.troughV = 2;
     }
+    // the tools' troughs reached 14 mm past the tool until 2026-10-21, FINGER_REACH (20) now: lengthened once;
+    // a bin that fits its content takes the size it then needs
+    let longer = 0;
+    if (!S.ui.reachV) {
+      for (const b of S.bins) {
+        let n = 0; for (const f of b.fingers) if (reachTrough(b, f)) n++;
+        if (n) { syncFingers(b); if (b.autoFit !== false) autoSize(b); b._rev = (b._rev || 0) + 1; Store.save('bin', b); longer++; }
+      }
+      S.ui.reachV = 1;
+    }
     // grips to lift a bin out with a tool in their way (an error until 2026-10-21): placed once, into a gap or
     // in the middle of the short ends under the tools
     let regrip = 0;
@@ -16136,6 +16165,7 @@ const App = {
     if (redepth) news.push(`Taschentiefen in ${redepth === 1 ? 'einem Bin' : redepth + ' Bins'} an die Werkzeughöhen angepasst, so tief, wie der Bin es zulässt.`);
     if (grown.length) news.push(`${grown.length === 1 ? `«${grown[0]}» ist` : `${grown.length} Bins sind`} jetzt so hoch, dass die Werkzeuge ganz in ihren Taschen liegen.`);
     if (deeper) news.push(`Taschen in ${deeper === 1 ? 'einem Bin' : deeper + ' Bins'} jetzt ${nf(DEPTH_EXTRA, 0)} mm tiefer als die Werkzeuge hoch sind (Reserve nach oben).`);
+    if (longer) news.push(`Griffmulden der Werkzeuge ragen jetzt ${nf(FINGER_REACH, 0)} mm über das Werkzeug hinaus statt 14 (in ${longer === 1 ? 'einem Bin' : longer + ' Bins'} angepasst). Wo es eng wird: «Griffmulden optimieren».`);
     if (regrip) news.push(`Griffmulden zum Herausheben in ${regrip === 1 ? 'einem Bin' : regrip + ' Bins'} neu gelegt: in eine Lücke am Rand oder mittig unter ein Werkzeug (dieses zuerst herausnehmen).`);
     if (wider) news.push(`Griffmulden der Werkzeuge wieder ${nf(FINGER_W, 0)} mm breit (in ${wider === 1 ? 'einem Bin' : wider + ' Bins'} angepasst).`);
     if (lower.length) news.push(`Griffmulden machen Bins nicht mehr höher: ${lower.join(', ')}.`);
@@ -16153,7 +16183,7 @@ if (location.hash === '#selbsttest') setTimeout(async () => {
     document.title = 'SELBSTTEST OK ' + Math.round(r.measureVolume(s)) + ' mm3, Schrift ' + (document.fonts.check('600 14px Barlow') ? 'da' : 'fehlt');
   } catch (e) { document.title = 'SELBSTTEST FEHLER ' + (e && (e.message || e)); }
 }, 800);
-window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, sinkTools, gripShapes, gripGaps, placeGrips, gripCovers, settleGrips, optimizeTroughs, fingerEdges, fingerEdgePicks, gripPlaces, gripRoom, fieldsFor, GRIP, GRIP_BALL, loadThree, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner, binSplit, halfCuts, binClipSpots, binMagnetSpots, BIN_CLIP, dogbonePoly };
+window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, sinkTools, gripShapes, gripGaps, placeGrips, gripCovers, settleGrips, reachTrough, FINGER_REACH, optimizeTroughs, fingerEdges, fingerEdgePicks, gripPlaces, gripRoom, fieldsFor, GRIP, GRIP_BALL, loadThree, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner, binSplit, halfCuts, binClipSpots, binMagnetSpots, BIN_CLIP, dogbonePoly };
 // The mouse wheel over a number field that has the focus changes its value: easily by accident while
 // scrolling the panel (a bin's tolerance, wall, floor). The field gives up the focus instead, and the page
 // scrolls on.
