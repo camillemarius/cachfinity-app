@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'af39f1fd121a';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'e80128578e5e';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -635,7 +635,7 @@ label.check input { accent-color: var(--accent); width: 16px; height: 16px; }
         <label title="Stapelrand oben, damit ein weiterer Bin auf diesem stehen kann" class="check"><input type="checkbox" id="bin-lip"> Stapelrand</label>
         <label class="f inline-f" style="padding-left: 26px" title="Hebt den Stapelrand um ganze Einheiten an. Werkzeuge, die aus ihrer Tasche ragen, haben dann Platz unter dem Bin darüber."><span>Rand erhöhen</span><input type="number" id="bin-lift" min="0" max="10" step="1" style="width: 64px"><span class="unit">u (je 7 mm)</span></label>
         <label class="f" title="Löcher für Magnete 6 × 2 mm unten im Bin: keine, 4 unter jedem Feld, oder nur die 4 in den äussersten Ecken (spart Magnete, der Bin hält trotzdem)"><span>Magnetlöcher 6 × 2 mm</span><select id="bin-mag" title="Löcher für Magnete 6 × 2 mm unten im Bin: keine, 4 unter jedem Feld, oder nur die 4 in den äussersten Ecken (spart Magnete, der Bin hält trotzdem)"><option value="none">Keine</option><option value="all">4 pro Feld</option><option value="corners">Nur 4 in den äussersten Ecken</option></select></label>
-        <div class="row"><button class="btn small" type="button" id="bin-autosize" title="Breite, Länge und Höhe nach dem Inhalt; die Werkzeuge liegen danach ganz in ihren Taschen">Grösse anpassen</button><button class="btn small" type="button" id="bin-arrange" title="Die Werkzeuge neu und platzsparend anordnen">Teile anordnen</button><button class="btn small" type="button" id="bin-nest" title="Die Werkzeuge nach ihren echten Umrissen ineinander schieben, auch gedreht, so dass der Bin möglichst wenige Felder braucht. Werkzeuge unter einer gemeinsamen Form (etwa einem Langloch über mehrere Stangen) bleiben zusammen. Dauert ein paar Sekunden; Strg+Z macht es rückgängig">Platzsparend anordnen</button></div>
+        <div class="row"><button class="btn small" type="button" id="bin-autosize" title="Breite, Länge und Höhe nach dem Inhalt; die Werkzeuge liegen danach ganz in ihren Taschen">Grösse anpassen</button><button class="btn small" type="button" id="bin-arrange" title="Die Werkzeuge neu und platzsparend anordnen">Teile anordnen</button><button class="btn small" type="button" id="bin-nest" title="Die Werkzeuge nach ihren echten Umrissen ineinander schieben, auch gedreht, so dass der Bin möglichst wenige Felder braucht. Werkzeuge unter einer gemeinsamen Form (etwa einem Langloch über mehrere Stangen) bleiben zusammen. Griffmulden wandern dabei entlang ihres Werkzeugs und ragen, wo nötig, nur auf einer Seite hinaus. Dauert ein paar Sekunden; Strg+Z macht es rückgängig">Platzsparend anordnen</button></div>
       </div>
       <div class="card">
         <h2>Inhalt</h2>
@@ -10894,14 +10894,16 @@ function crossings(poly, alongX, v) {
 // changes.
 const FINGER_REACH = 14, FINGER_W = 25, FINGER_DEEPER = 5;
 // the automatic trough of tool t at the place at (0 … 1) along it: across the tool and FINGER_REACH past
-// both sides, in tool coordinates (lx, ly, lrot, l), and the tool's width there (across); null where the
-// line misses the tool
-function fingerAcross(b, t, at) {
+// both sides (side 0), or past one side only (side 1 or -1; the other end at the pocket's edge, where there
+// is no room: one finger still gets under the tool), in tool coordinates (lx, ly, lrot, l), and the tool's
+// width there (across); null where the line misses the tool
+function fingerAcross(b, t, at, side = 0) {
   const o = t.outline, bb = polyBBox([o]), alongX = bb.w >= bb.h, len = alongX ? bb.w : bb.h;
   const along = (alongX ? bb.x0 : bb.y0) + at * len, cr = crossings(o, alongX, along);
   if (cr.length < 2) return null;
   const lo = Math.min(...cr), hi = Math.max(...cr), mid = (lo + hi) / 2, across = hi - lo + 2 * b.clearance;
-  return { across, lx: alongX ? along : mid, ly: alongX ? mid : along, lrot: alongX ? 90 : 0, l: Math.max(FINGER_W, Math.round((across + 2 * FINGER_REACH) * 2) / 2) };
+  const shift = (side * FINGER_REACH) / 2, reach = side ? FINGER_REACH : 2 * FINGER_REACH;
+  return { across, lx: alongX ? along : mid + shift, ly: alongX ? mid + shift : along, lrot: alongX ? 90 : 0, l: Math.max(FINGER_W, Math.round((across + reach) * 2) / 2) };
 }
 function autoFinger(b, it, allowOutside = b.autoFit !== false) {
   const t = toolById(it.toolId); if (!t) return null;
@@ -11476,8 +11478,9 @@ function setSaveState(st) {
 // «Teile anordnen» (packBin) puts the boxes around the tools in rows. Here each unit's footprint is its
 // pockets with their troughs, grown by half the material NEST_GAP that stays between two pockets. A unit is
 // a tool, or tools held together by a shape set by hand (a long slot across rods lying side by side), or a
-// shape over no tool. A unit lies in one of four turns, and a tool's automatic trough may move along it
-// (still across the tool and past both its sides, so it stays easy to take out; Camille's choice).
+// shape over no tool. A unit lies in one of four turns, and a tool's automatic trough may move along it, up
+// to near its ends, and reach past one side only where the other has no room (still across the tool, so it
+// stays easy to take out; Camille's choice).
 // Units are put into a strip of the bin's inner width at the free place that keeps the strip shortest
 // (bottom left). The free places come from no-fit polygons: positions of a unit's origin where it would
 // overlap one already set are the Minkowski sum of that one's footprint and the mirrored footprint of the
@@ -11492,8 +11495,11 @@ function setSaveState(st) {
 const NEST_GAP = 2; // mm of material at least between two pockets (and their troughs)
 // footprints are simplified to NEST_EPS (few corners) and grown by that more, so they still hold their pockets
 const NEST_EPS = 0.3, NEST_OFF = NEST_GAP / 2 + NEST_EPS;
-const NEST_AT = [0.5, 0.35, 0.65, 0.2, 0.8]; // places along a tool tried for its automatic trough
-const NEST_EDGE = 0.4; // mm from the inside's sides where there is room (its corners are rounded by 1.75 mm)
+const NEST_AT = [0.5, 0.35, 0.65, 0.2, 0.8, 0.1, 0.9]; // places along a tool tried for its automatic trough
+// The bin's inside has corners rounded by 1.75 mm: a pocket corner right in one reads as reaching into the wall
+// (binChecks). NEST_INSET mm kept free along every side keeps any pocket corner clear of that; NEST_EDGE mm
+// where there is room.
+const NEST_INSET = 0.2, NEST_EDGE = 0.4;
 const NEST_SQUEEZE = 1.5; // mm the best arrangement is asked to get shorter, again and again, at the end
 const normDeg = (a) => (((Math.round(a * 10) / 10) % 360) + 360) % 360;
 // The units of bin b. A shape set by hand over one or several tools (a slot across rods, a rectangle a tool
@@ -11520,9 +11526,9 @@ function nestUnits(b) {
     const trough = own.length === 1 && own[0].auto ? own[0] : null, troughs = [null];
     if (trough) {
       const at = [{ lx: trough.lx, ly: trough.ly, lrot: trough.lrot, l: trough.l }];
-      for (const k of NEST_AT) {
-        const c = fingerAcross(b, t, k);
-        if (c && !at.some((x) => Math.hypot(x.lx - c.lx, x.ly - c.ly) < 2 && x.lrot === c.lrot)) at.push({ lx: c.lx, ly: c.ly, lrot: c.lrot, l: Math.max(trough.w, c.l) });
+      for (const k of NEST_AT) for (const side of [0, 1, -1]) {
+        const c = fingerAcross(b, t, k, side);
+        if (c && !at.some((x) => Math.hypot(x.lx - c.lx, x.ly - c.ly) < 2 && x.lrot === c.lrot && Math.abs(x.l - c.l) < 1)) at.push({ lx: c.lx, ly: c.ly, lrot: c.lrot, l: Math.max(trough.w, c.l) });
       }
       troughs.push(...at.slice(1));
     }
@@ -11657,8 +11663,8 @@ async function nestBin(b, budget = 7000) {
   const area = (u) => foot(u, u.turns[0], 0).area;
   const span = (u) => { const bb = foot(u, u.turns[0], 0).box; return Math.max(bb.w, bb.h); };
   const rnd = nestRandom(units.length * 7919 + Math.round(units.reduce((s, u) => s + area(u), 0)));
-  // (a hair less than the bin's inside, so a strip filled to the edge does not count as a field more)
-  const inner = (n) => n * GF.pitch - GF.gap - 2 * b.wall - 0.01;
+  // (the bin's inside less NEST_INSET at both sides)
+  const inner = (n) => n * GF.pitch - GF.gap - 2 * b.wall - 2 * NEST_INSET;
   const fixed = b.autoFit === false, cs = curCase(), t0 = performance.now();
   // the strips: a bin of fixed size has its inner width and length (and the same turned); otherwise every
   // width from the narrowest unit up to 8 fields
@@ -11716,8 +11722,9 @@ async function nestBin(b, budget = 7000) {
     else todo.sort((p, q) => area(q) - area(p));
     const side = rnd() < 0.5 ? 1 : -1, by = ['end', 'end', 'top', 'col'][Math.floor(rnd() * 4)], out = [];
     for (const u of todo) {
-      // (a unit left out tries every place of its trough)
-      const was = taken.find((p) => p.u === u), vs = was ? [was.v] : u.troughs.map((_, v) => v);
+      // (a unit left out tries its trough where it is and in up to five other places)
+      const was = taken.find((p) => p.u === u), n = u.troughs.length;
+      const vs = was ? [was.v] : [0, ...Array.from({ length: Math.min(5, n - 1) }, () => 1 + Math.floor(rnd() * (n - 1)))];
       if (was && u.troughs.length > 1 && rnd() < 0.4) vs.push(Math.floor(rnd() * u.troughs.length));
       const sp = nestSpot(u, u.turns.flatMap((d) => [...new Set(vs)].map((v) => ({ d, v }))), placed, lane.W, lane.aimT, foot, nfp, side, by);
       if (sp) placed = [...placed, sp]; else out.push(u);
