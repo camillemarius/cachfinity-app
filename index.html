@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '7fae4866bc2a';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'e7035ea4cc41';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -684,6 +684,7 @@ label.f.sub-opt input { flex: none; }
           </div>
         </details>
         <div class="row"><button class="btn small" type="button" id="bin-autosize" title="Felder und Höhe nach den Werkzeugen, so wie sie liegen; die Werkzeuge liegen danach ganz in ihren Taschen">Bin an Bauteile anpassen</button><button class="btn small" type="button" id="bin-nest" title="Die Werkzeuge nach ihren echten Umrissen ineinander schieben, auch gedreht, so dass der Bin möglichst wenige Felder braucht. Werkzeuge unter einer gemeinsamen Form (etwa einem Langloch über mehrere Stangen) bleiben zusammen. Griffmulden wandern dabei entlang ihres Werkzeugs und ragen, wo nötig, nur auf einer Seite hinaus. Dauert ein paar Sekunden; Strg+Z macht es rückgängig">Platzsparend anordnen</button><button class="btn small" type="button" id="bin-sink" title="Die Höhe so einstellen, dass alle Werkzeuge bündig in ihren Taschen liegen: jede Tasche so tief, wie ihr Werkzeug hoch ist (und 1 mm Reserve), auch wo eine Tiefe von Hand gesetzt war; der Bin wird so hoch wie nötig, auch niedriger. Breite und Länge bleiben. Strg+Z macht es rückgängig">Bauteile versenken</button><button class="btn small" type="button" id="bin-grip-opt" title="Setzt die Griffmulden an den Werkzeugen neu an die beste Stelle: nichts im Weg, möglichst wenig Platz, wo es eng ist nur auf einer Seite herausragend. Die Werkzeuge bleiben liegen. Danach kommen die Griffmulden zum Herausheben in Lücken am Rand, an zwei gegenüberliegende Seiten. Ist keine Lücke frei, liegen sie mittig unter einem Werkzeug. Ein Bin, der seine Grösse automatisch anpasst, wird so klein wie möglich. Strg+Z macht es rückgängig">Griffmulden optimieren</button></div>
+        <label class="check" title="«Platzsparend anordnen» darf lange Werkzeuge auch geneigt legen: ein Ende tiefer, von oben gesehen kürzer. Nur so weit, wie die Höhe des Bins reicht; der Bin wird dafür nicht höher. Die Suche dauert etwas länger"><input type="checkbox" id="bin-nest-tilt"> Beim platzsparenden Anordnen auch geneigt legen <span class="unit">(nutzt die Höhe)</span></label>
         <h3 class="sub">Optionen</h3>
         <label title="Stapelrand oben, damit ein weiterer Bin auf diesem stehen kann" class="check"><input type="checkbox" id="bin-lip"> Stapelrand <span class="unit">(+4.4 mm)</span></label>
         <label class="f inline-f sub-opt" title="Hebt den Stapelrand um ganze Einheiten an. Werkzeuge, die aus ihrer Tasche ragen, haben dann Platz unter dem Bin darüber"><span>Zusätzlich erhöhen um</span><input type="number" id="bin-lift" min="0" max="10" step="1" style="width: 64px"><span class="unit">u (je 7 mm)</span></label>
@@ -10842,14 +10843,49 @@ function lockBin(b, on) {
   b.locked = true; b.lockedAt = Date.now();
 }
 // (with the bin: a locked one draws the tool as it was when locked)
-function itemPoly(it, b = null) { const t = b ? binTool(b, it.toolId) : toolById(it.toolId); return t ? placePoly(t.outline, it.x, it.y, it.rot, it.mirror) : null; }
+function itemPoly(it, b = null) { const t = b ? binTool(b, it.toolId) : toolById(it.toolId); return t ? placePoly(toolPlan(t, it.tilt), it.x, it.y, it.rot, it.mirror) : null; }
+// A tool laid tilted (it.tilt; Camille: «schräg in der Höhe», one end deeper, so it is shorter seen from above):
+// { deg, ax ('x' | 'y': its length in tool coordinates), u0 (its shallow end there), s (+1 / −1: towards the deep
+// end) }. Seen from above its length shrinks by cos(deg) towards the shallow end, and its top shifts by
+// height·sin(deg) towards the deep end; the pocket's floor falls by tan(deg) per mm from it.depth at the shallow
+// end.
+function tiltFor(t, deg, s = 1) {
+  if (!deg) return undefined;
+  const bb = polyBBox([t.outline]), ax = bb.w >= bb.h ? 'x' : 'y';
+  return { deg, ax, u0: s > 0 ? (ax === 'x' ? bb.x0 : bb.y0) : (ax === 'x' ? bb.x1 : bb.y1), s: s > 0 ? 1 : -1 };
+}
+// a point of the tool (tool coordinates) where it lies seen from above when tilted, and back
+function tiltPt(tl, [x, y]) {
+  if (!tl) return [x, y];
+  const c = Math.cos((tl.deg * Math.PI) / 180);
+  return tl.ax === 'x' ? [tl.u0 + (x - tl.u0) * c, y] : [x, tl.u0 + (y - tl.u0) * c];
+}
+function untiltPt(tl, [x, y]) {
+  if (!tl) return [x, y];
+  const c = Math.cos((tl.deg * Math.PI) / 180);
+  return tl.ax === 'x' ? [tl.u0 + (x - tl.u0) / c, y] : [x, tl.u0 + (y - tl.u0) / c];
+}
+// the tool seen from above (tool coordinates): tilted, its outline shrunk and swept by its top's shift
+function toolPlan(t, tl) {
+  if (!tl) return t.outline;
+  const shrunk = t.outline.map((p) => tiltPt(tl, p)), d = (t.height || 0) * Math.sin((tl.deg * Math.PI) / 180) * tl.s;
+  const copies = [0, 0.25, 0.5, 0.75, 1].map((k) => shrunk.map(([x, y]) => (tl.ax === 'x' ? [x + d * k, y] : [x, y + d * k])));
+  return largestRing(clipBool('union', copies)) || shrunk;
+}
+// how much deeper the floor lies at a point seen from above (tool coordinates) than at the shallow end
+const tiltDrop = (tl, [x, y]) => (tl ? Math.abs((tl.ax === 'x' ? x : y) - tl.u0) * Math.tan((tl.deg * Math.PI) / 180) : 0);
+// the deepest floor of a pocket: at a tilted tool's far end, else its depth
+function tiltDeep(t, it) {
+  const tl = it.tilt; if (!tl || !t) return it.depth;
+  return it.depth + Math.max(...toolPlan(t, tl).map((p) => tiltDrop(tl, p)));
+}
 const pocketCache = new WeakMap();
 function itemPocket(b, it) {
   const t = binTool(b, it.toolId); if (!t) return null;
-  const key = [t.outline, it.x, it.y, it.rot, it.mirror, b.clearance];
+  const key = [t.outline, it.x, it.y, it.rot, it.mirror, b.clearance, it.tilt ? JSON.stringify(it.tilt) + t.height : ''];
   const c = pocketCache.get(it);
   if (c && c.key.every((v, i) => v === key[i])) return c.val;
-  const p = placePoly(t.outline, it.x, it.y, it.rot, it.mirror);
+  const p = placePoly(toolPlan(t, it.tilt), it.x, it.y, it.rot, it.mirror);
   const val = largestRing(offsetPolys([p], b.clearance)) || p;
   pocketCache.set(it, { key, val });
   return val;
@@ -10926,7 +10962,7 @@ function shapeLabel(f) {
 // ly, lrot in tool coordinates) and follows when the tool is moved, turned or mirrored. x, y and rot are
 // derived from it here; whoever moves such a trough by hand stores the new relative place (attachLocal).
 function fingerWorld(it, f) {
-  const [p] = placePoly([[f.lx, f.ly]], it.x, it.y, it.rot, it.mirror);
+  const [p] = placePoly([tiltPt(it.tilt, [f.lx, f.ly])], it.x, it.y, it.rot, it.mirror); // (on a tilted tool: where it lies seen from above)
   return { x: p[0], y: p[1], rot: (((it.rot + (it.mirror ? -f.lrot : f.lrot)) % 360) + 360) % 360 };
 }
 function attachLocal(b, f) {
@@ -10934,7 +10970,7 @@ function attachLocal(b, f) {
   f.manual = true; // placed by hand: it stays where it was put
   const a = (-it.rot * Math.PI) / 180, dx = f.x - it.x, dy = f.y - it.y;
   const lx = dx * Math.cos(a) - dy * Math.sin(a), ly = dx * Math.sin(a) + dy * Math.cos(a);
-  f.lx = it.mirror ? -lx : lx; f.ly = ly; f.lrot = it.mirror ? -(f.rot - it.rot) : f.rot - it.rot;
+  [f.lx, f.ly] = untiltPt(it.tilt, [it.mirror ? -lx : lx, ly]); f.lrot = it.mirror ? -(f.rot - it.rot) : f.rot - it.rot;
 }
 // troughs whose tool left the bin go with it; a trough set relative to its pocket's depth (dplus mm
 // deeper) follows that depth
@@ -11136,8 +11172,12 @@ function ensureFingers(b) {
 function binPockets(b) {
   syncFingers(b);
   const out = [];
-  for (const it of b.items) { const p = itemPocket(b, it); if (p) out.push({ poly: p, depth: Math.min(it.depth, maxDepth(b)), kind: 'item', ref: it }); }
-  for (const f of b.fingers) out.push({ poly: fingerPoly(f), depth: Math.min(f.depth, maxDepth(b)), kind: 'finger', ref: f, scoop: isScoop(f) });
+  // (a tilted tool: depth at the shallow end, deep at the far one; its troughs as deep as the floor falls there)
+  for (const it of b.items) { const p = itemPocket(b, it); if (p) out.push({ poly: p, depth: Math.min(it.depth, maxDepth(b)), kind: 'item', ref: it, ...(it.tilt ? { tilt: it.tilt, deep: tiltDeep(binTool(b, it.toolId), it) } : {}) }); }
+  for (const f of b.fingers) {
+    const own = f.itemId && b.items.find((x) => x.id === f.itemId), drop = own && own.tilt ? tiltDrop(own.tilt, tiltPt(own.tilt, [f.lx, f.ly])) : 0;
+    out.push({ poly: fingerPoly(f), depth: Math.min(f.depth + drop, maxDepth(b)), kind: 'finger', ref: f, scoop: isScoop(f) });
+  }
   return out;
 }
 const polysArea = (ps) => ps.reduce((s, p) => s + Math.abs(polyArea(p)), 0);
@@ -11181,6 +11221,11 @@ function binChecks(b) {
     }
   }
   // the grips to lift the bin out: no pocket within 2 mm of one (a bin of fixed size, or moved by hand)
+  // a tilted tool whose deep end goes below what the bin allows
+  for (const p of pockets) if (p.tilt && p.deep > maxDepth(b) + 0.05) {
+    const t = binTool(b, p.ref.toolId), need = Math.ceil((p.deep + GF.base + b.floor) / GF.unit - 1e-6);
+    res.push({ level: 'bad', ref: p.ref, text: `${(t || {}).name || 'Teil'} liegt so geneigt zu tief: das tiefe Ende braucht ${nf(p.deep, 1)} mm, der Bin erlaubt ${nf(maxDepth(b), 1)} mm. Weniger neigen oder den Bin ${need} u hoch machen.` });
+  }
   const grips = gripShapes(b);
   if (grips.length === 2 && polysArea(clipBool('intersect', offsetPolys([grips[0].poly], 2), [grips[1].poly])) > 0.5) res.push({ level: 'bad', text: 'Die beiden Griffmulden zum Herausheben liegen aufeinander: eine an eine andere Stelle ziehen.' });
   else if (grips.length === 2 && grips[0].ax === grips[1].ax && grips[0].s === grips[1].s) res.push({ level: 'warn', text: 'Beide Griffmulden zum Herausheben liegen an derselben Seite: der Bin kommt schräg heraus. Besser an zwei gegenüberliegende Seiten.' });
@@ -11394,7 +11439,7 @@ function autoSize(b) {
   [b.gx, b.gy] = fieldsFor(b, polys.map((p) => polyBBox([p])), polys);
   // the height comes from the pockets and the shapes set by hand; a tool's finger trough does not make the
   // bin higher, it goes as deep as the bin is anyway (Camille's choice; binPockets stops it at maxDepth)
-  const deepest = Math.max(...b.items.map((it) => it.depth), ...b.fingers.filter((f) => !f.itemId).map((f) => f.depth), 5);
+  const deepest = Math.max(...b.items.map((it) => (it.tilt ? tiltDeep(binTool(b, it.toolId), it) : it.depth)), ...b.fingers.filter((f) => !f.itemId).map((f) => f.depth), 5);
   b.hu = clamp(Math.ceil((deepest + GF.base + b.floor) / GF.unit), 2, 30);
   centerItems(b);
 }
@@ -11463,7 +11508,7 @@ function sinkTools(b) {
     if (t.height > fullRoom(b) + 0.05) tall.push(t.name);
   }
   // (as autoSize works it out: the pockets and the shapes set by hand, not the troughs)
-  const deepest = Math.max(...b.items.map((it) => it.depth), ...b.fingers.filter((f) => !f.itemId).map((f) => f.depth), 5);
+  const deepest = Math.max(...b.items.map((it) => (it.tilt ? tiltDeep(binTool(b, it.toolId), it) : it.depth)), ...b.fingers.filter((f) => !f.itemId).map((f) => f.depth), 5);
   b.hu = clamp(Math.ceil((deepest + GF.base + b.floor) / GF.unit), 2, 30);
   return { was, tall };
 }
@@ -11863,7 +11908,9 @@ const normDeg = (a) => (((Math.round(a * 10) / 10) % 360) + 360) % 360;
 // the unit's turns, each in 90° steps: a tool laid aslant by hand keeps that angle as a choice). A tool
 // on its own with one automatic trough has the trough's places in troughs (the first: where it is now; then
 // across the tool, and the short ones at its edge, fingerEdgePicks).
-function nestUnits(b) {
+// (opts.tilt: a lone tool may also lie tilted, see tiltFor, as far as the bin's height allows and where that
+// makes it shorter; such a tilt is one more of its places, with its trough where it is)
+function nestUnits(b, opts = {}) {
   const parts = [
     ...b.items.filter((it) => toolById(it.toolId)).map((it) => ({ kind: 'item', ref: it, x: it.x, y: it.y, rot: it.rot, polys: [itemPocket(b, it), ...b.fingers.filter((f) => f.itemId === it.id).map(fingerPoly)] })),
     ...b.fingers.filter((f) => !f.itemId).map((f) => ({ kind: 'shape', ref: f, x: f.x, y: f.y, rot: f.rot || 0, polys: [fingerPoly(f)] })),
@@ -11888,7 +11935,18 @@ function nestUnits(b) {
       for (const c of fingerEdgePicks(b, t)) add(c, 'edge');
       troughs.push(...at.slice(1));
     }
-    return { id: 'u' + n, parts: ps, ax: a.x, ay: a.y, tools: ps.filter((p) => p.kind === 'item').length, trough, troughs, turns: round ? [0] : [...new Set([0, 90, 180, 270].flatMap((d) => [normDeg(s + d), normDeg(d)]))] };
+    // (tilts[v]: the tilt of place v; undefined keeps the tool's own)
+    const tilts = [];
+    if (opts.tilt && ps.length === 1 && t) {
+      const it = a.ref, len = (o) => { const bb = polyBBox([o]); return Math.max(bb.w, bb.h); }, flat = len(t.outline);
+      if (it.tilt) { troughs.push(null); tilts[troughs.length - 1] = null; }
+      for (const deg of [8, 12, 16, 20, 25, 30]) {
+        const tl = tiltFor(t, deg, 1);
+        if (flat - len(toolPlan(t, tl)) < 2 || tiltDeep(t, { ...it, tilt: tl }) > maxDepth(b)) continue;
+        troughs.push(null); tilts[troughs.length - 1] = tl;
+      }
+    }
+    return { id: 'u' + n, parts: ps, ax: a.x, ay: a.y, tools: ps.filter((p) => p.kind === 'item').length, trough, troughs, tilts, turns: round ? [0] : [...new Set([0, 90, 180, 270].flatMap((d) => [normDeg(s + d), normDeg(d)]))] };
   });
 }
 // where part p of unit u lies when the unit is turned by d with its origin at 0,0
@@ -11942,7 +12000,8 @@ function nestFootprint(b, u, d, v = 0) {
   for (const p of u.parts) {
     const q = nestPose(u, p, d);
     if (p.kind === 'shape') { polys.push(fingerPoly({ ...p.ref, ...q })); continue; }
-    const it = p.ref, at = { ...it, ...q }, raw = placePoly(toolById(it.toolId).outline, q.x, q.y, q.rot, it.mirror);
+    const tl = u.tilts && u.tilts[v] !== undefined ? u.tilts[v] || undefined : p.ref.tilt;
+    const it = p.ref, at = { ...it, ...q, tilt: tl }, raw = placePoly(toolPlan(toolById(it.toolId), tl), q.x, q.y, q.rot, it.mirror);
     polys.push(largestRing(offsetPolys([raw], b.clearance)) || raw);
     for (const f of b.fingers) if (f.itemId === it.id) { const g = nestTrough(u, f, v); polys.push(fingerPoly({ ...g, ...fingerWorld(at, g) })); }
   }
@@ -12026,7 +12085,7 @@ async function nestCore(b, budget, free = false) {
   if (!b.items.some((it) => toolById(it.toolId))) return { ok: false, why: 'empty' };
   const before = b.gx * b.gy;
   ensureFingers(b); syncFingers(b);
-  const units = nestUnits(b);
+  const units = nestUnits(b, { tilt: !!(S.ui && S.ui.nestTilt) });
   const feet = new Map(), nfps = new Map();
   const foot = (u, d, v) => { const k = `${u.id}@${d}#${v}`; if (!feet.has(k)) feet.set(k, nestFootprint(b, u, d, v)); return feet.get(k); };
   const nfp = (a, da, va, m, dm, vm) => {
@@ -12052,7 +12111,9 @@ async function nestCore(b, budget, free = false) {
   const rate = (res) => {
     const [gx, gy] = fixed ? [b.gx, b.gy] : fieldsFor(free ? { ...b, grips: false } : b, res.placed.map((p) => ({ x0: p.l, x1: p.r, y0: p.top, y1: p.end })));
     const fits = !cs || (gx <= cs.gx && gy <= cs.gy) || (gy <= cs.gx && gx <= cs.gy);
-    return { fields: gx * gy, score: fixed ? 0 : (fits ? 0 : 1e6) + gx * gy * 100 + Math.abs(gx - gy) + res.length / 1000 };
+    // (among equal results the least tilt: the bin's floor less deep)
+    const tilt = res.placed.reduce((s, p) => s + ((p.u.tilts && p.u.tilts[p.v] && p.u.tilts[p.v].deg) || 0), 0) / 100;
+    return { fields: gx * gy, score: (fixed ? 0 : (fits ? 0 : 1e6) + gx * gy * 100 + Math.abs(gx - gy) + res.length / 1000) + tilt };
   };
   let best = null;
   const take = (lane, res) => {
@@ -12141,18 +12202,48 @@ async function nestCore(b, budget, free = false) {
       const q = nestPose(pl.u, p, pl.d); let x = q.x + pl.x, y = q.y + pl.y, rot = q.rot;
       if (best.lane.turned) [x, y, rot] = [y, -x, normDeg(rot + 270)];
       Object.assign(p.ref, { x, y, rot });
+      if (p.kind === 'item' && pl.u.tilts && pl.u.tilts[pl.v] !== undefined) { if (pl.u.tilts[pl.v]) p.ref.tilt = pl.u.tilts[pl.v]; else delete p.ref.tilt; }
     }
-    if (pl.v && pl.u.trough) Object.assign(pl.u.trough, pl.u.troughs[pl.v], { manual: true, v: FINGER_V });
+    if (pl.v && pl.u.trough && pl.u.troughs[pl.v]) Object.assign(pl.u.trough, pl.u.troughs[pl.v], { manual: true, v: FINGER_V }); // (a tilt only: the trough as it is)
   }
   syncFingers(b);
   if (!fixed) { const g = b.grips; if (free) b.grips = false; autoSize(b); b.grips = g; }
   // (with grips the tools stay in the middle, between the free strips at the short ends or the gaps at both sides)
   if (b.grips) centerItems(b); else nestCorner(b);
+  // (the search takes the first tilt that fits; the least that still does makes the floor less deep)
+  if (units.some((u) => u.tilts && u.tilts.some(Boolean)) && relaxTilts(b, fixed) && !fixed) {
+    const g = b.grips; if (free) b.grips = false; autoSize(b); b.grips = g;
+    if (b.grips) centerItems(b); else nestCorner(b);
+  }
   b.manual = true; // nested by hand, as it were: later changes keep it (fitBin would lay it out in rows again)
   return { ok: true, gx: b.gx, gy: b.gy, before, kept: units.filter((u) => u.tools > 1).length, tries: k, ms: Math.round(performance.now() - t0) };
 }
 // the pockets of bin b moved into the inside's top left corner, NEST_EDGE from its sides (less where it is
 // tight): the room left over is one piece at the far sides
+// Each tilted tool of bin b at the least tilt (of those the search tries) that still fits where it lies: 2 mm
+// from every other pocket, inside a bin of fixed size, no more fields for one that fits its content. true when
+// one got less.
+function relaxTilts(b, fixed) {
+  const fields = () => { const P = binPockets(b).map((p) => p.poly); return fieldsFor({ ...b, grips: false }, P.map((q) => polyBBox([q])), P).reduce((m, c) => m * c, 1); };
+  const inner = binInner(b);
+  let less = false;
+  for (const it of b.items) {
+    if (!it.tilt) continue;
+    const t = toolById(it.toolId), was = it.tilt, f0 = fixed ? 0 : fields();
+    for (const deg of [8, 12, 16, 20, 25, 30]) {
+      if (deg >= was.deg) break;
+      it.tilt = tiltFor(t, deg, was.s); syncFingers(b);
+      const P = binPockets(b), mine = P.filter((p) => p.ref === it || p.ref.itemId === it.id), others = P.filter((p) => !mine.includes(p));
+      const zone = offsetPolys(mine.map((p) => p.poly), NEST_GAP);
+      const fits = !others.some((o) => polysArea(clipBool('intersect', [o.poly], zone)) > 0.05)
+        && (fixed ? !mine.some((p) => polysArea(clipBool('diff', [p.poly], [inner])) > 0.5) : fields() <= f0);
+      if (fits) { less = true; break; }
+      it.tilt = was;
+    }
+    syncFingers(b);
+  }
+  return less;
+}
 function nestCorner(b) {
   const polys = binPockets(b).map((p) => p.poly); if (!polys.length) return;
   const bb = polyBBox(polys), inn = polyBBox([binInner(b)]);
@@ -12427,6 +12518,17 @@ function roundCutters(r, b, rims, zTop) {
   // (cut one by one, see buildBinSolid)
   return { cutters: out, rings };
 }
+// A tilted tool's pocket (see tiltFor): straight down from its outline seen from above to a floor that falls from
+// its depth at the shallow end by tan(deg) per mm towards the deep end (a half-space tilted, turned and moved
+// there; the bin's own floor stays: at most maxDepth)
+function tiltCutter(r, b, p, zTop) {
+  const it = p.ref, tl = it.tilt, deep = Math.min(p.deep, maxDepth(b)), d0 = Math.min(it.depth, maxDepth(b));
+  const prism = cadPolyDrawing(r, p.poly).sketchOnPlane('XY', zTop - deep).extrude(deep + 10);
+  const at = (u) => placePoly([tl.ax === 'x' ? [u, 0] : [0, u]], it.x, it.y, it.rot, it.mirror)[0];
+  const P0 = at(tl.u0), P1 = at(tl.u0 + tl.s), phi = (Math.atan2(-(P1[1] - P0[1]), P1[0] - P0[0]) * 180) / Math.PI; // (CAD y is up)
+  const above = r.makeBox([-2000, -2000, 0], [2000, 2000, 1000]).rotate(tl.deg, [0, 0, 0], [0, 1, 0]).rotate(phi, [0, 0, 0], [0, 0, 1]).translate([P0[0], -P0[1], zTop - d0]);
+  return prism.intersect(above);
+}
 async function buildBinSolid(b, onStep = () => {}) {
   const r = await loadCAD();
   const W = binW(b), D = binD(b), zTop = binTop(b);
@@ -12453,7 +12555,7 @@ async function buildBinSolid(b, onStep = () => {}) {
   for (const p of pockets) {
     onStep(`Tasche ${++k} von ${pockets.length}`);
     const depth = Math.max(0.5, p.depth);
-    const cutter = p.scoop ? scoopCutter(r, p.ref, zTop, depth) : cadPolyDrawing(r, p.poly).sketchOnPlane('XY', zTop - depth).extrude(depth + 10);
+    const cutter = p.scoop ? scoopCutter(r, p.ref, zTop, depth) : p.tilt ? tiltCutter(r, b, p, zTop) : cadPolyDrawing(r, p.poly).sketchOnPlane('XY', zTop - depth).extrude(depth + 10);
     solid = solid.cut(cutter);
     await frame();
   }
@@ -12778,6 +12880,19 @@ function gripPreview(b) {
   }
   return out;
 }
+// A tilted tool's pocket in the quick preview: in six bands across its slope, each as deep as the floor in its
+// middle (the exact CAD view shows the slope)
+function tiltPreview(b, p) {
+  const it = p.ref, tl = it.tilt, at = (u) => placePoly([tl.ax === 'x' ? [u, 0] : [0, u]], it.x, it.y, it.rot, it.mirror)[0];
+  const P0 = at(tl.u0), P1 = at(tl.u0 + tl.s), ax = P1[0] - P0[0], ay = P1[1] - P0[1], n = Math.hypot(ax, ay) || 1, ux = ax / n, uy = ay / n;
+  const far = Math.max(...p.poly.map(([x, y]) => (x - P0[0]) * ux + (y - P0[1]) * uy)), tan = Math.tan((tl.deg * Math.PI) / 180), out = [];
+  for (let k = 0; k < 6; k++) {
+    const s0 = k === 0 ? -50 : (far * k) / 6, s1 = k === 5 ? far + 50 : (far * (k + 1)) / 6, mid = (far * (k + 0.5)) / 6;
+    const band = [[s0, -2000], [s1, -2000], [s1, 2000], [s0, 2000]].map(([a, c]) => [P0[0] + a * ux - c * uy, P0[1] + a * uy + c * ux]);
+    for (const q of clipBool('intersect', [p.poly], [band])) if (Math.abs(polyArea(q)) > 1) out.push({ ...p, poly: q, depth: Math.min(it.depth + Math.max(0, mid) * tan, maxDepth(b)) });
+  }
+  return out;
+}
 function fastBinGroup(THREE, b, opts = {}) {
   const grp = new THREE.Group();
   const mat = new THREE.MeshStandardMaterial({ color: b.color, roughness: 0.62, metalness: 0.02, transparent: !!opts.ghost, opacity: opts.ghost ? 0.25 : 1 });
@@ -12788,7 +12903,7 @@ function fastBinGroup(THREE, b, opts = {}) {
     const upper = slab(THREE, [threeShape(THREE, roundRectPoly(41.5, 41.5, GF.r, 4).map(([x, y]) => [x + cx, y + cy]))], 2.6, GF.base, mat);
     if (lower) grp.add(lower); if (upper) grp.add(upper);
   }
-  const inner = binInner(b), all = [...binPockets(b), ...gripPreview(b)];
+  const inner = binInner(b), all = [...binPockets(b).flatMap((p) => (p.tilt ? tiltPreview(b, p) : [p])), ...gripPreview(b)];
   // a round trough is cut in steps that stay outside its true surface; the smooth surface is laid in on top.
   // Where it meets a tool's pocket, the steps show on the pocket's wall: kept under 0.35 mm, so they read as
   // the trough's round edge
@@ -14241,6 +14356,7 @@ const BinUI = {
       toast(parts.join(' ') + ' Strg+Z macht es rückgängig.', how === 'none' || stuck ? 'bad' : undefined);
     };
     $('#bin-lift').onchange = (e) => { const b = curBin(); if (!b) return; b.lift = Math.round(clamp(num(e.target, 0), 0, 10)); this.changed(); };
+    $('#bin-nest-tilt').onchange = (e) => { S.ui.nestTilt = e.target.checked; Store.saveUi(); };
     $('#bin-round').onchange = (e) => { const b = curBin(); if (!b) return; b.round = e.target.checked; this.changed(); };
     $('#bin-mag').onchange = (e) => { const b = curBin(); if (!b) return; b.magnets = { none: false, all: true, corners: 'corners' }[e.target.value]; this.changed(); };
     $('#bin-join').replaceChildren(...BIN_JOINS.map((j) => h('option', { value: j.id, text: j.name, title: j.hint })));
@@ -14266,7 +14382,7 @@ const BinUI = {
       // the arrangement as it is, kept when the search finds nothing better (one laid out by hand may well be)
       const was = JSON.parse(JSON.stringify({ items: b.items, fingers: b.fingers, gx: b.gx, gy: b.gy, hu: b.hu, manual: b.manual, gripPos: b.gripPos || null })), fitted = !binChecks(b).some((c) => c.over);
       let r;
-      try { r = await busy('Ordne die Werkzeuge platzsparend an…', () => nestBin(b)); } catch (e) { console.error(e); toast('Das Anordnen ging nicht: ' + (e.message || e), 'bad'); return; }
+      try { r = await busy(S.ui.nestTilt ? 'Ordne die Werkzeuge platzsparend an, auch geneigt…' : 'Ordne die Werkzeuge platzsparend an…', () => nestBin(b, S.ui.nestTilt ? 10000 : 7000)); } catch (e) { console.error(e); toast('Das Anordnen ging nicht: ' + (e.message || e), 'bad'); return; }
       if (!r.ok) {
         Object.assign(b, was); this.render();
         if (r.why === 'fixed') toast(fitted ? 'Keine andere Anordnung gefunden, die in diesen Bin passt. Deine bleibt, wie sie ist.' : 'Auch so passen die Werkzeuge nicht in diesen Bin. Mit «Grösse automatisch anpassen» sucht die App die kleinste passende Grösse.', fitted ? undefined : 'bad');
@@ -14280,7 +14396,8 @@ const BinUI = {
       }
       this.sel = null; this.changed(true); this.stage.fitted = false; this.stage.fit();
       const n = r.gx * r.gy;
-      const kept = (r.kept ? ` Werkzeuge unter einer gemeinsamen Form (${r.kept === 1 ? 'eine Gruppe' : r.kept + ' Gruppen'}) sind zusammen geblieben.` : '')
+      const tiltedN = S.ui.nestTilt ? b.items.filter((it) => it.tilt).length : 0;
+      const kept = (tiltedN ? ` ${tiltedN === 1 ? 'Ein Werkzeug liegt' : tiltedN + ' Werkzeuge liegen'} geneigt.` : '') + (r.kept ? ` Werkzeuge unter einer gemeinsamen Form (${r.kept === 1 ? 'eine Gruppe' : r.kept + ' Gruppen'}) sind zusammen geblieben.` : '')
         + (r.grips === 'gaps' ? ' Die Griffmulden liegen in Lücken am Rand.' : r.grips === 'ends' ? ' Die Griffmulden liegen mittig an den kurzen Seiten.' : r.grips === 'under' ? (() => { const on = gripCovers(b); return on.length ? ` Die Griffmulden liegen mittig an den kurzen Seiten, unter ${on.join(' und ')}: zum Herausheben zuerst ${on.length === 1 ? 'dieses Werkzeug' : 'diese Werkzeuge'} herausnehmen.` : ' Die Griffmulden liegen mittig an den kurzen Seiten.'; })() : '');
       toast((b.autoFit !== false ? `Platzsparend angeordnet: ${r.gx} × ${r.gy} = ${n} Felder` + (n < r.before ? ` statt ${r.before}.` : '.') : 'Platzsparend angeordnet.') + kept + ' Strg+Z macht es rückgängig.');
     };
@@ -14518,6 +14635,13 @@ const BinUI = {
     }
     if (lb) { $('#bin-undo').disabled = true; $('#bin-redo').disabled = true; }
   },
+  // an item tilted by hand (0: flat again), its deep end at the tool's one end or the other
+  setTilt(it, deg, s = 1) {
+    const b = curBin(), t = b && binTool(b, it.toolId); if (!t || binLocked(b)) return;
+    const d = Math.round(clamp(deg, 0, 40));
+    if (d) it.tilt = tiltFor(t, d, s); else delete it.tilt;
+    syncFingers(b); this.changed();
+  },
   renderTop() {
     const sel = $('#bin-select'); sel.replaceChildren();
     for (const b of S.bins) sel.append(h('option', { value: b.id, text: `${b.name} · ${binTag(b)}` }));
@@ -14565,7 +14689,7 @@ const BinUI = {
     const mm = (v) => nf(v, 1).replace(/\.0$/, '');
     $('#bin-adv-sum').textContent = `Toleranz ${mm(b.clearance)} mm · Rand ${mm(b.wall)} mm · Boden ${mm(b.floor)} mm`;
     if (this.advBin !== b.id) { $('#bin-adv').open = false; this.advBin = b.id; }
-    $('#bin-lip').checked = b.lip; $('#bin-grips').value = gripKind(b) || 'none'; $('#bin-mag').value = magnetMode(b); $('#bin-round').checked = b.round === true; $('#bin-autofit').checked = b.autoFit !== false; $('#bin-autofinger').checked = !!b.autoFingers;
+    $('#bin-lip').checked = b.lip; $('#bin-grips').value = gripKind(b) || 'none'; $('#bin-mag').value = magnetMode(b); $('#bin-round').checked = b.round === true; $('#bin-nest-tilt').checked = !!S.ui.nestTilt; $('#bin-autofit').checked = b.autoFit !== false; $('#bin-autofinger').checked = !!b.autoFingers;
     $('#bin-lift').value = b.lift || 0; $('#bin-lift').closest('label').hidden = !b.lip; $('#bin-grip-row').hidden = !b.grips; $('#bin-grip-opt').hidden = !b.grips && !b.fingers.some((f) => f.auto && f.itemId);
     // (a bin that fits its content does this by itself on every change)
     $('#bin-autosize').hidden = b.autoFit !== false;
@@ -14576,7 +14700,7 @@ const BinUI = {
       const t = binTool(b, it.toolId);
       items.append(h('div', { class: 'item' + (this.isSel(it.id) ? ' sel' : ''), onclick: (e) => { if (e.shiftKey) this.toggleSel('item', it); else this.sel = { kind: 'item', id: it.id }; this.renderPanel(); this.stage.redraw(); } },
         h('span', { class: 'swatch', style: { background: b.color } }),
-        h('div', null, h('div', { class: 't', text: t ? t.name : 'fehlt' }), h('div', { class: 's', text: `Tiefe ${nf(Math.min(it.depth, maxDepth(b)), 1)} mm${t && t.height > Math.min(it.depth, maxDepth(b)) + 0.05 ? ` (Werkzeug ${nf(t.height, 1)} mm hoch)` : ''} · ${nf(it.rot, 0)}°${it.mirror ? ' · gespiegelt' : ''}${t && t.fit ? ' · ' + (t.fit === 'ok' ? (toolLocked(t) ? '🔒' : '🔓') : FIT_TEXT[t.fit]) : ''}` })),
+        h('div', null, h('div', { class: 't', text: t ? t.name : 'fehlt' }), h('div', { class: 's', text: `Tiefe ${nf(Math.min(it.depth, maxDepth(b)), 1)} mm${t && t.height > Math.min(it.depth, maxDepth(b)) + 0.05 ? ` (Werkzeug ${nf(t.height, 1)} mm hoch)` : ''} · ${nf(it.rot, 0)}°${it.mirror ? ' · gespiegelt' : ''}${it.tilt ? ` · ${it.tilt.deg}° geneigt` : ''}${t && t.fit ? ' · ' + (t.fit === 'ok' ? (toolLocked(t) ? '🔒' : '🔓') : FIT_TEXT[t.fit]) : ''}` })),
         // the tool as a body in the 3D view, to see how deep it sits (off unless ticked; a setting of this
         // browser, not of the bin)
         h('label', { class: 'check', title: 'Werkzeug in der 3D-Ansicht zeigen', style: { fontSize: '12px', gap: '4px' }, onclick: (e) => e.stopPropagation() },
@@ -14603,11 +14727,18 @@ const BinUI = {
       const t = binTool(b, ref.toolId);
       $('#bin-sel-title').textContent = t ? t.name : 'Teil';
       const rotIn = h('input', { type: 'number', value: ref.rot, step: 1, onchange: (e) => { ref.rot = ((num(e.target, 0) % 360) + 360) % 360; this.changed(); } });
+      // tilted: one end deeper, shorter seen from above (Camille)
+      const tiltIn = h('input', { type: 'number', value: ref.tilt ? ref.tilt.deg : 0, min: 0, max: 40, step: 1, onchange: (e) => this.setTilt(ref, num(e.target, 0), ref.tilt ? ref.tilt.s : 1) });
+      const deepT = ref.tilt && t ? tiltDeep(t, ref) : null;
       body.append(
         h('div', { class: 'row' },
           h('button', { class: 'btn small', type: 'button', title: 'Um 90° gegen den Uhrzeigersinn drehen', onclick: () => { ref.rot = (ref.rot + 270) % 360; this.changed(); } }, '⟲ 90°'),
           h('button', { class: 'btn small', type: 'button', title: 'Um 90° im Uhrzeigersinn drehen (auch Taste R)', onclick: () => { ref.rot = (ref.rot + 90) % 360; this.changed(); } }, '⟳ 90°'),
           h('label', { class: 'f grow', title: 'Drehwinkel des Werkzeugs im Bin in Grad' }, h('span', { text: 'Winkel °' }), rotIn)),
+        h('div', { class: 'row', title: 'Das Werkzeug geneigt legen: ein Ende tiefer, dafür von oben gesehen kürzer. Die Tasche bekommt einen schrägen Boden; das tiefe Ende darf nicht tiefer liegen, als der Bin erlaubt' },
+          h('label', { class: 'f grow' }, h('span', { text: 'Neigung °' }), tiltIn),
+          h('button', { class: 'btn small', type: 'button', disabled: !ref.tilt, title: 'Das andere Ende des Werkzeugs tiefer legen', onclick: () => this.setTilt(ref, ref.tilt.deg, -ref.tilt.s) }, 'Anderes Ende tiefer')),
+        ...(ref.tilt ? [h('p', { class: 'unit', text: `Tasche ${nf(ref.depth, ref.depth % 1 ? 1 : 0)} mm am flachen, ${nf(deepT, 1)} mm am tiefen Ende` })] : []),
         h('label', { class: 'check', title: 'Das Werkzeug liegt umgedreht im Bin: die Tasche wird gespiegelt' + (toolLocked(t) ? ' (gesperrt, weil der Testdruck passt: das Schloss oben rechts entsperrt)' : '') }, h('input', { type: 'checkbox', disabled: toolLocked(t), checked: ref.mirror, onchange: (e) => { ref.mirror = e.target.checked; this.changed(); } }), 'Spiegeln (Teil liegt umgedreht)'),
         h('label', { class: 'f', title: 'Tiefe dieser Tasche; eine hier eingetragene Tiefe bleibt, auch wenn sich die Werkzeughöhe ändert' + (toolLocked(t) ? ' (gesperrt, weil der Testdruck passt: unter «Werkzeuge» das Schloss entsperrt)' : '') }, h('span', { text: `Taschentiefe mm (Teil ${t ? nf(t.height, 1) : '?'} mm hoch, max ${nf(maxDepth(b), 1)})` }),
           h('input', { type: 'number', value: ref.depth, min: 1, max: 200, step: 0.5, disabled: toolLocked(t), onchange: (e) => { ref.depth = clamp(num(e.target, ref.depth), 0.5, 200); ref.depthSet = true; this.changed(); } })),
@@ -14746,7 +14877,8 @@ const BinUI = {
     for (const p of pockets) {
       const bb = polyBBox([p.poly]);
       // the pocket's depth; when the tool is taller (it stands out, or the bin is too low for it) both
-      if (p.kind === 'item') { const t = binTool(b, p.ref.toolId); if (t && st.scale > 1.2) drawLabel(c, st, t.height > p.depth + 0.05 ? `${t.name} · Tasche ${nf(p.depth, 0)} von ${nf(t.height, 0)} mm` : `${t.name} · ${nf(p.depth, 0)} mm`, bb.cx, bb.cy, { size: 11 }); }
+      if (p.kind === 'item' && p.tilt) { const t = binTool(b, p.ref.toolId); if (t && st.scale > 1.2) drawLabel(c, st, `${t.name} · ${p.tilt.deg}° geneigt · ${nf(p.depth, 0)}→${nf(Math.min(p.deep, maxDepth(b)), 0)} mm`, bb.cx, bb.cy, { size: 10 }); }
+      else if (p.kind === 'item') { const t = binTool(b, p.ref.toolId); if (t && st.scale > 1.2) drawLabel(c, st, t.height > p.depth + 0.05 ? `${t.name} · Tasche ${nf(p.depth, 0)} von ${nf(t.height, 0)} mm` : `${t.name} · ${nf(p.depth, 0)} mm`, bb.cx, bb.cy, { size: 11 }); }
       // a shape's size only on the one chosen (Camille: shown on some and not on others by their width, irritating)
       else if (this.isSel(p.ref.id)) drawLabel(c, st, `${shapeLabel(p.ref).size} · ${nf(p.depth, 0)} mm`, bb.cx, bb.y1 + st.px(12), { size: 10 });
     }
@@ -16335,7 +16467,7 @@ if (location.hash === '#selbsttest') setTimeout(async () => {
     document.title = 'SELBSTTEST OK ' + Math.round(r.measureVolume(s)) + ' mm3, Schrift ' + (document.fonts.check('600 14px Barlow') ? 'da' : 'fehlt');
   } catch (e) { document.title = 'SELBSTTEST FEHLER ' + (e && (e.message || e)); }
 }, 800);
-window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, sinkTools, gripShapes, gripGaps, placeGrips, itemPoly, gripCovers, settleGrips, unreachTrough, FINGER_REACH, lockBin, binLocked, binTool, gripDims, roundCutters, EDGE_ROUND, optimizeTroughs, fingerEdges, fingerEdgePicks, gripPlaces, gripRoom, fieldsFor, GRIP, GRIP_BALL, loadThree, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner, binSplit, halfCuts, binClipSpots, binMagnetSpots, BIN_CLIP, dogbonePoly };
+window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, sinkTools, gripShapes, gripGaps, placeGrips, itemPoly, tiltFor, toolPlan, tiltDeep, tiltPt, gripCovers, settleGrips, unreachTrough, FINGER_REACH, lockBin, binLocked, binTool, gripDims, roundCutters, EDGE_ROUND, optimizeTroughs, fingerEdges, fingerEdgePicks, gripPlaces, gripRoom, fieldsFor, GRIP, GRIP_BALL, loadThree, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner, binSplit, halfCuts, binClipSpots, binMagnetSpots, BIN_CLIP, dogbonePoly };
 // The mouse wheel over a number field that has the focus changes its value: easily by accident while
 // scrolling the panel (a bin's tolerance, wall, floor). The field gives up the focus instead, and the page
 // scrolls on.
