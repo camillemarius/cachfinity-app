@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'e7035ea4cc41';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '601165144d7f';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -671,7 +671,7 @@ label.f.sub-opt input { flex: none; }
           <label title="Tiefe in Gridfinity-Feldern zu 42 mm" class="f"><span>Tiefe Felder</span><input type="number" id="bin-gy" min="1" max="12" step="1"></label>
           <label title="Höhe in Einheiten zu 7 mm, ohne Stapelrand; die Taschen werden höchstens so tief, wie diese Höhe erlaubt" class="f"><span>Höhe u (7 mm)</span><input type="number" id="bin-hu" min="2" max="30" step="1"></label>
         </div>
-        <label title="Breite, Tiefe und Höhe folgen den Werkzeugen; sie liegen ganz in ihren Taschen (1 mm Reserve nach oben)" class="check"><input type="checkbox" id="bin-autofit" checked> Grösse automatisch anpassen</label>
+        <label title="Breite, Tiefe und Höhe folgen den Werkzeugen; sie liegen ganz in ihren Taschen (so tief wie hoch, siehe «ändern»)" class="check"><input type="checkbox" id="bin-autofit" checked> Grösse automatisch anpassen</label>
         <p class="check-note">Felder und Höhe richten sich nach den Werkzeugen. Stellst du sie selbst ein, schaltet sich das aus.</p>
         <p id="bin-dims" class="mono"></p>
         <!-- settings that change every pocket and are rarely touched: a line with the values, opened on purpose -->
@@ -682,8 +682,9 @@ label.f.sub-opt input { flex: none; }
             <label title="So viel Wand bleibt mindestens zwischen den Taschen und dem Rand des Bins" class="f"><span>Mindestrand mm</span><input type="number" id="bin-wall" min="1.2" max="10" step="0.1"></label>
             <label title="Material unter der tiefsten Tasche" class="f"><span>Boden mm</span><input type="number" id="bin-floor" min="0.8" max="10" step="0.1"></label>
           </div>
+          <label title="Wie viel tiefer die Taschen sind, als die Werkzeuge hoch sind: 0 heisst bündig mit der Oberkante (neue Bins); Bins von vorher haben 1 mm. Taschen, deren Tiefe von Hand gesetzt ist, bleiben" class="f"><span>Tasche tiefer als Werkzeug mm <span class="unit">(0 = bündig)</span></span><input type="number" id="bin-dextra" min="0" max="5" step="0.5"></label>
         </details>
-        <div class="row"><button class="btn small" type="button" id="bin-autosize" title="Felder und Höhe nach den Werkzeugen, so wie sie liegen; die Werkzeuge liegen danach ganz in ihren Taschen">Bin an Bauteile anpassen</button><button class="btn small" type="button" id="bin-nest" title="Die Werkzeuge nach ihren echten Umrissen ineinander schieben, auch gedreht, so dass der Bin möglichst wenige Felder braucht. Werkzeuge unter einer gemeinsamen Form (etwa einem Langloch über mehrere Stangen) bleiben zusammen. Griffmulden wandern dabei entlang ihres Werkzeugs und ragen, wo nötig, nur auf einer Seite hinaus. Dauert ein paar Sekunden; Strg+Z macht es rückgängig">Platzsparend anordnen</button><button class="btn small" type="button" id="bin-sink" title="Die Höhe so einstellen, dass alle Werkzeuge bündig in ihren Taschen liegen: jede Tasche so tief, wie ihr Werkzeug hoch ist (und 1 mm Reserve), auch wo eine Tiefe von Hand gesetzt war; der Bin wird so hoch wie nötig, auch niedriger. Breite und Länge bleiben. Strg+Z macht es rückgängig">Bauteile versenken</button><button class="btn small" type="button" id="bin-grip-opt" title="Setzt die Griffmulden an den Werkzeugen neu an die beste Stelle: nichts im Weg, möglichst wenig Platz, wo es eng ist nur auf einer Seite herausragend. Die Werkzeuge bleiben liegen. Danach kommen die Griffmulden zum Herausheben in Lücken am Rand, an zwei gegenüberliegende Seiten. Ist keine Lücke frei, liegen sie mittig unter einem Werkzeug. Ein Bin, der seine Grösse automatisch anpasst, wird so klein wie möglich. Strg+Z macht es rückgängig">Griffmulden optimieren</button></div>
+        <div class="row"><button class="btn small" type="button" id="bin-autosize" title="Felder und Höhe nach den Werkzeugen, so wie sie liegen; die Werkzeuge liegen danach ganz in ihren Taschen">Bin an Bauteile anpassen</button><button class="btn small" type="button" id="bin-nest" title="Die Werkzeuge nach ihren echten Umrissen ineinander schieben, auch gedreht, so dass der Bin möglichst wenige Felder braucht. Werkzeuge unter einer gemeinsamen Form (etwa einem Langloch über mehrere Stangen) bleiben zusammen. Griffmulden wandern dabei entlang ihres Werkzeugs und ragen, wo nötig, nur auf einer Seite hinaus. Dauert ein paar Sekunden; Strg+Z macht es rückgängig">Platzsparend anordnen</button><button class="btn small" type="button" id="bin-sink" title="Die Höhe so einstellen, dass alle Werkzeuge bündig in ihren Taschen liegen: jede Tasche so tief, wie ihr Werkzeug hoch ist (dazu die Zugabe unter «ändern»), auch wo eine Tiefe von Hand gesetzt war; der Bin wird so hoch wie nötig, auch niedriger. Breite und Länge bleiben. Strg+Z macht es rückgängig">Bauteile versenken</button><button class="btn small" type="button" id="bin-grip-opt" title="Setzt die Griffmulden an den Werkzeugen neu an die beste Stelle: nichts im Weg, möglichst wenig Platz, wo es eng ist nur auf einer Seite herausragend. Die Werkzeuge bleiben liegen. Danach kommen die Griffmulden zum Herausheben in Lücken am Rand, an zwei gegenüberliegende Seiten. Ist keine Lücke frei, liegen sie mittig unter einem Werkzeug. Ein Bin, der seine Grösse automatisch anpasst, wird so klein wie möglich. Strg+Z macht es rückgängig">Griffmulden optimieren</button></div>
         <label class="check" title="«Platzsparend anordnen» darf lange Werkzeuge auch geneigt legen: ein Ende tiefer, von oben gesehen kürzer. Nur so weit, wie die Höhe des Bins reicht; der Bin wird dafür nicht höher. Die Suche dauert etwas länger"><input type="checkbox" id="bin-nest-tilt"> Beim platzsparenden Anordnen auch geneigt legen <span class="unit">(nutzt die Höhe)</span></label>
         <h3 class="sub">Optionen</h3>
         <label title="Stapelrand oben, damit ein weiterer Bin auf diesem stehen kann" class="check"><input type="checkbox" id="bin-lip"> Stapelrand <span class="unit">(+4.4 mm)</span></label>
@@ -11487,14 +11488,15 @@ const followsHeight = (it) => !it.depthSet && !toolLocked(toolById(it.toolId));
 // own: they stop at the bin's deepest pocket).
 const fullRoom = (b) => 30 * GF.unit - GF.base - b.floor;
 const depthRoom = (b) => (b.autoFit !== false ? fullRoom(b) : maxDepth(b));
-// A pocket is this much deeper than its tool is high: the tool lies safely below the top edge even when its
-// measured height is a little short, and a bin stacked on top does not touch it (Camille's choice, instead
-// of raising the stacking rim).
+// How much deeper a pocket is than its tool is high (b.depthExtra, mm). Bins from before 2026-10-21 have none
+// set and keep DEPTH_EXTRA (1 mm, Camille's first choice: the tool safely below the top edge); after her prints
+// she found every tool 1 mm sunk, flush is better (less play under a stacked bin): new bins get 0.
 const DEPTH_EXTRA = 1;
+const depthExtraOf = (b) => (b && b.depthExtra != null ? b.depthExtra : DEPTH_EXTRA);
 // «Bin an Bauteile anpassen» (shown while a bin does not fit its content by itself): the pockets get their tools' full height (a depth set by hand stays), so the
 // size worked out afterwards (autoSize) is high enough for the tools to lie fully in them
-function fullDepths(b) { for (const it of b.items) { const t = toolById(it.toolId); if (t && followsHeight(it)) it.depth = Math.floor(Math.min(t.height + DEPTH_EXTRA, fullRoom(b)) * 10 + 1e-6) / 10; } }
-// «Bauteile versenken»: every tool fully in its pocket, flush with the top (its height and DEPTH_EXTRA, also
+function fullDepths(b) { for (const it of b.items) { const t = toolById(it.toolId); if (t && followsHeight(it)) it.depth = Math.floor(Math.min(t.height + depthExtraOf(b), fullRoom(b)) * 10 + 1e-6) / 10; } }
+// «Bauteile versenken»: every tool fully in its pocket, flush with the top (its height and depthExtraOf, also
 // where a depth was set by hand), and the bin just as high as that needs, lower too where it was higher (its
 // width and length stay; up to 30 u). A tool locked because its test print fits is sunk as well: the lock keeps
 // its outline, height and status, and this button is asked for (Camille). Returns the height before, and the
@@ -11504,7 +11506,7 @@ function sinkTools(b) {
   const was = b.hu, tall = [];
   for (const it of b.items) {
     const t = toolById(it.toolId); if (!t) continue;
-    it.depth = Math.floor(Math.min(t.height + DEPTH_EXTRA, fullRoom(b)) * 10 + 1e-6) / 10; delete it.depthSet;
+    it.depth = Math.floor(Math.min(t.height + depthExtraOf(b), fullRoom(b)) * 10 + 1e-6) / 10; delete it.depthSet;
     if (t.height > fullRoom(b) + 0.05) tall.push(t.name);
   }
   // (as autoSize works it out: the pockets and the shapes set by hand, not the troughs)
@@ -11514,7 +11516,7 @@ function sinkTools(b) {
 }
 // a pocket's depth from its tool's height (rounded down to 0.1 mm: rounded up it could pass the bin's
 // deepest pocket, 15.05 mm in a 3 u bin)
-function defaultDepth(b, tool) { return Math.floor(Math.min(tool.height + DEPTH_EXTRA, depthRoom(b)) * 10 + 1e-6) / 10; }
+function defaultDepth(b, tool) { return Math.floor(Math.min(tool.height + depthExtraOf(b), depthRoom(b)) * 10 + 1e-6) / 10; }
 // A tool's height was changed in the library: its pockets take the depth from the new height (as when it is
 // put into a bin), and their bins adapt. A depth set by hand in the bin (it.depthSet) stays. Returns the
 // bins changed.
@@ -11651,7 +11653,7 @@ function newBin(props = {}) {
   const used = new Set(S.bins.map((b) => b.color));
   return {
     id: uid(), name: 'Bin ' + (S.bins.length + 1), gx: 2, gy: 2, hu: 4,
-    clearance: toolTol(), wall: 3, floor: 1.2, lip: true, magnets: 'corners', autoFit: true, autoFingers: true, round: true,
+    clearance: toolTol(), wall: 3, floor: 1.2, lip: true, magnets: 'corners', autoFit: true, autoFingers: true, round: true, depthExtra: 0,
     color: BIN_COLORS.find((c) => !used.has(c)) || BIN_COLORS[S.bins.length % BIN_COLORS.length],
     items: [], fingers: [], place: null, ...props,
   };
@@ -14171,7 +14173,7 @@ const LibUI = {
             uses ? `In ${inBins.slice(0, 2).map((b) => `«${b.name}»`).join(', ')}${uses > 2 ? ` und ${uses - 2} weiteren` : ''}` : 'Noch in keinem Bin'),
           // (its size is left out: of little interest here, Camille)
           h('div', { class: 'row', style: { flexWrap: 'wrap', rowGap: '4px' } },
-            h('label', { class: 'f', title: 'Höhe des Werkzeugs, wie es im Bin liegt: daraus wird die Taschentiefe (1 mm Reserve); die Taschen in den Bins folgen', style: { flexDirection: 'row', alignItems: 'center', gap: '6px' } }, h('span', { text: 'Höhe' }),
+            h('label', { class: 'f', title: 'Höhe des Werkzeugs, wie es im Bin liegt: daraus wird die Taschentiefe; die Taschen in den Bins folgen', style: { flexDirection: 'row', alignItems: 'center', gap: '6px' } }, h('span', { text: 'Höhe' }),
               h('input', { type: 'number', value: t.height, min: 1, max: 300, step: 0.5, disabled: locked, style: { width: '70px' }, onchange: (e) => {
                 t.height = clamp(num(e.target, t.height), 1, 300); Store.save('tool', t);
                 // the pockets of this tool follow (see toolHeightChanged)
@@ -14329,6 +14331,13 @@ const BinUI = {
     bindNum('#bin-gx', 'gx', 1, 12, true); bindNum('#bin-gy', 'gy', 1, 12, true); bindNum('#bin-hu', 'hu', 2, 30, true);
     bindNum('#bin-wall', 'wall', 1.2, 10); bindNum('#bin-floor', 'floor', 0.8, 10);
     // the tolerance widens every tool pocket all round; a bin set to fit its content grows with it
+    // the extra depth over the tool heights: the pockets that follow the heights take it at once
+    $('#bin-dextra').onchange = (e) => {
+      const b = curBin(); if (!b) return;
+      b.depthExtra = Math.round(clamp(num(e.target, depthExtraOf(b)), 0, 5) * 10) / 10;
+      for (const it of b.items) { const t = toolById(it.toolId); if (t && followsHeight(it)) it.depth = defaultDepth(b, t); }
+      fitBin(b); this.changed(true);
+    };
     $('#bin-clear').onchange = (e) => { const b = curBin(); if (!b) return; b.clearance = Math.round(clamp(num(e.target, b.clearance), 0, 5) * 10) / 10; fitBin(b); this.changed(true); };
     $('#bin-name').onchange = (e) => { const b = curBin(); if (!b) return; b.name = e.target.value.trim() || b.name; this.changed(); };
     $('#bin-lip').onchange = (e) => { const b = curBin(); if (!b) return; b.lip = e.target.checked; this.changed(); };
@@ -14687,7 +14696,8 @@ const BinUI = {
     $('#bin-clear').value = b.clearance; $('#bin-wall').value = b.wall; $('#bin-floor').value = b.floor;
     // closed until opened on purpose, and closed again for another bin
     const mm = (v) => nf(v, 1).replace(/\.0$/, '');
-    $('#bin-adv-sum').textContent = `Toleranz ${mm(b.clearance)} mm · Rand ${mm(b.wall)} mm · Boden ${mm(b.floor)} mm`;
+    $('#bin-adv-sum').textContent = `Toleranz ${mm(b.clearance)} mm · Rand ${mm(b.wall)} mm · Boden ${mm(b.floor)} mm · ${depthExtraOf(b) ? `Taschen +${mm(depthExtraOf(b))} mm` : 'Taschen bündig'}`;
+    $('#bin-dextra').value = depthExtraOf(b);
     if (this.advBin !== b.id) { $('#bin-adv').open = false; this.advBin = b.id; }
     $('#bin-lip').checked = b.lip; $('#bin-grips').value = gripKind(b) || 'none'; $('#bin-mag').value = magnetMode(b); $('#bin-round').checked = b.round === true; $('#bin-nest-tilt').checked = !!S.ui.nestTilt; $('#bin-autofit').checked = b.autoFit !== false; $('#bin-autofinger').checked = !!b.autoFingers;
     $('#bin-lift').value = b.lift || 0; $('#bin-lift').closest('label').hidden = !b.lip; $('#bin-grip-row').hidden = !b.grips; $('#bin-grip-opt').hidden = !b.grips && !b.fingers.some((f) => f.auto && f.itemId);
@@ -16467,7 +16477,7 @@ if (location.hash === '#selbsttest') setTimeout(async () => {
     document.title = 'SELBSTTEST OK ' + Math.round(r.measureVolume(s)) + ' mm3, Schrift ' + (document.fonts.check('600 14px Barlow') ? 'da' : 'fehlt');
   } catch (e) { document.title = 'SELBSTTEST FEHLER ' + (e && (e.message || e)); }
 }, 800);
-window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, sinkTools, gripShapes, gripGaps, placeGrips, itemPoly, tiltFor, toolPlan, tiltDeep, tiltPt, gripCovers, settleGrips, unreachTrough, FINGER_REACH, lockBin, binLocked, binTool, gripDims, roundCutters, EDGE_ROUND, optimizeTroughs, fingerEdges, fingerEdgePicks, gripPlaces, gripRoom, fieldsFor, GRIP, GRIP_BALL, loadThree, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner, binSplit, halfCuts, binClipSpots, binMagnetSpots, BIN_CLIP, dogbonePoly };
+window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, sinkTools, gripShapes, gripGaps, placeGrips, itemPoly, depthExtraOf, defaultDepth, tiltFor, toolPlan, tiltDeep, tiltPt, gripCovers, settleGrips, unreachTrough, FINGER_REACH, lockBin, binLocked, binTool, gripDims, roundCutters, EDGE_ROUND, optimizeTroughs, fingerEdges, fingerEdgePicks, gripPlaces, gripRoom, fieldsFor, GRIP, GRIP_BALL, loadThree, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner, binSplit, halfCuts, binClipSpots, binMagnetSpots, BIN_CLIP, dogbonePoly };
 // The mouse wheel over a number field that has the focus changes its value: easily by accident while
 // scrolling the panel (a bin's tolerance, wall, floor). The field gives up the focus instead, and the page
 // scrolls on.
