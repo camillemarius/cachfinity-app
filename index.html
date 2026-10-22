@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '45eb709fe077';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '0e1000b874e6';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -700,7 +700,7 @@ label.f.sub-opt input { flex: none; }
         <div class="fields">
           <label title="Breite in Gridfinity-Feldern zu 42 mm" class="f"><span>Breite Felder</span><input type="number" id="bin-gx" min="1" max="12" step="1"></label>
           <label title="Tiefe in Gridfinity-Feldern zu 42 mm" class="f"><span>Tiefe Felder</span><input type="number" id="bin-gy" min="1" max="12" step="1"></label>
-          <label title="Höhe in Einheiten zu 7 mm, ohne Stapelrand; die Taschen werden höchstens so tief, wie diese Höhe erlaubt. Auch halbe Einheiten (z. B. 5.5 u = 38.5 mm): nicht im Gridfinity-Standard, aber der Bin passt auf jede Grundplatte und lässt sich stapeln. «Grösse automatisch anpassen» wählt immer ganze Einheiten." class="f"><span>Höhe u (7 mm)</span><input type="number" id="bin-hu" min="2" max="30" step="0.5"></label>
+          <label title="Höhe in Einheiten zu 7 mm, ohne Stapelrand; die Taschen werden höchstens so tief, wie diese Höhe erlaubt. Auch halbe Einheiten (z. B. 5.5 u = 38.5 mm): nicht im Gridfinity-Standard, aber der Bin passt auf jede Grundplatte und lässt sich stapeln. Steht ein Bin auf einer halben Höhe, passen «Bauteile versenken» und die automatische Grösse ihn in halben Schritten an, sonst in ganzen." class="f"><span>Höhe u (7 mm)</span><input type="number" id="bin-hu" min="2" max="30" step="0.5"></label>
         </div>
         <label title="Breite, Tiefe und Höhe folgen den Werkzeugen; sie liegen ganz in ihren Taschen (so tief wie hoch, siehe «ändern»)" class="check"><input type="checkbox" id="bin-autofit" checked> Grösse automatisch anpassen</label>
         <p class="check-note">Felder und Höhe richten sich nach den Werkzeugen. Stellst du sie selbst ein, schaltet sich das aus.</p>
@@ -895,7 +895,7 @@ label.f.sub-opt input { flex: none; }
     <h3>Höhe</h3>
     <table class="help-table"><tbody>
       <tr><th>Einheit u</th><td>7 mm</td><td>«Höhe u» zählt ohne Stapelrand: 3 u = 21 mm, 6 u = 42 mm.</td></tr>
-      <tr><th>Halbe Einheiten</th><td>z. B. 5.5 u = 38.5 mm</td><td>Nicht im Gridfinity-Standard. In Cachfinity von Hand einstellbar; der Bin passt trotzdem auf jede Grundplatte und lässt sich stapeln. «Grösse automatisch anpassen» wählt ganze u.</td></tr>
+      <tr><th>Halbe Einheiten</th><td>z. B. 5.5 u = 38.5 mm</td><td>Nicht im Gridfinity-Standard. In Cachfinity von Hand einstellbar; der Bin passt trotzdem auf jede Grundplatte und lässt sich stapeln. Steht ein Bin auf einer halben Höhe, passen «Bauteile versenken» und die automatische Grösse ihn in halben Schritten an, sonst in ganzen.</td></tr>
       <tr><th>Fuss</th><td>4.75 mm</td><td>Gehört zum ersten u. Profil von unten: 0.8 mm schräg (45°), 1.8 mm senkrecht, 2.15 mm schräg. Unten 35.6 mm breit.</td></tr>
       <tr><th>Boden</th><td>1.2 mm</td><td>Über dem Fuss (unter «ändern» einstellbar). Eine Tasche ist darum höchstens 7 × u − 5.95 mm tief, bei 6 u gut 36 mm.</td></tr>
       <tr><th>Stapelrand</th><td>4.4 mm</td><td>Kommt oben auf die Höhe. Profil von oben: 1.9 mm schräg, 1.8 mm senkrecht, 0.7 mm schräg, zusammen 2.6 mm breit. Cachfinity flacht die Spitze um 0.3 mm ab.</td></tr>
@@ -11534,6 +11534,10 @@ function centerItems(b) {
   for (const it of b.items) { it.x -= bb.cx; it.y -= bb.cy; }
   for (const f of b.fingers) { f.x -= bb.cx; f.y -= bb.cy; }
 }
+// The height a pocket this deep needs: whole units; a bin already at a half unit (set by hand, Camille
+// 2026-10-22) in half units, so that «Bauteile versenken» or the automatic size do not take it back up to a
+// whole one (her 5.5 u bin went to 6)
+const huFor = (b, deepest) => { const q = Number.isInteger(b.hu) ? 1 : 2; return clamp(Math.ceil(((deepest + GF.base + b.floor) / GF.unit) * q) / q, 2, 30); };
 function autoSize(b) {
   if (binLocked(b)) return;
   const polys = binPockets(b).map((p) => p.poly); if (!polys.length) return;
@@ -11541,7 +11545,7 @@ function autoSize(b) {
   // the height comes from the pockets and the shapes set by hand; a tool's finger trough does not make the
   // bin higher, it goes as deep as the bin is anyway (Camille's choice; binPockets stops it at maxDepth)
   const deepest = Math.max(...b.items.map((it) => (it.tilt ? tiltDeep(binTool(b, it.toolId), it) : it.depth)), ...b.fingers.filter((f) => !f.itemId).map((f) => f.depth), 5);
-  b.hu = clamp(Math.ceil((deepest + GF.base + b.floor) / GF.unit), 2, 30);
+  b.hu = huFor(b, deepest);
   centerItems(b);
 }
 // Pack the tools and choose the bin size: rows for every width from 1 field up, keeping the smallest
@@ -11611,7 +11615,7 @@ function sinkTools(b) {
   }
   // (as autoSize works it out: the pockets and the shapes set by hand, not the troughs)
   const deepest = Math.max(...b.items.map((it) => (it.tilt ? tiltDeep(binTool(b, it.toolId), it) : it.depth)), ...b.fingers.filter((f) => !f.itemId).map((f) => f.depth), 5);
-  b.hu = clamp(Math.ceil((deepest + GF.base + b.floor) / GF.unit), 2, 30);
+  b.hu = huFor(b, deepest);
   return { was, tall };
 }
 // a pocket's depth from its tool's height (rounded down to 0.1 mm: rounded up it could pass the bin's
@@ -16627,7 +16631,7 @@ if (location.hash === '#selbsttest') setTimeout(async () => {
     document.title = 'SELBSTTEST OK ' + Math.round(r.measureVolume(s)) + ' mm3, Schrift ' + (document.fonts.check('600 14px Barlow') ? 'da' : 'fehlt');
   } catch (e) { document.title = 'SELBSTTEST FEHLER ' + (e && (e.message || e)); }
 }, 800);
-window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, HelpUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, sinkTools, gripShapes, gripGaps, placeGrips, itemPoly, depthExtraOf, defaultDepth, tiltFor, toolPlan, tiltDeep, tiltPt, gripCovers, settleGrips, unreachTrough, FINGER_REACH, lockBin, binLocked, binTool, gripDims, roundCutters, EDGE_ROUND, optimizeTroughs, fingerEdges, fingerEdgePicks, gripPlaces, gripRoom, fieldsFor, GRIP, GRIP_BALL, loadThree, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner, binSplit, halfCuts, binClipSpots, binMagnetSpots, BIN_CLIP, dogbonePoly };
+window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, huFor, sinkTools, autoSize, FotoUI, TraceUI, BinUI, CaseUI, HelpUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, sinkTools, gripShapes, gripGaps, placeGrips, itemPoly, depthExtraOf, defaultDepth, tiltFor, toolPlan, tiltDeep, tiltPt, gripCovers, settleGrips, unreachTrough, FINGER_REACH, lockBin, binLocked, binTool, gripDims, roundCutters, EDGE_ROUND, optimizeTroughs, fingerEdges, fingerEdgePicks, gripPlaces, gripRoom, fieldsFor, GRIP, GRIP_BALL, loadThree, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner, binSplit, halfCuts, binClipSpots, binMagnetSpots, BIN_CLIP, dogbonePoly };
 // The mouse wheel over a number field that has the focus changes its value: easily by accident while
 // scrolling the panel (a bin's tolerance, wall, floor). The field gives up the focus instead, and the page
 // scrolls on.
