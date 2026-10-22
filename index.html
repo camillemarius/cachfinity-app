@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '3f43a2baf895';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '3e566ee6de47';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -500,7 +500,7 @@ label.f.sub-opt input { flex: none; }
         <div class="stage-empty" id="foto-empty" hidden><div><strong>Noch kein Foto</strong>Lege die Teile auf ein weisses Blatt und fotografiere sie von oben. Dann rechts «Foto hinzufügen». Zum Ausprobieren gibt es dort auch «Beispiel».</div></div>
         <div class="stage-overlay" id="foto-overlay"></div>
       </div>
-      <div class="stage-bar"><span class="hint" id="foto-hint">Ziehe die vier Punkte genau auf die Ecken des Papiers. Mausrad zoomt, Ziehen auf freier Fläche verschiebt.</span>
+      <div class="stage-bar"><span class="hint" id="foto-hint">Ziehe die vier Punkte genau auf die Papierecken, mit Strg fein. Mausrad zoomt, Ziehen auf freier Fläche verschiebt.</span>
         <button class="btn small ghost" type="button" id="foto-fit" title="Zoom so, dass alles zu sehen ist">Alles zeigen</button></div>
     </div>
     <div class="panel">
@@ -659,7 +659,7 @@ label.f.sub-opt input { flex: none; }
         <div class="stage-overlay" id="bin-overlay"></div>
         <div class="stage-alert" id="bin-alert" role="alert" hidden></div>
       </div>
-      <div class="stage-bar"><span class="hint" id="bin-hint">Teile und Formen ziehen zum Verschieben, die Anfasser an einer Form ändern ihre Grösse. Griffmulden zum Herausheben an der Wand entlang ziehen. Pfeiltasten schieben um 1 mm, mit Shift um 5 mm. R dreht um 90°. Shift-Klick wählt mehrere Teile, Strg+A alle: sie bewegen sich dann zusammen.</span>
+      <div class="stage-bar"><span class="hint" id="bin-hint">Teile und Formen ziehen zum Verschieben, die Anfasser an einer Form ändern ihre Grösse. Griffmulden zum Herausheben an der Wand entlang ziehen. Gezogen rastet alles auf 0.5 mm, mit Strg fein auf 0.1 mm. Pfeiltasten schieben um 1 mm, mit Shift um 5 mm. R dreht um 90°. Shift-Klick wählt mehrere Teile, Strg+A alle: sie bewegen sich dann zusammen.</span>
         <button class="btn small ghost" type="button" id="bin-fit" title="Zoom so, dass alles zu sehen ist">Alles zeigen</button></div>
     </div>
     <div class="panel" id="bin-panel">
@@ -13059,9 +13059,14 @@ function caseGroup(THREE, cs, focusId, hidden = null) {
 }
 
 // ===== Stage: zoomable 2D canvas with pointer tools =====
+// Ctrl (Cmd on a Mac) held while dragging: fine adjustment (Camille: «auf alle Platzierungen»)
+const FINE_K = 0.2;
+const fineKey = (e) => !!(e && (e.ctrlKey || e.metaKey));
 class Stage {
-  constructor(canvas, { draw, tool, bounds, pad = 28 }) {
-    this.cv = canvas; this.ctx = canvas.getContext('2d'); this.drawFn = draw; this.tool = tool || {}; this.bounds = bounds; this.pad = pad;
+  // fine: on this stage a drag with Ctrl follows a fifth of the pointer's way (dragW); the tool sees Ctrl in the
+  // event and leaves its snapping off or takes finer steps
+  constructor(canvas, { draw, tool, bounds, pad = 28, fine = false }) {
+    this.cv = canvas; this.ctx = canvas.getContext('2d'); this.drawFn = draw; this.tool = tool || {}; this.bounds = bounds; this.pad = pad; this.fine = fine; this.fineG = null;
     this.scale = 1; this.ox = 0; this.oy = 0; this.w = 0; this.h = 0; this.dpr = 1; this.fitted = false;
     this.ptrs = new Map(); this.pan = null; this.pinch = null; this.raf = 0;
     new ResizeObserver(() => this.resize()).observe(canvas.parentElement);
@@ -13120,7 +13125,17 @@ class Stage {
     const [x, y] = this.s2w(sp[0], sp[1]);
     if (e.button === 1 || e.button === 2 || !(this.tool.down && this.tool.down(x, y, e))) {
       if (e.button !== 2) this.pan = { sx: sp[0], sy: sp[1], ox: this.ox, oy: this.oy };
-    } else this.dragging = true;
+    } else { this.dragging = true; this.fineG = { on: fineKey(e), r: [x, y], v: [x, y], last: [x, y] }; }
+  }
+  // the point a drag is at: the pointer, or with Ctrl (on a fine stage) a fifth of its way from where Ctrl was
+  // pressed; pressed or let go mid-drag, the dragged thing goes on from where it is, so it never jumps
+  dragW(w, e) {
+    const g = this.fineG; if (!this.fine || !g) return w;
+    const on = fineKey(e);
+    if (on !== g.on) { g.on = on; g.r = w; g.v = g.last; }
+    const k = on ? FINE_K : 1;
+    g.last = [g.v[0] + (w[0] - g.r[0]) * k, g.v[1] + (w[1] - g.r[1]) * k];
+    return g.last;
   }
   move(e) {
     const sp = this.evS(e);
@@ -13134,13 +13149,13 @@ class Stage {
       return;
     }
     if (this.pan) { this.ox = this.pan.ox + sp[0] - this.pan.sx; this.oy = this.pan.oy + sp[1] - this.pan.sy; this.redraw(); return; }
-    if (this.dragging && this.tool.move) { const [x, y] = this.s2w(sp[0], sp[1]); this.tool.move(x, y, e); }
+    if (this.dragging && this.tool.move) { const [x, y] = this.dragW(this.s2w(sp[0], sp[1]), e); this.tool.move(x, y, e); }
   }
   up(e, cancelled) {
     this.ptrs.delete(e.pointerId);
     if (this.pinch) { if (this.ptrs.size < 2) this.pinch = null; return; }
     if (this.pan) { this.pan = null; return; }
-    if (this.dragging) { this.dragging = false; const [x, y] = this.evW(e); if (cancelled) { if (this.tool.cancel) this.tool.cancel(); } else if (this.tool.up) this.tool.up(x, y, e); }
+    if (this.dragging) { this.dragging = false; const [x, y] = this.dragW(this.evW(e), e); this.fineG = null; if (cancelled) { if (this.tool.cancel) this.tool.cancel(); } else if (this.tool.up) this.tool.up(x, y, e); }
   }
 }
 function matGrid(c, st, step, x0, y0, x1, y1) {
@@ -13179,6 +13194,7 @@ const FotoUI = {
     this.stage = new Stage($('#cv-foto'), {
       draw: (c, st) => this.draw(c, st),
       bounds: () => { const ph = T.photos[T.sel]; return ph ? { cx: ph.W / 2, cy: ph.H / 2, w: ph.W, h: ph.H } : null; },
+      fine: true,
       tool: {
         down: (x, y) => { const k = this.hit(x, y); if (k < 0) return false; this.drag = k; this.stage.redraw(); return true; },
         move: (x, y) => {
@@ -13282,7 +13298,7 @@ const FotoUI = {
     const sc = ph ? T.scenes[this.sceneOf(ph)] : null, multi = !!sc && sc.photos.length >= 2;
     $('#foto-hint').textContent = !ph ? 'Füge rechts ein Foto hinzu oder lade das Beispiel.' : multi
       ? `Foto ${T.sel + 1}: Ecken prüfen. Die Nummern zeigen, welche Papierecke zu welcher im ersten Foto mit denselben Teilen gehört.`
-      : 'Ziehe die vier Punkte genau auf die Papierecken. Mausrad zoomt, Ziehen auf freier Fläche verschiebt.';
+      : 'Ziehe die vier Punkte genau auf die Papierecken, mit Strg fein. Mausrad zoomt, Ziehen auf freier Fläche verschiebt.';
     this.stage.redraw();
   },
   draw(c, st) {
@@ -13411,6 +13427,7 @@ const TraceUI = {
     this.stage = new Stage($('#cv-trace'), {
       draw: (c, st) => this.draw(c, st),
       bounds: () => (T.frame ? { cx: T.frame.w / 2, cy: T.frame.h / 2, w: T.frame.w, h: T.frame.h } : null),
+      fine: true,
       tool: {
         down: (x, y, e) => this.down(x, y, e),
         move: (x, y, e) => this.dragTo(x, y, e),
@@ -13511,9 +13528,9 @@ const TraceUI = {
   hitSeg(it, x, y) { let best = -1, bd = this.tol(); it.raw.forEach((p, i) => { const q = it.raw[(i + 1) % it.raw.length]; const d = segDist(x, y, p[0], p[1], q[0], q[1]).d; if (d < bd) { bd = d; best = i; } }); return best; },
   setMode(m) { this.mode = m; this.hover = null; if (m !== 'measure') this.meas = null; this.stage.cv.style.cursor = m === 'measure' ? 'crosshair' : ''; this.render(); },
   // «Messen»: a line dragged on the photo (world units are mm on the paper), its ends caught by the outlines'
-  // points within reach (Alt: free) and kept level or upright with Shift; it stays until the next one
+  // points within reach (Alt or Ctrl: free) and kept level or upright with Shift; it stays until the next one
   measAt(x, y, e) {
-    if (e && e.altKey) return [x, y];
+    if (e && (e.altKey || fineKey(e))) return [x, y];
     let best = null, bd = this.tol();
     for (const it of T.items) for (const p of it.raw) { const d = Math.hypot(p[0] - x, p[1] - y); if (d < bd) { bd = d; best = [p[0], p[1]]; } }
     return best || [x, y];
@@ -13597,20 +13614,17 @@ const TraceUI = {
     let px = x - d.gx, py = y - d.gy;
     if (e.shiftKey) { if (Math.abs(px - d.x0) >= Math.abs(py - d.y0)) py = d.y0; else px = d.x0; } // only along x or y
     this.guides = null;
-    if (!e.altKey) [px, py] = this.snap(it, this.dragV, px, py);
+    if (!e.altKey && !fineKey(e)) [px, py] = this.snap(it, this.dragV, px, py); // Ctrl: fine (the stage), no snapping
     it.raw = it.raw.slice(); it.raw[this.dragV] = [px, py]; it.edited = true; d.moved = true;
     // «Gespiegelt bearbeiten»: how the outline will look with this side copied over
     this.mirrorPrev = this.mirroring(it) ? mirrorHalf(it.raw, it.axis, this.editSide(it, [px, py], [d.x0, d.y0])) : null;
     this.loupe = { x: px, y: py }; this.stage.redraw();
   },
-  // the axis follows its end (turns about the other one; level or plumb within 2°, Alt: free) or its middle.
-  // Ctrl (Camille: it jumped): fine, a fifth of the pointer's way and without snapping; pressed or let go
-  // during the drag, the axis goes on from where it is
+  // the axis follows its end (turns about the other one; level or plumb within 2°, Alt or Ctrl: free) or its
+  // middle; with Ctrl the stage makes it fine
   dragAxis(x, y, e) {
     const g = this.axisDrag, it = T.selItem; if (!it) return;
-    const fine = !!(e.ctrlKey || e.metaKey);
-    if (fine !== !!g.fine) { g.fine = fine; g.x0 = x; g.y0 = y; g.a0 = it.axis.a; g.b0 = it.axis.b; }
-    const k = fine ? 0.2 : 1, dx = (x - g.x0) * k, dy = (y - g.y0) * k;
+    const fine = fineKey(e), dx = x - g.x0, dy = y - g.y0;
     if (g.which === 'm') it.axis = { a: [g.a0[0] + dx, g.a0[1] + dy], b: [g.b0[0] + dx, g.b0[1] + dy] };
     else {
       const fixed = g.which === 'a' ? g.b0 : g.a0, moving = g.which === 'a' ? g.a0 : g.b0;
@@ -13704,7 +13718,7 @@ const TraceUI = {
     if (best.k === 'b') return { p: q, guides: [[b, q], ...mark(b, Lb.d, q)] };
     return { p: q, guides: [[a, q], [b, q], ...mark(q, a, b)] };
   },
-  // Magnetic help while dragging (Alt switches it off). With a symmetry axis (snapAxis): onto the mirror
+  // Magnetic help while dragging (Alt or Ctrl switch it off). With a symmetry axis (snapAxis): onto the mirror
   // image of a point on the other side, or onto the axis. Else onto the straight line through the two
   // neighbours (takes a kink out), then square corners (rightAngle), else level with a neighbour
   // horizontally or vertically.
@@ -13927,10 +13941,10 @@ const TraceUI = {
     if (has && T.scenes.length > 1) ov.append(h('span', { class: 'chip-on-mat', text: `Motiv ${T.scene + 1} von ${T.scenes.length}` }));
     if (has && parallaxMode() === 'multi') ov.append(h('span', { class: 'chip-on-mat', text: `Umrisse aus ${P.length} Fotos. Im Hintergrund Foto ${T.photos.indexOf(P[0]) + 1}, darin wirken hohe Teile grösser.` }));
     if (has && T.items.some((i) => i.symPreview)) ov.append(h('span', { class: 'chip-on-mat', text: 'Strichpunkt: Spiegelachse · weiss gepunktet: so sähe der Umriss gespiegelt aus' }));
-    if (!this.merging) $('#trace-hint').textContent = this.mode === 'measure' ? 'Messen: von einem Punkt zum anderen ziehen, die Länge steht an der Linie. An Umrisspunkten rastet sie ein (Alt: frei), Shift hält sie waagrecht oder senkrecht. Gemessen auf Papierhöhe: hohe Teile wirken im Foto etwas grösser. Esc oder «Bearbeiten» beendet.' : !T.selItem ? 'Teil anklicken, um seinen Umriss zu bearbeiten.'
+    if (!this.merging) $('#trace-hint').textContent = this.mode === 'measure' ? 'Messen: von einem Punkt zum anderen ziehen, die Länge steht an der Linie. An Umrisspunkten rastet sie ein (Alt: frei), mit Strg fein und ohne Einrasten, Shift hält sie waagrecht oder senkrecht. Gemessen auf Papierhöhe: hohe Teile wirken im Foto etwas grösser. Esc oder «Bearbeiten» beendet.' : !T.selItem ? 'Teil anklicken, um seinen Umriss zu bearbeiten.'
       : this.mode === 'delete' ? 'Löschen: Punkte antippen, die weg sollen. Esc oder «Bearbeiten» beendet.'
-        : this.axisOn ? 'Achse: an den Enden ziehen dreht sie, an der Mitte verschiebt sie; mit Strg fein und ohne Einrasten. Gezogene Punkte rasten auf den Spiegelbildern der Punkte gegenüber ein (Alt: frei). Rechtsklick löscht einen Punkt.'
-          : 'Punkt ziehen verschiebt ihn, er rastet bei rechten Winkeln und Geraden ein (Alt: frei). Über eine Linie fahren: in der Mitte erscheint ein Punkt, ziehen fügt ihn ein. Rechtsklick oder Entf löscht, Strg+Z macht rückgängig.';
+        : this.axisOn ? 'Achse: an den Enden ziehen dreht sie, an der Mitte verschiebt sie. Gezogene Punkte rasten auf den Spiegelbildern der Punkte gegenüber ein (Alt: frei). Mit Strg ziehen: fein und ohne Einrasten. Rechtsklick löscht einen Punkt.'
+          : 'Punkt ziehen verschiebt ihn, er rastet bei rechten Winkeln und Geraden ein (Alt: frei). Mit Strg ziehen: fein und ohne Einrasten. Über eine Linie fahren: in der Mitte erscheint ein Punkt, ziehen fügt ihn ein. Rechtsklick oder Entf löscht, Strg+Z macht rückgängig.';
     $('#trace-tool-edit').setAttribute('aria-pressed', String(this.mode === 'edit'));
     $('#trace-tool-del').setAttribute('aria-pressed', String(this.mode === 'delete'));
     $('#trace-tool-measure').setAttribute('aria-pressed', String(this.mode === 'measure'));
@@ -14268,6 +14282,7 @@ const BinUI = {
   set sel(v) { this._sel = v; this.multi = new Set(v ? [v.kind + ':' + v.id] : []); },
   init() {
     this.stage = new Stage($('#cv-bin'), {
+      fine: true,
       draw: (c, st) => this.draw(c, st),
       // the bin, and whatever sticks out of it
       bounds: () => {
@@ -14294,14 +14309,15 @@ const BinUI = {
           this.renderPanel(); this.stage.redraw();
           return true;
         },
-        move: (x, y) => {
+        move: (x, y, e) => {
           if (!this.drag) return;
-          if (this.drag.handle) { this.resizeTo(this.drag.handle, x, y); this.drag.moved = true; this.stage.redraw(); return; }
-          if (this.drag.grip !== undefined) { this.moveGrip(curBin(), this.drag.grip, x, y); this.drag.moved = true; this.stage.redraw(); return; }
-          // one part goes to 0.5 mm steps, several move by 0.5 mm steps and keep their places to each other
-          const d = this.drag, one = d.group.length === 1, dx = Math.round((x - d.sx) * 2) / 2, dy = Math.round((y - d.sy) * 2) / 2;
+          const q = fineKey(e) ? 10 : 2; // 0.5 mm steps; with Ctrl fine (the stage) and 0.1 mm
+          if (this.drag.handle) { this.resizeTo(this.drag.handle, x, y, q); this.drag.moved = true; this.stage.redraw(); return; }
+          if (this.drag.grip !== undefined) { this.moveGrip(curBin(), this.drag.grip, x, y, q); this.drag.moved = true; this.stage.redraw(); return; }
+          // one part goes to those steps, several move by them and keep their places to each other
+          const d = this.drag, one = d.group.length === 1, dx = Math.round((x - d.sx) * q) / q, dy = Math.round((y - d.sy) * q) / q;
           for (const g of d.group) {
-            g.ref.x = one ? Math.round((g.x0 + x - d.sx) * 2) / 2 : g.x0 + dx; g.ref.y = one ? Math.round((g.y0 + y - d.sy) * 2) / 2 : g.y0 + dy;
+            g.ref.x = one ? Math.round((g.x0 + x - d.sx) * q) / q : g.x0 + dx; g.ref.y = one ? Math.round((g.y0 + y - d.sy) * q) / q : g.y0 + dy;
             if (g.ref.itemId) attachLocal(curBin(), g.ref); // a tool's trough keeps its new place on the tool
           }
           d.moved = true; this.stage.redraw();
@@ -14492,12 +14508,12 @@ const BinUI = {
   },
   // the grip to lift the bin out under the pointer (its index), or −1
   hitGrip(b, x, y) { return gripShapes(b).findIndex((g) => pointInPoly(x, y, g.poly)); },
-  // a grip dragged: to the wall nearest the pointer (also round a corner), along it in 0.5 mm steps
-  moveGrip(b, i, x, y) {
+  // a grip dragged: to the wall nearest the pointer (also round a corner), along it in 0.5 mm steps (q 2; Ctrl: 0.1)
+  moveGrip(b, i, x, y, q = 2) {
     const hw = binW(b) / 2 - b.wall, hd = binD(b) / 2 - b.wall;
     const [ax, s] = [['y', -1, y + hd], ['y', 1, hd - y], ['x', -1, x + hw], ['x', 1, hw - x]].reduce((p, q) => (q[2] < p[2] ? q : p));
     const room = gripRoom(b, ax), ps = gripPlaces(b).map((p) => ({ ...p }));
-    ps[i] = { ax, s, at: clamp(Math.round((ax === 'y' ? x : y) * 2) / 2, -room, room), under: ps[i].under };
+    ps[i] = { ax, s, at: clamp(Math.round((ax === 'y' ? x : y) * q) / q, -room, room), under: ps[i].under };
     b.gripPos = ps;
   },
   // the smallest pocket under the pointer: a tool lying in a larger rectangle is still reachable
@@ -14519,8 +14535,8 @@ const BinUI = {
     return out;
   },
   hitHandle(x, y) { const tol = this.stage.px(this.touch ? 18 : 9); return this.handles().find((hd) => Math.hypot(hd.x - x, hd.y - y) < tol) || null; },
-  resizeTo(hd, x, y) {
-    const f = hd.f, d = Math.max(2, Math.round(2 * Math.abs((x - f.x) * hd.ux + (y - f.y) * hd.uy) * 2) / 2); // full size, 0.5 mm steps
+  resizeTo(hd, x, y, q = 2) {
+    const f = hd.f, d = Math.max(2, Math.round(2 * Math.abs((x - f.x) * hd.ux + (y - f.y) * hd.uy) * q) / q); // full size, 0.5 mm steps (Ctrl: 0.1)
     if (hd.key === 'd') { f.w = d; f.l = d; }
     else if (hd.key === 'l') f.l = Math.max(d, shapeKind(f) === 'slot' ? f.w : 1);
     else { f.w = d; if (shapeKind(f) === 'slot' && f.l < f.w) f.l = f.w; }
@@ -14575,7 +14591,7 @@ const BinUI = {
     $('#bin-view-2d').setAttribute('aria-pressed', String(v === '2d')); $('#bin-view-3d').setAttribute('aria-pressed', String(v === '3d'));
     $('#cv-bin').hidden = v !== '2d'; $('#bin-3d').hidden = v !== '3d';
     $('#bin-fit').hidden = v !== '2d';
-    $('#bin-hint').textContent = v === '2d' ? 'Teile und Formen ziehen zum Verschieben, die Anfasser an einer Form ändern ihre Grösse. Griffmulden zum Herausheben an der Wand entlang ziehen. Pfeiltasten schieben um 1 mm, mit Shift um 5 mm. R dreht um 90°. Shift-Klick wählt mehrere Teile, Strg+A alle: sie bewegen sich dann zusammen.' : 'Ziehen dreht, Mausrad zoomt. Die Ansicht zeigt die exakte CAD-Geometrie, wie sie exportiert wird.';
+    $('#bin-hint').textContent = v === '2d' ? 'Teile und Formen ziehen zum Verschieben, die Anfasser an einer Form ändern ihre Grösse. Griffmulden zum Herausheben an der Wand entlang ziehen. Gezogen rastet alles auf 0.5 mm, mit Strg fein auf 0.1 mm. Pfeiltasten schieben um 1 mm, mit Shift um 5 mm. R dreht um 90°. Shift-Klick wählt mehrere Teile, Strg+A alle: sie bewegen sich dann zusammen.' : 'Ziehen dreht, Mausrad zoomt. Die Ansicht zeigt die exakte CAD-Geometrie, wie sie exportiert wird.';
     if (v === '3d') { this.update3d(); setTimeout(() => this.exact3d(curBin()), 250); } else this.stage.redraw();
   },
   // The exact CAD model for the 3D view, computed when the view opens (a few seconds; the page waits). The
