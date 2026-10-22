@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '0e1000b874e6';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '20f70f7c2ffd';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -8680,6 +8680,14 @@ const idb = (mode, fn) => new Promise((res, rej) => {
     tx.onabort = () => { rej(tx.error || new Error('IndexedDB abgebrochen')); db.close(); };
   };
 });
+// a string's hash (53 bits, cyrb53): to tell whether something computed from a bin is still the bin's
+function hashStr(str, seed = 0) {
+  let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+  for (let i = 0; i < str.length; i++) { const c = str.charCodeAt(i); h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+}
 const idbGet = (k) => idb('readonly', (s) => s.get(k)), idbSet = (k, v) => idb('readwrite', (s) => s.put(v, k)), idbDel = (k) => idb('readwrite', (s) => s.delete(k));
 
 // ---------- linear algebra ----------
@@ -10921,6 +10929,12 @@ const binW = (b) => b.gx * GF.pitch - GF.gap;
 const binD = (b) => b.gy * GF.pitch - GF.gap;
 const binTop = (b) => b.hu * GF.unit;
 // a bin's size in short, the same everywhere: fields across, fields deep, height units (Camille: 5x7x5u)
+// What a bin's shape is made from, as a short key: the bin without its name, colour and place in a case, and its
+// pockets as they come from the tools (a tool's outline or height changed changes them; a locked bin's are frozen)
+function binKey(b) {
+  const { name, color, place, _rev, _t, ...rest } = b;
+  return hashStr(JSON.stringify([rest, binPockets(b).map((p) => [p.poly, p.depth, p.deep, !!p.scoop])]));
+}
 const sizeTag = (w, d, hu) => `${w}x${d}x${hu}u`, binTag = (b) => sizeTag(b.gx, b.gy, b.hu);
 // A raised rim (b.lift height units of wall under the stacking lip) gives tools standing out of their
 // pockets room under a bin stacked on top. Height units a bin takes up when stacked, and how much a tool
@@ -12999,6 +13013,15 @@ function tiltPreview(b, p) {
   }
   return out;
 }
+// The stand-ins kept by what they show (binKey, colour, ghost), so the case view does not build every bin again for
+// each layer shown or hidden; a copy for each use (it is moved and turned; the copies share the geometry)
+const fastKept = new Map();
+function fastBinKept(THREE, b, opts = {}) {
+  const id = b.id + (opts.ghost ? ':ghost' : ''), key = binKey(b) + b.color, hit = fastKept.get(id);
+  if (hit && hit.key === key) return hit.grp.clone();
+  const grp = fastBinGroup(THREE, b, opts); fastKept.set(id, { key, grp });
+  return grp.clone();
+}
 function fastBinGroup(THREE, b, opts = {}) {
   const grp = new THREE.Group();
   const mat = new THREE.MeshStandardMaterial({ color: b.color, roughness: 0.62, metalness: 0.02, transparent: !!opts.ghost, opacity: opts.ghost ? 0.25 : 1 });
@@ -13014,17 +13037,22 @@ function fastBinGroup(THREE, b, opts = {}) {
   // Where it meets a tool's pocket, the steps show on the pocket's wall: kept under 0.35 mm, so they read as
   // the trough's round edge
   const flat = all.flatMap((p) => (p.scoop ? scoopSteps(p.ref, p.depth, clamp(Math.ceil(p.depth / 0.35), 10, 80), 0.2).map((q) => ({ ...p, ...q })) : [p]));
-  const pockets = flat.map((p) => ({ ...p, poly: largestRing(clipBool('intersect', [p.poly], [offsetPolys([inner], b.wall - 0.6)[0] || inner])) })).filter((p) => p.poly);
   const usable = offsetPolys([inner], b.wall - 0.6)[0] || inner;
+  const pockets = flat.map((p) => ({ ...p, poly: largestRing(clipBool('intersect', [p.poly], [usable])) })).filter((p) => p.poly);
   for (const p of all) if (p.scoop) { const m = scoopMesh(THREE, b, p, all, mat, usable); if (m) grp.add(m); }
   const depths = [...new Set(pockets.map((p) => Math.round(p.depth * 10) / 10))].sort((a, c) => c - a);
   let z = GF.base;
   const deepest = depths.length ? zTop - depths[0] : zTop;
   const base = slab(THREE, [threeShape(THREE, outline)], z, deepest, mat); if (base) grp.add(base);
   z = deepest;
+  // the opening at each depth: the union of the pockets at least that deep, grown from the one below (it was
+  // made anew at every depth, from all of them: seconds for a bin with round troughs, cut in hundreds of steps)
+  const byDepth = pockets.slice().sort((p, q) => q.depth - p.depth);
+  let open = [], used = 0;
   depths.forEach((d, k) => {
     const zNext = k + 1 < depths.length ? zTop - depths[k + 1] : zTop;
-    const open = clipBool('union', pockets.filter((p) => p.depth >= d - 0.05).map((p) => p.poly));
+    const add = []; while (used < byDepth.length && byDepth[used].depth >= d - 0.05) add.push(byDepth[used++].poly);
+    if (add.length) open = clipBool('union', [...open, ...add]);
     const { outer, holes } = splitRings(open);
     const shapes = [threeShape(THREE, outline, outer)];
     for (const island of holes) shapes.push(threeShape(THREE, island));
@@ -13068,11 +13096,15 @@ function scoopMesh(THREE, b, p, all, mat, usable) {
   };
   const M = 2 * NS + 2 * NL, pos = [], dep = [];
   for (const [rho, d] of prof) for (const [x, y] of ring(rho)) { pos.push(x, -y, zTop - d); dep.push(d); }
-  const others = all.filter((o) => o !== p), idx = [];
+  // only the pockets that reach into the trough's area can open it (each triangle was tested against every
+  // pocket of the bin), each first by its box
+  let sx0 = Infinity, sy0 = Infinity, sx1 = -Infinity, sy1 = -Infinity;
+  for (let i = 0; i < pos.length; i += 3) { const x = pos[i], y = -pos[i + 1]; if (x < sx0) sx0 = x; if (x > sx1) sx1 = x; if (y < sy0) sy0 = y; if (y > sy1) sy1 = y; }
+  const others = all.filter((o) => o !== p).map((o) => ({ o, bb: polyBBox([o.poly]) })).filter(({ bb }) => bb.x1 >= sx0 && bb.x0 <= sx1 && bb.y1 >= sy0 && bb.y0 <= sy1), idx = [];
   const air = (i, j, l) => {
     const cx = (pos[3 * i] + pos[3 * j] + pos[3 * l]) / 3, cy = -(pos[3 * i + 1] + pos[3 * j + 1] + pos[3 * l + 1]) / 3, d = (dep[i] + dep[j] + dep[l]) / 3;
     // outside the bin there is no material to show it in
-    return (usable && !pointInPoly(cx, cy, usable)) || others.some((o) => o.depth > d + 0.05 && pointInPoly(cx, cy, o.poly));
+    return (usable && !pointInPoly(cx, cy, usable)) || others.some(({ o, bb }) => o.depth > d + 0.05 && cx >= bb.x0 && cx <= bb.x1 && cy >= bb.y0 && cy <= bb.y1 && pointInPoly(cx, cy, o.poly));
   };
   for (let k = 0; k < rings; k++) for (let i = 0; i < M; i++) {
     const p0 = k * M + i, p1 = k * M + ((i + 1) % M), q0 = p0 + M, q1 = p1 + M;
@@ -13089,7 +13121,7 @@ function meshGroup(THREE, mesh, color) {
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(mesh.vertices, 3));
   g.setAttribute('normal', new THREE.Float32BufferAttribute(mesh.normals, 3));
-  g.setIndex(mesh.triangles);
+  g.setIndex(Array.isArray(mesh.triangles) ? mesh.triangles : new THREE.BufferAttribute(mesh.triangles, 1)); // (as kept: typed arrays)
   const grp = new THREE.Group();
   grp.add(new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.02 })));
   return grp;
@@ -13151,7 +13183,7 @@ function caseGroup(THREE, cs, focusId, hidden = null) {
   box.position.set(W / 2, -D / 2, H / 2); grp.add(box);
   for (const b of placedIn(cs)) {
     if (hidden && hidden.has(b.id)) continue;
-    const g = fastBinGroup(THREE, b, { ghost: focusId && focusId !== b.id });
+    const g = fastBinKept(THREE, b, { ghost: focusId && focusId !== b.id });
     g.add(toolsGroup(THREE, b)); // the tools ticked «3D» in the bin
     const fp = footprint(b);
     g.rotation.z = b.place.rot === 90 ? -Math.PI / 2 : 0; // clockwise seen from above, like the 2D plan
@@ -14385,6 +14417,7 @@ const BinUI = {
   get sel() { return this._sel; },
   set sel(v) { this._sel = v; this.multi = new Set(v ? [v.kind + ':' + v.id] : []); },
   init() {
+    setTimeout(() => this.pruneExact(), 20000);
     this.stage = new Stage($('#cv-bin'), {
       fine: true,
       draw: (c, st) => this.draw(c, st),
@@ -14700,18 +14733,43 @@ const BinUI = {
     $('#bin-hint').textContent = v === '2d' ? 'Teile und Formen ziehen zum Verschieben, die Anfasser an einer Form ändern ihre Grösse. Griffmulden zum Herausheben an der Wand entlang ziehen. Gezogen rastet alles auf 0.5 mm, mit Strg fein auf 0.1 mm. Pfeiltasten schieben um 1 mm, mit Shift um 5 mm. R dreht um 90°. Shift-Klick wählt mehrere Teile, Strg+A alle: sie bewegen sich dann zusammen.' : 'Ziehen dreht, Mausrad zoomt. Die Ansicht zeigt die exakte CAD-Geometrie, wie sie exportiert wird.';
     if (v === '3d') { this.update3d(); setTimeout(() => this.exact3d(curBin()), 250); } else this.stage.redraw();
   },
-  // The exact CAD model for the 3D view, computed when the view opens (a few seconds; the page waits). The
-  // quick stand-in shows the round troughs in fine steps, which leave small teeth where they meet a pocket.
-  // After a change in the 3D view the stand-in shows again, with a button to compute the exact form.
+  // The exact model's mesh, kept by what the bin is made from (binKey) and the app's build: here, and in the
+  // browser's IndexedDB (the last one per bin), so a bin computed or exported once shows exact at once, also
+  // after a restart (Camille: the 3D view loaded slowly). In the page without a build (local.html) only here.
+  exactKey(b) { return (window.CF_BUILD || 'dev') + ':' + binKey(b); },
+  async loadExact(b) {
+    const key = this.exactKey(b), ex = this.exact.get(b.id);
+    if (ex && ex.key === key) return ex.mesh;
+    if (!window.CF_BUILD) return null;
+    try { const v = await idbGet('exact:' + b.id); if (v && v.key === key) { this.exact.set(b.id, { key, mesh: v }); return v; } } catch { /* not kept */ }
+    return null;
+  },
+  keepExact(b, mesh, key) {
+    if (!mesh) return;
+    const m = { key, vertices: Float32Array.from(mesh.vertices), normals: Float32Array.from(mesh.normals), triangles: Uint32Array.from(mesh.triangles) };
+    this.exact.set(b.id, { key, mesh: m });
+    if (window.CF_BUILD) idbSet('exact:' + b.id, m).catch((e) => console.warn('exact mesh not kept', e));
+  },
+  // the kept meshes of bins no longer there go
+  async pruneExact() {
+    try {
+      const ids = new Set(S.bins.map((b) => 'exact:' + b.id));
+      for (const k of (await idb('readonly', (s) => s.getAllKeys())) || []) if (typeof k === 'string' && k.startsWith('exact:') && !ids.has(k)) await idbDel(k);
+    } catch { /* nothing kept */ }
+  },
+  // The exact CAD model for the 3D view, computed when the view opens (a few seconds; the page waits) unless it
+  // is kept. The quick stand-in shows the round troughs in fine steps, which leave small teeth where they meet a
+  // pocket. After a change in the 3D view the stand-in shows again, with a button to compute the exact form.
   async exact3d(b) {
     if (!b || this.computing || this.view !== '3d') return;
-    const ex = this.exact.get(b.id); if (ex && ex.rev === (b._rev || 0)) return;
+    if (await this.loadExact(b)) { if (this.view === '3d') this.update3d(); return; }
     this.computing = true;
+    const key = this.exactKey(b); // (as the bin is now: it may change while the model is computed)
     try {
       await busy('Lade CAD-Kern…', async () => {
         const solid = await buildBinSolid(b, (st) => setBusyText(`Exakte 3D-Form: ${st}…`));
         setBusyText('Exakte 3D-Form: Oberfläche…'); await frame();
-        this.exact.set(b.id, { rev: b._rev || 0, mesh: solid.mesh({ tolerance: 0.08, angularTolerance: 0.3 }) });
+        this.keepExact(b, solid.mesh({ tolerance: 0.08, angularTolerance: 0.3 }), key);
       });
     } catch (e) { console.error(e); toast('Die exakte Form liess sich nicht berechnen, es bleibt die Vorschau.', 'bad'); }
     this.computing = false;
@@ -14724,11 +14782,14 @@ const BinUI = {
       if (!self.viewer) self.viewer = new Viewer3D($('#bin-3d'));
       await self.viewer.ready;
       const { THREE } = await loadThree();
-      const ex = self.exact.get(b.id);
-      const grp = ex && ex.rev === (b._rev || 0) ? meshGroup(THREE, ex.mesh, b.color) : fastBinGroup(THREE, b);
+      const key = self.exactKey(b), mesh = await self.loadExact(b);
+      // (another bin chosen or this one changed meanwhile: the newer update draws; this one would come last and
+      // put the stand-in over the exact model)
+      if (self.view !== '3d' || !curBin() || curBin().id !== b.id || self.exactKey(curBin()) !== key) return;
+      const grp = mesh ? meshGroup(THREE, mesh, b.color) : fastBinKept(THREE, b);
       grp.add(toolsGroup(THREE, b)); // the tools ticked «3D» in the content list
       self.viewer.set(grp, self.viewer.lastBin === b.id); self.viewer.lastBin = b.id;
-      const exact = ex && ex.rev === (b._rev || 0);
+      const exact = !!mesh;
       $('#bin-overlay').replaceChildren(...[h('span', { class: 'chip-on-mat', text: exact ? 'Exakte CAD-Geometrie' : 'Schnellvorschau' }),
         exact || self.computing ? null : h('button', { class: 'btn small', type: 'button', style: { pointerEvents: 'auto' }, onclick: () => self.exact3d(curBin()) }, 'Exakt berechnen')].filter(Boolean));
     } catch (e) { console.error(e); toast('3D-Ansicht konnte nicht laden: ' + (e.message || e), 'bad'); }
@@ -14737,8 +14798,8 @@ const BinUI = {
     const b = curBin(); if (!b) return;
     const errs = binChecks(b).filter((c) => c.level === 'bad');
     try {
-      const res = await busy('Lade CAD-Kern (einmalig ~11 MB)…', () => exportBins([b]));
-      this.exact.set(b.id, { rev: b._rev || 0, mesh: res.meshes.get(b.id) });
+      const key = this.exactKey(b), res = await busy('Lade CAD-Kern (einmalig ~11 MB)…', () => exportBins([b]));
+      this.keepExact(b, res.meshes.get(b.id), key);
       $('#bin-export-status').textContent = `Zum Drucken: ${res.files.filter((f) => /\.stl$/.test(f.name)).map((f) => f.name + ' (' + nf(f.data.length / 1024, 0) + ' kB)').join(', ')}; dieselben Teile als STEP im Ordner ${STEP_DIR}.` + (errs.length ? ' Achtung: Die Prüfung meldet Fehler.' : '');
       if (this.view === '3d') this.update3d();
       await saveFile(`${exportName(b.name)}_Bin-${b.gx}x${b.gy}-${b.hu}u.zip`, res.zip);
@@ -15207,8 +15268,8 @@ const CaseUI = {
     const cs = curCase(); if (!cs) return;
     const bins = placedIn(cs); if (!bins.length) { toast('In diesem Koffer liegt noch kein Bin.'); return; }
     try {
-      const res = await busy('Lade CAD-Kern…', () => exportBins(bins));
-      for (const b of bins) BinUI.exact.set(b.id, { rev: b._rev || 0, mesh: res.meshes.get(b.id) });
+      const keys = new Map(bins.map((b) => [b.id, BinUI.exactKey(b)])), res = await busy('Lade CAD-Kern…', () => exportBins(bins));
+      for (const b of bins) BinUI.keepExact(b, res.meshes.get(b.id), keys.get(b.id));
       await saveFile(`${exportName(cs.name)}_alle_Bins.zip`, res.zip);
     } catch (e) { console.error(e); toast('Export fehlgeschlagen: ' + (e.message || e), 'bad'); }
   },
@@ -16631,7 +16692,7 @@ if (location.hash === '#selbsttest') setTimeout(async () => {
     document.title = 'SELBSTTEST OK ' + Math.round(r.measureVolume(s)) + ' mm3, Schrift ' + (document.fonts.check('600 14px Barlow') ? 'da' : 'fehlt');
   } catch (e) { document.title = 'SELBSTTEST FEHLER ' + (e && (e.message || e)); }
 }, 800);
-window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, huFor, sinkTools, autoSize, FotoUI, TraceUI, BinUI, CaseUI, HelpUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, sinkTools, gripShapes, gripGaps, placeGrips, itemPoly, depthExtraOf, defaultDepth, tiltFor, toolPlan, tiltDeep, tiltPt, gripCovers, settleGrips, unreachTrough, FINGER_REACH, lockBin, binLocked, binTool, gripDims, roundCutters, EDGE_ROUND, optimizeTroughs, fingerEdges, fingerEdgePicks, gripPlaces, gripRoom, fieldsFor, GRIP, GRIP_BALL, loadThree, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner, binSplit, halfCuts, binClipSpots, binMagnetSpots, BIN_CLIP, dogbonePoly };
+window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, binKey, hashStr, idbGet, fastBinKept, meshGroup, caseGroup, huFor, sinkTools, autoSize, FotoUI, TraceUI, BinUI, CaseUI, HelpUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, sinkTools, gripShapes, gripGaps, placeGrips, itemPoly, depthExtraOf, defaultDepth, tiltFor, toolPlan, tiltDeep, tiltPt, gripCovers, settleGrips, unreachTrough, FINGER_REACH, lockBin, binLocked, binTool, gripDims, roundCutters, EDGE_ROUND, optimizeTroughs, fingerEdges, fingerEdgePicks, gripPlaces, gripRoom, fieldsFor, GRIP, GRIP_BALL, loadThree, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner, binSplit, halfCuts, binClipSpots, binMagnetSpots, BIN_CLIP, dogbonePoly };
 // The mouse wheel over a number field that has the focus changes its value: easily by accident while
 // scrolling the panel (a bin's tolerance, wall, floor). The field gives up the focus instead, and the page
 // scrolls on.
