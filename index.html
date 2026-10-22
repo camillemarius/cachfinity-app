@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '3e566ee6de47';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '58fb10b34597';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -669,7 +669,7 @@ label.f.sub-opt input { flex: none; }
         <div class="fields">
           <label title="Breite in Gridfinity-Feldern zu 42 mm" class="f"><span>Breite Felder</span><input type="number" id="bin-gx" min="1" max="12" step="1"></label>
           <label title="Tiefe in Gridfinity-Feldern zu 42 mm" class="f"><span>Tiefe Felder</span><input type="number" id="bin-gy" min="1" max="12" step="1"></label>
-          <label title="Höhe in Einheiten zu 7 mm, ohne Stapelrand; die Taschen werden höchstens so tief, wie diese Höhe erlaubt" class="f"><span>Höhe u (7 mm)</span><input type="number" id="bin-hu" min="2" max="30" step="1"></label>
+          <label title="Höhe in Einheiten zu 7 mm, ohne Stapelrand; die Taschen werden höchstens so tief, wie diese Höhe erlaubt. Auch halbe Einheiten (z. B. 5.5 u = 38.5 mm): nicht im Gridfinity-Standard, aber der Bin passt auf jede Grundplatte und lässt sich stapeln. «Grösse automatisch anpassen» wählt immer ganze Einheiten." class="f"><span>Höhe u (7 mm)</span><input type="number" id="bin-hu" min="2" max="30" step="0.5"></label>
         </div>
         <label title="Breite, Tiefe und Höhe folgen den Werkzeugen; sie liegen ganz in ihren Taschen (so tief wie hoch, siehe «ändern»)" class="check"><input type="checkbox" id="bin-autofit" checked> Grösse automatisch anpassen</label>
         <p class="check-note">Felder und Höhe richten sich nach den Werkzeugen. Stellst du sie selbst ein, schaltet sich das aus.</p>
@@ -792,7 +792,7 @@ label.f.sub-opt input { flex: none; }
     <div class="fields">
       <label title="Breite in Gridfinity-Feldern zu 42 mm" class="f"><span>Breite Felder</span><input type="number" id="nb-gx" min="1" max="12" step="1" value="2"></label>
       <label title="Tiefe in Gridfinity-Feldern zu 42 mm" class="f"><span>Tiefe Felder</span><input type="number" id="nb-gy" min="1" max="12" step="1" value="2"></label>
-      <label title="Höhe in Einheiten zu 7 mm" class="f"><span>Höhe u (7 mm)</span><input type="number" id="nb-hu" min="2" max="30" step="1" value="6"></label>
+      <label title="Höhe in Einheiten zu 7 mm, auch halbe (z. B. 5.5 u = 38.5 mm; nicht im Gridfinity-Standard, passt aber auf jede Grundplatte)" class="f"><span>Höhe u (7 mm)</span><input type="number" id="nb-hu" min="2" max="30" step="0.5" value="6"></label>
     </div>
     <div class="f"><span>Inhalt zum Start</span>
       <div class="seg" id="nb-kind" role="group" aria-label="Inhalt zum Start">
@@ -14341,14 +14341,16 @@ const BinUI = {
     $('#bin-del').onclick = () => { this.confirmDel = true; this.renderTop(); };
     $('#bin-view-2d').onclick = () => this.setView('2d');
     $('#bin-view-3d').onclick = () => this.setView('3d');
-    const bindNum = (id, key, lo, hi, isInt) => { $(id).onchange = (e) => {
-      const b = curBin(); if (!b) return; let v = clamp(num(e.target, b[key]), lo, hi); if (isInt) v = Math.round(v); b[key] = v; if (['gx', 'gy', 'hu'].includes(key)) b.autoFit = false;
+    // step: the value is rounded to it (fields whole; the height also half units, Camille 2026-10-22: not in the
+    // Gridfinity standard, which counts whole 7 mm units, but such a bin sits on any baseplate and stacks)
+    const bindNum = (id, key, lo, hi, step) => { $(id).onchange = (e) => {
+      const b = curBin(); if (!b) return; let v = clamp(num(e.target, b[key]), lo, hi); if (step) v = Math.round(v / step) * step; b[key] = v; if (['gx', 'gy', 'hu'].includes(key)) b.autoFit = false;
       // a higher or lower bin (or floor): the pockets take their depth from the tool heights again, as deep as
       // the bin now allows; a depth set by hand stays
       if (key === 'hu' || key === 'floor') for (const it of b.items) { const t = toolById(it.toolId); if (t && followsHeight(it)) it.depth = defaultDepth(b, t); }
       this.changed(true);
     }; };
-    bindNum('#bin-gx', 'gx', 1, 12, true); bindNum('#bin-gy', 'gy', 1, 12, true); bindNum('#bin-hu', 'hu', 2, 30, true);
+    bindNum('#bin-gx', 'gx', 1, 12, 1); bindNum('#bin-gy', 'gy', 1, 12, 1); bindNum('#bin-hu', 'hu', 2, 30, 0.5);
     bindNum('#bin-wall', 'wall', 1.2, 10); bindNum('#bin-floor', 'floor', 0.8, 10);
     // the tolerance widens every tool pocket all round; a bin set to fit its content grows with it
     // the extra depth over the tool heights: the pockets that follow the heights take it at once
@@ -14723,7 +14725,7 @@ const BinUI = {
     $('#bin-lift').value = b.lift || 0; $('#bin-lift').closest('label').hidden = !b.lip; $('#bin-grip-row').hidden = !b.grips; $('#bin-grip-opt').hidden = !b.grips && !b.fingers.some((f) => f.auto && f.itemId);
     // (a bin that fits its content does this by itself on every change)
     $('#bin-autosize').hidden = b.autoFit !== false;
-    $('#bin-dims').textContent = `${nf(binW(b), 1)} × ${nf(binD(b), 1)} × ${nf(binTop(b), 0)} mm${binLift(b) ? ` + ${binLift(b) * GF.unit} mm erhöhter Rand` : ''}${b.lip ? ' + 4.4 Stapelrand' : ''}\nTaschen bis ${nf(Math.floor(maxDepth(b) * 10 + 1e-6) / 10, 1)} mm tief`;
+    $('#bin-dims').textContent = `${nf(binW(b), 1)} × ${nf(binD(b), 1)} × ${nf(binTop(b), binTop(b) % 1 ? 1 : 0)} mm${binLift(b) ? ` + ${binLift(b) * GF.unit} mm erhöhter Rand` : ''}${b.lip ? ' + 4.4 Stapelrand' : ''}\nTaschen bis ${nf(Math.floor(maxDepth(b) * 10 + 1e-6) / 10, 1)} mm tief`;
     const add = $('#bin-add-tool'); add.replaceChildren(...S.tools.map((t) => h('option', { value: t.id, text: t.name })));
     const items = $('#bin-items'); items.replaceChildren();
     for (const it of b.items) {
@@ -15017,13 +15019,16 @@ const CaseUI = {
     const bins = placedIn(cs).filter((b) => this.level === 'all' || b.place.z === this.level).sort((a, b) => b.place.z - a.place.z);
     return bins.find((b) => { const fp = footprint(b); return cx >= b.place.x && cx < b.place.x + fp.w && cy >= b.place.y && cy < b.place.y + fp.h; }) || null;
   },
-  // one unit (7 mm) up or down; jumps past a bin in the way, never into one or below the floor
+  // one unit (7 mm) up or down; jumps past a bin in the way, never into one or below the floor. The top of
+  // another bin passed on the way is a place too: with half units (a 5.5 u bin) it need not be a whole unit away
   moveZ(b, dir) {
     const cs = curCase(); if (!cs || !b.place) return;
     const others = placedIn(cs).filter((o) => o !== b), z0 = b.place.z;
     let z = z0 + dir;
     const blocked = (zz) => { b.place.z = zz; const c = others.some((o) => collides(b, o)); b.place.z = z0; return c; };
     while (z >= 0 && z <= cs.hu + 10 && blocked(z)) z += dir;
+    const top = others.map((o) => o.place.z + stackU(o)).filter((t) => (dir > 0 ? t > z0 && t < z : t < z0 && t > z) && t >= 0 && !blocked(t)).sort((p, q) => (p - q) * dir)[0];
+    if (top !== undefined) z = top;
     if (z < 0) { toast('Tiefer geht nicht: darunter ist der Boden oder ein anderer Bin.'); return; }
     if (z > cs.hu + 10) return;
     b.place.z = z; Store.save('bin', b); this.render();
@@ -15705,7 +15710,7 @@ const NewBin = {
   },
   // the bin as it would be made, not stored yet
   build() {
-    const gx = Math.round(clamp(num($('#nb-gx'), 2), 1, 12)), gy = Math.round(clamp(num($('#nb-gy'), 2), 1, 12)), hu = Math.round(clamp(num($('#nb-hu'), 6), 2, 30));
+    const gx = Math.round(clamp(num($('#nb-gx'), 2), 1, 12)), gy = Math.round(clamp(num($('#nb-gy'), 2), 1, 12)), hu = Math.round(clamp(num($('#nb-hu'), 6), 2, 30) * 2) / 2; // half units too
     const b = newBin({ gx, gy, hu, autoFit: false, autoFingers: this.kind === 'empty' }); // tools put into an empty bin later still get their troughs
     // sizes rounded down to 0.1 mm, so nothing reaches into the wall or below the floor
     const down = (v) => Math.floor(v * 10 + 1e-6) / 10;
