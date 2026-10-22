@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '58fb10b34597';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '45eb709fe077';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -457,6 +457,37 @@ label.f.sub-opt input { flex: none; }
 .dlg-body { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
 .dlg-body h2 { margin: 0; }
 .dlg-body .seg { flex-wrap: wrap; }
+/* the help window: «Was ist Gridfinity?» */
+.dlg-help { width: min(860px, calc(100vw - 32px)); }
+.dlg-help .dlg-body { max-height: calc(100vh - 34px); overflow: auto; }
+.help p { margin: 0; line-height: 1.45; }
+.help h3 { margin: 6px 0 -4px; font-family: var(--font-display); font-size: 19px; }
+.help-figs { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 12px; }
+.help-figs figure { min-width: 0; margin: 0; padding: 8px; border-radius: 8px; background: var(--surface-2); }
+.help-figs svg { display: block; width: 100%; height: auto; }
+.help-figs figcaption { margin-top: 4px; font-size: 12px; color: var(--muted); }
+.help-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.help-table th, .help-table td { padding: 6px 10px 6px 0; border-top: 1px solid var(--line); text-align: left; vertical-align: top; }
+.help-table th { width: 9.5em; font-weight: 600; }
+.help-table td:nth-child(2) { width: 12em; font-family: var(--font-mono); font-size: 12.5px; }
+.hs-plate { fill: var(--muted); fill-opacity: 0.45; stroke: var(--muted); stroke-width: 0.2; }
+.hs-bin { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 0.3; stroke-linejoin: round; }
+.hs-field { fill: none; stroke: var(--muted); stroke-width: 0.25; stroke-dasharray: 1 0.8; }
+.hs-mag { fill: var(--surface); stroke: var(--fg); stroke-width: 0.25; }
+.hs-dim { fill: none; stroke: var(--fg); stroke-width: 0.15; }
+.hs-ext { fill: none; stroke: var(--muted); stroke-width: 0.12; stroke-dasharray: 0.6 0.5; }
+.hs-ground { fill: none; stroke: var(--muted); stroke-width: 0.2; stroke-dasharray: 1 0.8; }
+.hs-txt { fill: var(--fg); font-family: var(--font-body); font-size: 2.3px; font-weight: 600; }
+.fig-scroll .hs-txt { font-size: 2.7px; }
+.help-btn { min-width: 30px; font-weight: 700; }
+@media (max-width: 640px) {
+  .help-figs { grid-template-columns: minmax(0, 1fr); }
+  .fig-scroll { overflow-x: auto; }
+  .fig-scroll svg { min-width: 470px; } /* the labels stay readable; the drawing scrolls sideways */
+  .help-table, .help-table tbody, .help-table tr, .help-table th, .help-table td { display: block; width: auto; }
+  .help-table tr { padding: 6px 0; border-top: 1px solid var(--line); }
+  .help-table th, .help-table td { padding: 1px 0; border: 0; }
+}
 .nb-preview canvas { width: 100%; height: auto; border-radius: 8px; display: block; background: var(--mat); }
 
 .savestate.offline .dot { background: var(--warn); }
@@ -490,7 +521,7 @@ label.f.sub-opt input { flex: none; }
     <div class="savestate local" id="savestate"><span class="dot"></span><span id="savestate-text">Nur in diesem Browser</span>
       <button class="btn small primary" type="button" id="df-grant-top" hidden title="Der Browser fragt nach jedem Start einmal, ob die App die Datendatei benutzen darf">Datendatei freigeben</button>
       <button class="btn small primary" type="button" id="gd-sync-top" hidden title="Google gibt den Zugriff für eine Stunde; dein nächster Klick in der App erneuert ihn, oder dieser Knopf">Mit Google abgleichen</button>
-      <button class="btn small ghost" type="button" id="data-open" title="Sichern, laden, Datenordner, Offline-Version">Daten</button></div>
+      <button class="btn small ghost" type="button" id="data-open" title="Sichern, laden, Datenordner, Offline-Version">Daten</button><button class="btn small ghost help-btn" type="button" id="help-open" title="Was ist Gridfinity? Masse und Begriffe" aria-label="Hilfe: Was ist Gridfinity?">?</button></div>
   </header>
 
   <!-- 1 Fotos -->
@@ -825,6 +856,75 @@ label.f.sub-opt input { flex: none; }
       <button title="Tasche (Linie) und Umriss (gestrichelt) 1:1 auf A4, mit Massstab zum Nachmessen" class="btn" type="button" id="tp-pdf">Auf Papier, 1:1 (PDF)</button>
       <button title="Dünne Rahmen, innen genau die Tasche: drucken und das Werkzeug hineinlegen" class="btn primary" type="button" id="tp-stl">3D-Rahmen (STL)</button>
     </div>
+  </div>
+</dialog>
+<dialog class="dlg dlg-help" id="help-dlg" aria-labelledby="help-title">
+  <div class="dlg-body help">
+    <h2 id="help-title">Was ist Gridfinity?</h2>
+    <p>Gridfinity ist ein offenes System zum Aufbewahren, das Zack Freedman 2022 vorgestellt hat. Eine Grundplatte trägt ein Raster aus quadratischen Feldern. Jeder Bin hat unten einen genormten Fuss: er passt damit in jedes Feld, und Bins lassen sich aufeinander stapeln. Weil die Masse offen sind, passen Bins und Platten aus verschiedenen Quellen zusammen. Cachfinity baut solche Bins, mit Taschen in der Form deiner Werkzeuge.</p>
+    <div class="help-figs">
+      <figure><div class="fig-scroll"><svg viewBox="-44 -5 102 45" role="img" aria-label="Schnitt durch einen Bin mit 1 Feld und 3 u auf der offenen Grundplatte, mit Massen">
+      <path class="hs-ground" d="M-42 30H30"/>
+      <polygon class="hs-plate" points="-23.85,30 -18.15,30 -18.85,29.3 -18.85,27.5 -21,25.35 -23.15,27.5 -23.15,29.3"/><polygon class="hs-plate" points="23.85,30 18.15,30 18.85,29.3 18.85,27.5 21,25.35 23.15,27.5 23.15,29.3"/>
+      <polygon class="hs-bin" points="-17.8,30 -18.6,29.2 -18.6,27.4 -20.75,25.25 -20.75,4.6 -18.85,6.5 -18.85,8.3 -18.15,9 -13,9 -13,24.05 13,24.05 13,9 18.15,9 18.85,8.3 18.85,6.5 20.75,4.6 20.75,25.25 18.6,27.4 18.6,29.2 17.8,30"/>
+      <text class="hs-txt" x="0" y="16.5" text-anchor="middle">Tasche</text><text class="hs-txt" x="0" y="23.2" text-anchor="middle">Boden 1.2</text>
+      <path class="hs-ext" d="M-21 25.6V35.4M21 25.6V35.4"/><path class="hs-dim" d="M-21 34.2H21M-21 33.400000000000006v1.6M21 33.400000000000006v1.6"/><text class="hs-txt" x="0" y="38.4" text-anchor="middle">Feld 42</text>
+      <path class="hs-ext" d="M-20.75 4.2V0M20.75 4.2V0"/><path class="hs-dim" d="M-20.75 1H20.75M-20.75 0.19999999999999996v1.6M20.75 0.19999999999999996v1.6"/><text class="hs-txt" x="0" y="-1" text-anchor="middle">Bin 41.5</text>
+      <path class="hs-ext" d="M21.2 25.25H25.2M21.2 9H43M21.2 4.6H25.2M24 30H43"/>
+      <path class="hs-dim" d="M24 30V25.25M23.2 30h1.6M23.2 25.25h1.6"/><text class="hs-txt" x="25.6" y="28.6" text-anchor="start">Fuss 4.75</text>
+      <path class="hs-dim" d="M24 9V4.600000000000001M23.2 9h1.6M23.2 4.600000000000001h1.6"/><text class="hs-txt" x="25.6" y="7.8" text-anchor="start">Rand 4.4</text>
+      <path class="hs-dim" d="M42 30V9M41.2 30h1.6M41.2 9h1.6"/><path class="hs-dim" d="M41.4 23H42.6M41.4 16H42.6"/><text class="hs-txt" x="43.4" y="27.4" text-anchor="start">1 u = 7</text><text class="hs-txt" x="43.4" y="20.4" text-anchor="start">2 u</text><text class="hs-txt" x="43.4" y="13.4" text-anchor="start">3 u = 21</text>
+      <path class="hs-ext" d="M-23.2 25.35H-28.2M-23.9 30H-28.2"/><path class="hs-dim" d="M-27 30V25.35M-27.8 30h1.6M-27.8 25.35h1.6"/><text class="hs-txt" x="-28.6" y="28.9" text-anchor="end">Platte 4.65</text>
+    </svg></div><figcaption>Schnitt durch einen Bin mit 1 Feld und 3 u auf der offenen Grundplatte, massstäblich (mm). «Rand» ist der Stapelrand.</figcaption></figure>
+      <figure><svg viewBox="-27 -31 64 61" role="img" aria-label="Ein Feld von oben mit den vier Magnetlöchern und ihren Abständen">
+      <rect class="hs-field" x="-21" y="-21" width="42" height="42"/>
+      <rect class="hs-bin" x="-20.75" y="-20.75" width="41.5" height="41.5" rx="3.75"/>
+      <circle class="hs-mag" cx="-13" cy="-13" r="3.25"/><circle class="hs-mag" cx="13" cy="-13" r="3.25"/><circle class="hs-mag" cx="13" cy="13" r="3.25"/><circle class="hs-mag" cx="-13" cy="13" r="3.25"/>
+      <path class="hs-ext" d="M-13 -16.6V-26M13 -16.6V-26"/><path class="hs-dim" d="M-13 -25H13M-13 -25.8v1.6M13 -25.8v1.6"/><text class="hs-txt" x="0" y="-26.7" text-anchor="middle">26</text>
+      <path class="hs-ext" d="M-21 21.4V27M-13 16.6V27"/><path class="hs-dim" d="M-21 26H-13M-21 25.2v1.6M-13 25.2v1.6"/><text class="hs-txt" x="-17" y="29.6" text-anchor="middle">8</text>
+      <path class="hs-dim" d="M15.3 15.3L22 22H26"/><text class="hs-txt" x="26.4" y="22.8" text-anchor="start">Ø 6.5</text>
+      <text class="hs-txt" x="0" y="1" text-anchor="middle">42 × 42</text>
+    </svg><figcaption>Ein Feld von oben mit den Magnetlöchern (mm).</figcaption></figure>
+    </div>
+    <h3>Raster</h3>
+    <table class="help-table"><tbody>
+      <tr><th>Feld</th><td>42 × 42 mm</td><td>Das Raster der Grundplatte. Ein Bin belegt ganze Felder.</td></tr>
+      <tr><th>Bin aussen</th><td>Felder × 42 − 0.5 mm</td><td>Je Seite 0.25 mm Luft. 1 Feld = 41.5 mm, 2 Felder = 83.5 mm, 3 Felder = 125.5 mm.</td></tr>
+      <tr><th>Ecken</th><td>Radius 3.75 mm</td><td>Am Bin aussen. Die Sockel der Grundplatte haben 4 mm.</td></tr>
+    </tbody></table>
+    <h3>Höhe</h3>
+    <table class="help-table"><tbody>
+      <tr><th>Einheit u</th><td>7 mm</td><td>«Höhe u» zählt ohne Stapelrand: 3 u = 21 mm, 6 u = 42 mm.</td></tr>
+      <tr><th>Halbe Einheiten</th><td>z. B. 5.5 u = 38.5 mm</td><td>Nicht im Gridfinity-Standard. In Cachfinity von Hand einstellbar; der Bin passt trotzdem auf jede Grundplatte und lässt sich stapeln. «Grösse automatisch anpassen» wählt ganze u.</td></tr>
+      <tr><th>Fuss</th><td>4.75 mm</td><td>Gehört zum ersten u. Profil von unten: 0.8 mm schräg (45°), 1.8 mm senkrecht, 2.15 mm schräg. Unten 35.6 mm breit.</td></tr>
+      <tr><th>Boden</th><td>1.2 mm</td><td>Über dem Fuss (unter «ändern» einstellbar). Eine Tasche ist darum höchstens 7 × u − 5.95 mm tief, bei 6 u gut 36 mm.</td></tr>
+      <tr><th>Stapelrand</th><td>4.4 mm</td><td>Kommt oben auf die Höhe. Profil von oben: 1.9 mm schräg, 1.8 mm senkrecht, 0.7 mm schräg, zusammen 2.6 mm breit. Cachfinity flacht die Spitze um 0.3 mm ab.</td></tr>
+      <tr><th>Ganzer Bin</th><td>7 × u + 4.4 mm</td><td>Bei 6 u: 42 + 4.4 = 46.4 mm (gedruckt 46.1 mm wegen der abgeflachten Spitze).</td></tr>
+      <tr><th>Stapeln</th><td>7 × u je Bin</td><td>Der Fuss des oberen Bins steckt im Stapelrand des unteren. Im Stapel zählt jeder Bin 7 × u; der Stapelrand kommt nur beim obersten dazu. Ein Bin ohne Stapelrand trägt keinen anderen.</td></tr>
+      <tr><th>Stapelrand erhöhen</th><td>ganze u</td><td>Hebt den Rand um ganze u (je 7 mm). Werkzeuge, die oben aus ihrer Tasche ragen, haben dann Platz unter dem Bin darüber.</td></tr>
+    </tbody></table>
+    <h3>Grundplatte</h3>
+    <table class="help-table"><tbody>
+      <tr><th>Sockel</th><td>4.65 mm tief</td><td>Je Feld eine Vertiefung für den Fuss: oben 42 mm, unten 36.3 mm. Profil von oben: 2.15 mm schräg, 1.8 mm senkrecht, 0.7 mm schräg.</td></tr>
+      <tr><th>Offen</th><td>ohne Boden</td><td>Nur die Stege zwischen den Feldern; spart Material. Der Bin steht unten auf dem Kofferboden.</td></tr>
+      <tr><th>Mit Boden</th><td>3 mm</td><td>Ein Boden unter den Sockeln. Er kommt zur Höhe im Koffer dazu; die Koffer-Prüfung rechnet ihn mit.</td></tr>
+    </tbody></table>
+    <h3>Magnete</h3>
+    <table class="help-table"><tbody>
+      <tr><th>Magnet</th><td>6 × 2 mm</td><td>Durchmesser × Höhe. Die Löcher sind 6.5 mm weit und 2.4 mm tief.</td></tr>
+      <tr><th>Lage</th><td>8 mm vom Feldrand</td><td>Vier je Feld, 26 mm auseinander (Mitte zu Mitte).</td></tr>
+      <tr><th>In Cachfinity</th><td>wählbar</td><td>Im Bin keine, 4 pro Feld oder 4 in den äussersten Ecken. Die Grundplatte bekommt sie mit «Magnetlöcher 6 × 2 mm».</td></tr>
+    </tbody></table>
+    <h3>Begriffe in Cachfinity</h3>
+    <table class="help-table"><tbody>
+      <tr><th>5x7x5u</th><td>Grösse</td><td>5 Felder breit, 7 Felder tief, 5 u hoch.</td></tr>
+      <tr><th>Toleranz</th><td>Standard 0.5 mm</td><td>Spiel rundum zwischen Werkzeug und Tasche.</td></tr>
+      <tr><th>Mindestrand</th><td>Standard 3 mm</td><td>So viel Wand bleibt mindestens zwischen den Taschen und der Aussenseite des Bins (unter «ändern»).</td></tr>
+      <tr><th>Griffmulde (Werkzeug)</th><td>25 mm breit</td><td>Eine Mulde am Werkzeug zum Greifen. Sie ragt 15 mm über den Umriss hinaus.</td></tr>
+      <tr><th>Griffmulde (Bin)</th><td>Rechteckig 20 mm oder Kugel Ø 30 mm</td><td>An der Wand, um den Bin aus der Grundplatte zu heben.</td></tr>
+      <tr><th>Koffer</th><td>Innenhöhe in u</td><td>Die Prüfung rechnet den Boden der Grundplatte mit.</td></tr>
+    </tbody></table>
+    <div class="row" style="justify-content: flex-end"><button class="btn" type="button" id="help-close">Schliessen</button></div>
   </div>
 </dialog>
 <dialog class="dlg" id="data-dlg" aria-labelledby="data-title">
@@ -15758,6 +15858,13 @@ const NewBin = {
 // downloaded with the current data in it and takes it over the first time it is opened.
 // the version on claude.ai, opened by the offline file's «Online»
 const ONLINE_URL = 'https://claude.ai/artifact/8DGVthRhpovbFsJB2wgEsj';
+// «?» next to «Daten»: what Gridfinity is, its sizes and the words the app uses (Camille: only when looked for)
+const HelpUI = {
+  init() {
+    $('#help-open').onclick = () => { const d = $('#help-dlg'); if (d.showModal) d.showModal(); else d.setAttribute('open', ''); d.querySelector('.dlg-body').scrollTop = 0; };
+    $('#help-close').onclick = () => $('#help-dlg').close();
+  },
+};
 const DataUI = {
   init() {
     $('#mode-online').onclick = () => this.goOnline();
@@ -16488,7 +16595,7 @@ const App = {
       }
       S.ui.flushFix = 1;
     }
-    FotoUI.init(); TraceUI.init(); LibUI.init(); BinUI.init(); CaseUI.init(); Overview.init(); NewBin.init(); TestPrint.init(); DataUI.init(); Undo.init(); DataFolder.init(); GDrive.init();
+    FotoUI.init(); TraceUI.init(); LibUI.init(); BinUI.init(); CaseUI.init(); Overview.init(); NewBin.init(); TestPrint.init(); DataUI.init(); HelpUI.init(); Undo.init(); DataFolder.init(); GDrive.init();
     window.addEventListener('online', () => Store.sendAll());
     DataUI.takeStartData();
     for (const b of $$('.tab')) b.addEventListener('click', () => this.show(b.dataset.tab));
@@ -16520,7 +16627,7 @@ if (location.hash === '#selbsttest') setTimeout(async () => {
     document.title = 'SELBSTTEST OK ' + Math.round(r.measureVolume(s)) + ' mm3, Schrift ' + (document.fonts.check('600 14px Barlow') ? 'da' : 'fehlt');
   } catch (e) { document.title = 'SELBSTTEST FEHLER ' + (e && (e.message || e)); }
 }, 800);
-window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, sinkTools, gripShapes, gripGaps, placeGrips, itemPoly, depthExtraOf, defaultDepth, tiltFor, toolPlan, tiltDeep, tiltPt, gripCovers, settleGrips, unreachTrough, FINGER_REACH, lockBin, binLocked, binTool, gripDims, roundCutters, EDGE_ROUND, optimizeTroughs, fingerEdges, fingerEdgePicks, gripPlaces, gripRoom, fieldsFor, GRIP, GRIP_BALL, loadThree, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner, binSplit, halfCuts, binClipSpots, binMagnetSpots, BIN_CLIP, dogbonePoly };
+window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, FotoUI, TraceUI, BinUI, CaseUI, HelpUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, sinkTools, gripShapes, gripGaps, placeGrips, itemPoly, depthExtraOf, defaultDepth, tiltFor, toolPlan, tiltDeep, tiltPt, gripCovers, settleGrips, unreachTrough, FINGER_REACH, lockBin, binLocked, binTool, gripDims, roundCutters, EDGE_ROUND, optimizeTroughs, fingerEdges, fingerEdgePicks, gripPlaces, gripRoom, fieldsFor, GRIP, GRIP_BALL, loadThree, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner, binSplit, halfCuts, binClipSpots, binMagnetSpots, BIN_CLIP, dogbonePoly };
 // The mouse wheel over a number field that has the focus changes its value: easily by accident while
 // scrolling the panel (a bin's tolerance, wall, floor). The field gives up the focus instead, and the page
 // scrolls on.
