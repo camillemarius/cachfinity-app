@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '69191bf1f023';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '3f43a2baf895';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -13603,15 +13603,19 @@ const TraceUI = {
     this.mirrorPrev = this.mirroring(it) ? mirrorHalf(it.raw, it.axis, this.editSide(it, [px, py], [d.x0, d.y0])) : null;
     this.loupe = { x: px, y: py }; this.stage.redraw();
   },
-  // the axis follows its end (turns about the other one; level or plumb within 2°, Alt: free) or its middle
+  // the axis follows its end (turns about the other one; level or plumb within 2°, Alt: free) or its middle.
+  // Ctrl (Camille: it jumped): fine, a fifth of the pointer's way and without snapping; pressed or let go
+  // during the drag, the axis goes on from where it is
   dragAxis(x, y, e) {
     const g = this.axisDrag, it = T.selItem; if (!it) return;
-    const dx = x - g.x0, dy = y - g.y0;
+    const fine = !!(e.ctrlKey || e.metaKey);
+    if (fine !== !!g.fine) { g.fine = fine; g.x0 = x; g.y0 = y; g.a0 = it.axis.a; g.b0 = it.axis.b; }
+    const k = fine ? 0.2 : 1, dx = (x - g.x0) * k, dy = (y - g.y0) * k;
     if (g.which === 'm') it.axis = { a: [g.a0[0] + dx, g.a0[1] + dy], b: [g.b0[0] + dx, g.b0[1] + dy] };
     else {
       const fixed = g.which === 'a' ? g.b0 : g.a0, moving = g.which === 'a' ? g.a0 : g.b0;
       let p = [moving[0] + dx, moving[1] + dy];
-      if (!e.altKey) {
+      if (!e.altKey && !fine) {
         const ang = Math.atan2(p[1] - fixed[1], p[0] - fixed[0]), q = Math.round(ang / (Math.PI / 2)) * (Math.PI / 2);
         if (Math.abs(ang - q) < (2 * Math.PI) / 180) { const l = Math.hypot(p[0] - fixed[0], p[1] - fixed[1]); p = [fixed[0] + Math.cos(q) * l, fixed[1] + Math.sin(q) * l]; }
       }
@@ -13925,7 +13929,7 @@ const TraceUI = {
     if (has && T.items.some((i) => i.symPreview)) ov.append(h('span', { class: 'chip-on-mat', text: 'Strichpunkt: Spiegelachse · weiss gepunktet: so sähe der Umriss gespiegelt aus' }));
     if (!this.merging) $('#trace-hint').textContent = this.mode === 'measure' ? 'Messen: von einem Punkt zum anderen ziehen, die Länge steht an der Linie. An Umrisspunkten rastet sie ein (Alt: frei), Shift hält sie waagrecht oder senkrecht. Gemessen auf Papierhöhe: hohe Teile wirken im Foto etwas grösser. Esc oder «Bearbeiten» beendet.' : !T.selItem ? 'Teil anklicken, um seinen Umriss zu bearbeiten.'
       : this.mode === 'delete' ? 'Löschen: Punkte antippen, die weg sollen. Esc oder «Bearbeiten» beendet.'
-        : this.axisOn ? 'Achse: an den Enden ziehen dreht sie, an der Mitte verschiebt sie. Gezogene Punkte rasten auf den Spiegelbildern der Punkte gegenüber ein (Alt: frei). Rechtsklick löscht einen Punkt.'
+        : this.axisOn ? 'Achse: an den Enden ziehen dreht sie, an der Mitte verschiebt sie; mit Strg fein und ohne Einrasten. Gezogene Punkte rasten auf den Spiegelbildern der Punkte gegenüber ein (Alt: frei). Rechtsklick löscht einen Punkt.'
           : 'Punkt ziehen verschiebt ihn, er rastet bei rechten Winkeln und Geraden ein (Alt: frei). Über eine Linie fahren: in der Mitte erscheint ein Punkt, ziehen fügt ihn ein. Rechtsklick oder Entf löscht, Strg+Z macht rückgängig.';
     $('#trace-tool-edit').setAttribute('aria-pressed', String(this.mode === 'edit'));
     $('#trace-tool-del').setAttribute('aria-pressed', String(this.mode === 'delete'));
