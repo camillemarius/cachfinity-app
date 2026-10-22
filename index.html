@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '410a7820f78e';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '2caabb971ad4';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -495,7 +495,9 @@ label.f.sub-opt input { flex: none; }
 
 /* online / offline */
 .mode-switch { margin-left: auto; }
-.mode-switch + .savestate { margin-left: 8px; }
+.mode-switch + .savestate, .lang-switch + .savestate { margin-left: 8px; }
+.mode-switch + .lang-switch { margin-left: 8px; }
+.lang-switch button { min-width: 34px; }
 .mode-switch button[aria-pressed="true"]#mode-offline { color: var(--warn); }
 .drop-hint { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: rgba(8, 14, 10, 0.6); color: #fff; font: 600 20px var(--font-display); pointer-events: none; }
 
@@ -512,12 +514,13 @@ label.f.sub-opt input { flex: none; }
       <button title="Umrisse erkennen und von Hand korrigieren: Punkte, Symmetrieachse, Testdruck" class="tab" role="tab" id="tab-btn-trace" data-tab="trace"><span class="n">3</span>Umrisse bearbeiten</button>
       <button title="Übersicht aller Bins, Toleranz für neue Bins, neuer Bin" class="tab" role="tab" id="tab-btn-bins" data-tab="bins"><span class="n">4</span>Bins</button>
       <button title="Einen Bin einrichten: Grösse, Taschen, Griffmulden, Formen, 3D, Export" class="tab" role="tab" id="tab-btn-bin" data-tab="bin"><span class="n">5</span>Bin bearbeiten</button>
-      <button title="Übersicht der Koffer; Bins einem Koffer zuweisen" class="tab" role="tab" id="tab-btn-cases" data-tab="cases"><span class="n">6</span>Koffer</button>
+      <button title="Übersicht der Koffer; Bins einem Koffer zuweisen" class="tab" role="tab" id="tab-btn-cases" data-tab="cases" data-en="Cases"><span class="n">6</span>Koffer</button>
       <button title="Bins im Koffer platzieren und stapeln, Grundplatte, Export" class="tab" role="tab" id="tab-btn-case" data-tab="case"><span class="n">7</span>Koffer bearbeiten</button>
     </nav>
     <div class="seg mode-switch" role="group" aria-label="Online oder offline arbeiten">
       <button type="button" id="mode-online" title="Mit deinem claude.ai-Konto arbeiten">Online</button><button type="button" id="mode-offline" title="Ohne Internet arbeiten, mit der Offline-Datei">Offline</button>
     </div>
+    <div class="seg lang-switch" role="group" aria-label="Sprache"><button type="button" data-lang="de" title="Deutsch" translate="no">DE</button><button type="button" data-lang="en" title="English" translate="no">EN</button></div>
     <div class="savestate local" id="savestate"><span class="dot"></span><span id="savestate-text">Nur in diesem Browser</span>
       <button class="btn small primary" type="button" id="df-grant-top" hidden title="Der Browser fragt nach jedem Start einmal, ob die App die Datendatei benutzen darf">Datendatei freigeben</button>
       <button class="btn small primary" type="button" id="gd-sync-top" hidden title="Google gibt den Zugriff für eine Stunde; dein nächster Klick in der App erneuert ihn, oder dieser Knopf">Mit Google abgleichen</button>
@@ -9183,6 +9186,7 @@ function makeZip(files) {
   return new Blob([...chunks, ...central, new Uint8Array(end.buffer)], { type: 'application/zip' });
 }
 async function saveFile(filename, blob) {
+  filename = tr(filename);
   const dl = await cap('downloads');
   if (dl) {
     try { await dl.save({ filename, data: blob }); toast('Gespeichert: ' + filename); }
@@ -9199,6 +9203,1204 @@ async function saveFile(filename, blob) {
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }
 const safeName = (s) => (s || 'bin').replace(/[^\p{L}\p{N}._-]+/gu, '_').replace(/^_+|_+$/g, '').slice(0, 60) || 'bin';
+
+// English for the language switch (02-i18n.js): the German text as the app shows it → English. {0}, {1} … stand
+// for values (numbers, names, a German piece looked up in turn); {1:e=s} maps a German plural ending to the
+// English one. A text missing here stays German in English mode.
+const I18N_EN = {
+  "Arbeitsschritte": "Steps",
+  "Fotos der Werkzeuge laden: auf einem weissen A4-Blatt, von oben fotografiert; das Blatt gibt den Massstab": "Load photos of the tools: on a white A4 sheet, photographed from above; the sheet sets the scale",
+  "Alle Werkzeuge: Name, Höhe, Testdruck-Status, Umriss bearbeiten, in einen Bin legen": "All tools: name, height, test print status, edit outline, place in a bin",
+  "Umrisse erkennen und von Hand korrigieren: Punkte, Symmetrieachse, Testdruck": "Detect outlines and correct them by hand: points, symmetry axis, test print",
+  "Übersicht aller Bins, Toleranz für neue Bins, neuer Bin": "Overview of all bins, clearance for new bins, new bin",
+  "Einen Bin einrichten: Grösse, Taschen, Griffmulden, Formen, 3D, Export": "Set up a bin: size, pockets, finger scoops, shapes, 3D, export",
+  "Übersicht der Koffer; Bins einem Koffer zuweisen": "Overview of the cases; assign bins to a case",
+  "Bins im Koffer platzieren und stapeln, Grundplatte, Export": "Place and stack bins in the case, baseplate, export",
+  "Online oder offline arbeiten": "Work online or offline",
+  "Mit deinem claude.ai-Konto arbeiten": "Work with your claude.ai account",
+  "Ohne Internet arbeiten, mit der Offline-Datei": "Work without internet, using the offline file",
+  "Sprache": "Language",
+  "Deutsch": "Deutsch",
+  "English": "English",
+  "Der Browser fragt nach jedem Start einmal, ob die App die Datendatei benutzen darf": "After each start, the browser asks once whether the app may use the data file",
+  "Google gibt den Zugriff für eine Stunde; dein nächster Klick in der App erneuert ihn, oder dieser Knopf": "Google grants access for one hour; your next click in the app renews it, or this button does",
+  "Sichern, laden, Datenordner, Offline-Version": "Back up, load, data folder, offline version",
+  "Was ist Gridfinity? Masse und Begriffe": "What is Gridfinity? Dimensions and terms",
+  "Hilfe: Was ist Gridfinity?": "Help: What is Gridfinity?",
+  "Zoom so, dass alles zu sehen ist": "Zoom to show everything",
+  "Ein oder mehrere Fotos wählen: Werkzeuge auf weissem A4-Papier, von oben fotografiert": "Choose one or more photos: tools on white A4 paper, photographed from above",
+  "Ein erzeugtes Beispielfoto laden, zum Ausprobieren": "Load a generated example photo to try things out",
+  "Drei Beispielfotos derselben Teile aus verschiedenen Richtungen: die Umrisse werden geschnitten, das nimmt die Überhöhung hoher Teile weg": "Three example photos of the same parts from different directions: the outlines are intersected, which removes the parallax of tall parts",
+  "Format des Blatts unter den Werkzeugen; es dient als Massstab": "Size of the sheet under the tools; it serves as the scale",
+  "Breite des Blatts in mm (bei eigenem Format)": "Sheet width in mm (for a custom size)",
+  "Höhe des Blatts in mm (bei eigenem Format)": "Sheet height in mm (for a custom size)",
+  "Die vier Ecken des Blatts im Foto neu suchen lassen": "Find the four sheet corners in the photo again",
+  "Höhe der Kamera über dem Blatt; leer lassen, dann schätzt Cachfinity sie aus dem Foto": "Height of the camera above the sheet; leave it empty and Cachfinity estimates it from the photo",
+  "Weiter zur Erkennung der Umrisse": "Continue to outline detection",
+  "Werkzeug": "Tool",
+  "Punkte ziehen, in der Linienmitte neue einfügen": "Drag points, insert new ones at the middle of a line",
+  "Angetippte Punkte löschen": "Delete tapped points",
+  "Auf dem Foto messen: von einem Punkt zum anderen ziehen, die Länge in mm erscheint an der Linie": "Measure on the photo: drag from one point to another, the length in mm appears on the line",
+  "Rückgängig (Strg+Z)": "Undo (Ctrl+Z)",
+  "Rückgängig": "Undo",
+  "Wiederholen": "Redo",
+  "Ansicht": "View",
+  "Das Foto unter den Umrissen zeigen": "Show the photo under the outlines",
+  "Zeigt orange über dem Foto, was die Erkennung als Teil gezählt hat": "Shows in orange over the photo what detection counted as a part",
+  "Die Umrisse an den echten Kanten im Foto ausrichten": "Align the outlines with the real edges in the photo",
+  "Schatten neben den Teilen erkennen und abziehen": "Detect and subtract shadows next to the parts",
+  "Wie dunkel etwas sein muss, um als Teil zu zählen: nach rechts zählt mehr dazu, nach links weniger": "How dark something must be to count as a part: to the right more counts, to the left less",
+  "Lücken bis zu dieser Breite innerhalb eines Teils schliessen, etwa zwischen Zangenbacken": "Close gaps up to this width within a part, e.g. between plier jaws",
+  "Kleinere Flecken gelten nicht als Teil": "Smaller spots don't count as a part",
+  "Streifen am Papierrand, der nicht als Teil zählt": "Strip along the paper edge that doesn't count as a part",
+  "Wie stark die Umrisse vereinfacht werden: links mehr Punkte, rechts mehr Geraden": "How much the outlines are simplified: left more points, right more straight lines",
+  "Das gewählte Teil mit einem zweiten verbinden: danach das zweite Teil anklicken": "Join the selected part with a second one: then click the second part",
+  "Den gewählten Punkt löschen (auch mit Rechtsklick oder Entf)": "Delete the selected point (also with right-click or Del)",
+  "Den Umriss wieder so, wie er erkannt wurde": "Return the outline to how it was detected",
+  "Dieses Teil nicht übernehmen": "Don't add this part",
+  "Spiegelachse für das gewählte Teil: gezogene Punkte rasten auf den Spiegelbildern der Punkte gegenüber ein, eine Seite lässt sich auf die andere spiegeln": "Symmetry axis for the selected part: dragged points snap to the mirror images of the opposite points, and one side can be mirrored onto the other",
+  "Diese Seite auf die andere Seite der Achse spiegeln: der Umriss wird genau symmetrisch": "Mirror this side onto the other side of the axis: the outline becomes exactly symmetrical",
+  "Die Achse neu bestimmen lassen": "Detect the axis again",
+  "Jede Änderung auf einer Seite der Achse wird auf die andere Seite übertragen": "Every change on one side of the axis is applied to the other side",
+  "Den Umriss zum Anprobieren drucken: als dünnen Rahmen (3D) oder 1:1 auf Papier": "Print the outline to check the fit: as a thin frame (3D) or 1:1 on paper",
+  "Die angehakten Teile als Werkzeuge in die Sammlung übernehmen": "Add the checked parts to the library as tools",
+  "Nichts ändern und zurück": "Go back without changes",
+  "Die Beispiel-Werkzeuge und Beispiel-Bins löschen": "Delete the example tools and example bins",
+  "Spiel rundum zwischen Werkzeug und Tasche für neu angelegte Bins (Standard 0.5 mm)": "Clearance all around between tool and pocket for newly created bins (default 0.5 mm)",
+  "Diese Toleranz in alle bestehenden Bins übernehmen": "Apply this clearance to all existing bins",
+  "Einen neuen Bin anlegen: leer, mit einem Fach, mit Fächern oder mit Kugelmulde": "Create a new bin: empty, with one compartment, with compartments or with a ball scoop",
+  "Welchen Bin du bearbeitest": "Which bin you are editing",
+  "Einen neuen Bin anlegen": "Create a new bin",
+  "Eine Kopie dieses Bins anlegen": "Create a copy of this bin",
+  "Sperren, zum Beispiel wenn der Bin gedruckt ist: danach ändert sich nichts mehr daran, weder durch dich noch durch Anpassungen der App (auch nicht, wenn sich ein Werkzeug später ändert). Exportieren geht weiter; ein Klick entsperrt wieder": "Lock it, for example once the bin is printed: after that nothing about it changes, neither by you nor by adjustments from the app (not even if a tool changes later). Exporting still works; one click unlocks it again",
+  "Diesen Bin löschen (mit Rückfrage)": "Delete this bin (asks first)",
+  "Draufsicht: Werkzeuge und Formen anordnen": "Top view: arrange tools and shapes",
+  "3D-Ansicht: zuerst die Schnellvorschau; die exakte Form mit «Exakt berechnen» oder nach dem Export (danach gespeichert). Werkzeuge mit Haken «3D» in der Liste erscheinen darin": "3D view: first the quick preview; the exact shape with “Compute exact” or after export (saved afterwards). Tools checked “3D” in the list appear in it",
+  "Name des Bins": "Bin name",
+  "Breite in Gridfinity-Feldern zu 42 mm": "Width in 42 mm Gridfinity cells",
+  "Tiefe in Gridfinity-Feldern zu 42 mm": "Depth in 42 mm Gridfinity cells",
+  "Höhe in Einheiten zu 7 mm, ohne Stapelrand; die Taschen werden höchstens so tief, wie diese Höhe erlaubt. Auch halbe Einheiten (z. B. 5.5 u = 38.5 mm): nicht im Gridfinity-Standard, aber der Bin passt auf jede Grundplatte und lässt sich stapeln. Steht ein Bin auf einer halben Höhe, passen «Bauteile versenken» und die automatische Grösse ihn in halben Schritten an, sonst in ganzen.": "Height in units of 7 mm, without stacking lip; the pockets get at most as deep as this height allows. Half units work too (e.g. 5.5 u = 38.5 mm): not in the Gridfinity standard, but the bin fits any baseplate and stacks. If a bin is at a half height, “Sink tools flush” and the automatic size adjust it in half steps, otherwise in whole ones.",
+  "Breite, Tiefe und Höhe folgen den Werkzeugen; sie liegen ganz in ihren Taschen (so tief wie hoch, siehe «ändern»)": "Width, depth and height follow the tools; they sit fully in their pockets (as deep as they are high, see “change”)",
+  "Spiel rundum zwischen Werkzeug und Taschenwand": "Clearance all around between tool and pocket wall",
+  "So viel Wand bleibt mindestens zwischen den Taschen und dem Rand des Bins": "Minimum wall left between the pockets and the edge of the bin",
+  "Material unter der tiefsten Tasche": "Material under the deepest pocket",
+  "Wie viel tiefer die Taschen sind, als die Werkzeuge hoch sind: 0 heisst bündig mit der Oberkante (neue Bins); Bins von vorher haben 1 mm. Taschen, deren Tiefe von Hand gesetzt ist, bleiben": "How much deeper the pockets are than the tools are high: 0 means flush with the top edge (new bins); older bins have 1 mm. Pockets whose depth was set by hand stay as they are",
+  "Felder und Höhe nach den Werkzeugen, so wie sie liegen; die Werkzeuge liegen danach ganz in ihren Taschen": "Set cells and height from the tools as they lie; afterwards the tools sit fully in their pockets",
+  "Die Werkzeuge nach ihren echten Umrissen ineinander schieben, auch gedreht, so dass der Bin möglichst wenige Felder braucht. Werkzeuge unter einer gemeinsamen Form (etwa einem Langloch über mehrere Stangen) bleiben zusammen. Griffmulden wandern dabei entlang ihres Werkzeugs und ragen, wo nötig, nur auf einer Seite hinaus. Dauert ein paar Sekunden; Strg+Z macht es rückgängig": "Push the tools together by their real outlines, rotated too, so the bin needs as few cells as possible. Tools under a shared shape (such as a slot across several rods) stay together. Finger scoops move along their tool and, where needed, stick out on one side only. Takes a few seconds; Ctrl+Z undoes it",
+  "Die Höhe so einstellen, dass alle Werkzeuge bündig in ihren Taschen liegen: jede Tasche so tief, wie ihr Werkzeug hoch ist (dazu die Zugabe unter «ändern»), auch wo eine Tiefe von Hand gesetzt war; der Bin wird so hoch wie nötig, auch niedriger. Breite und Länge bleiben. Strg+Z macht es rückgängig": "Set the height so that all tools sit flush in their pockets: each pocket as deep as its tool is high (plus the extra under “change”), even where a depth was set by hand; the bin becomes as tall as needed, possibly lower. Width and length stay. Ctrl+Z undoes it",
+  "Setzt die Griffmulden an den Werkzeugen neu an die beste Stelle: nichts im Weg, möglichst wenig Platz, wo es eng ist nur auf einer Seite herausragend. Die Werkzeuge bleiben liegen. Danach kommen die Griffmulden zum Herausheben in Lücken am Rand, an zwei gegenüberliegende Seiten. Ist keine Lücke frei, liegen sie mittig unter einem Werkzeug. Ein Bin, der seine Grösse automatisch anpasst, wird so klein wie möglich. Strg+Z macht es rückgängig": "Moves the finger scoops at the tools to the best spot: nothing in the way, as little space as possible, sticking out on one side only where it is tight. The tools stay where they are. Then the lift grips go into gaps at the edge, on two opposite sides. If no gap is free, they sit centered under a tool. A bin that adjusts its size automatically becomes as small as possible. Ctrl+Z undoes it",
+  "«Platzsparend anordnen» darf lange Werkzeuge auch geneigt legen: ein Ende tiefer, von oben gesehen kürzer. Nur so weit, wie die Höhe des Bins reicht; der Bin wird dafür nicht höher. Die Suche dauert etwas länger": "“Arrange compactly” may also lay long tools tilted: one end lower, shorter when seen from above. Only as far as the bin's height allows; the bin does not get taller for it. The search takes a little longer",
+  "Stapelrand oben, damit ein weiterer Bin auf diesem stehen kann": "Stacking lip on top so another bin can stand on this one",
+  "Hebt den Stapelrand um ganze Einheiten an. Werkzeuge, die aus ihrer Tasche ragen, haben dann Platz unter dem Bin darüber": "Raises the stacking lip by whole units. Tools that stick out of their pocket then have room under the bin above",
+  "Griffmulden an zwei gegenüberliegenden Seiten (zuerst an den kurzen), damit sich ein Bin, der den Koffer ganz füllt, herausheben lässt. Kugel: Ø 30 mm, oben ein Loch von 24 mm, die Fingerkuppe hakt unter den Rand. Rechteckige Mulde: 20 mm breit und 18 mm nach innen, unter die Kante ausgehöhlt. Sie kommen in Lücken am Rand; ist keine frei, liegen sie mittig an den kurzen Seiten unter einem Werkzeug (zum Herausheben dieses zuerst herausnehmen). Der Bin wird dafür nicht grösser": "Lift grips on two opposite sides (the short ones first), so a bin that fills the case completely can be lifted out. Ball: Ø 30 mm, a 24 mm hole at the top, your fingertip hooks under the rim. Rectangular scoop: 20 mm wide and 18 mm inward, hollowed out under the edge. They go into gaps at the edge; if none is free, they sit centered on the short sides under a tool (take that tool out first to lift the bin). The bin does not get bigger for them",
+  "Löcher für Magnete 6 × 2 mm unten im Bin: keine, 4 unter jedem Feld, oder nur die 4 in den äussersten Ecken (spart Magnete, der Bin hält trotzdem)": "Holes for 6 × 2 mm magnets in the bottom of the bin: none, 4 under each cell, or only the 4 in the outermost corners (saves magnets, the bin still holds)",
+  "Rundet die oberen Kanten um 1 mm ab: an den Taschen, den Griffmulden und, ohne Stapelrand, am äusseren Rand. Angenehmer zum Greifen; im Druck aus fünf Schichten zu 0.2 mm": "Rounds the top edges by 1 mm: at the pockets, the finger scoops and, without a stacking lip, the outer rim. Nicer to grip; printed as five layers of 0.2 mm",
+  "Ein Werkzeug aus der Sammlung wählen": "Choose a tool from the library",
+  "Das gewählte Werkzeug in den Bin legen": "Place the selected tool in the bin",
+  "Eine runde Vertiefung dazu: Griffmulde, Loch oder Kugelmulde": "Add a round recess: finger scoop, hole or ball scoop",
+  "Runde Mulde, eine halbe Kugel": "Round scoop, half a sphere",
+  "Ein Langloch dazu, etwa eine lange Griffmulde quer über mehrere Werkzeuge": "Add a slot, e.g. a long finger scoop across several tools",
+  "Ein Rechteck dazu: Fach mit runden Ecken": "Add a rectangle: compartment with rounded corners",
+  "Jedes Werkzeug bekommt eine runde Griffmulde quer darüber; eine gelöschte bleibt weg": "Each tool gets a round finger scoop across it; a deleted one stays gone",
+  "Wie die Teile eines Bins, der grösser ist als das Druckbett, zusammenkommen: mit Klammern von unten, geleimt, lose nebeneinander auf der Grundplatte, oder gar nicht geteilt": "How the parts of a bin larger than the print bed are joined: with clips from below, glued, loose side by side on the baseplate, or not split at all",
+  "Den Bin als STL und STEP herunterladen; was grösser ist als das Druckbett, wird geteilt, wie unter «Teile verbinden» gewählt": "Download the bin as STL and STEP; anything larger than the print bed is split as chosen under “Join parts”",
+  "Alle Werkzeuge dieses Bins zum Anprobieren: dünne Rahmen (STL) oder 1:1 auf Papier (PDF), mit der Toleranz dieses Bins": "All tools of this bin for a test fit: thin frames (STL) or 1:1 on paper (PDF), with this bin's clearance",
+  "Einen neuen Koffer anlegen": "Create a new case",
+  "Welchen Koffer du einrichtest": "Which case you are setting up",
+  "Diesen Koffer löschen; seine Bins bleiben erhalten (mit Rückfrage)": "Delete this case; its bins are kept (asks first)",
+  "Draufsicht: Bins platzieren, verschieben, stapeln": "Top view: place, move, stack bins",
+  "3D-Ansicht mit Grundplatte; Werkzeuge mit Haken «3D» im Bin erscheinen darin": "3D view with baseplate; tools checked “3D” in the bin appear in it",
+  "Name des Koffers": "Case name",
+  "Innenbreite des Koffers in Feldern zu 42 mm": "Inner width of the case in 42 mm cells",
+  "Innenlänge des Koffers in Feldern zu 42 mm": "Inner length of the case in 42 mm cells",
+  "Innenhöhe des Koffers in Einheiten zu 7 mm; die Prüfung rechnet den Boden der Grundplatte mit": "Inside height of the case in units of 7 mm; the checks include the baseplate floor",
+  "Breite und Länge tauschen; die Bins drehen mit": "Swap width and length; the bins rotate along",
+  "Grundplatte: offen (ohne Boden) oder mit 3 mm Boden; beide Male halten Klammern die Druckteile zusammen": "Baseplate: open (no floor) or with a 3 mm floor; either way, clips hold the printed parts together",
+  "Magnetlöcher 6 × 2 mm unter den Magneten der Bins, 4 je Feld. Die offene Platte steht dafür auf 3 mm hohen Inseln in den Ecken der Felder (die Mitte bleibt offen) und wird 3 mm höher": "6 × 2 mm magnet holes under the bins' magnets, 4 per cell. For this the open plate stands on 3 mm high islands in the cell corners (the middle stays open) and gets 3 mm taller",
+  "Die Grundplatte als STEP und STL herunterladen, geteilt fürs Druckbett, mit den Klammern": "Download the baseplate as STEP and STL, split for the print bed, with the clips",
+  "Alle Bins dieses Koffers als STEP und STL herunterladen": "Download all bins of this case as STEP and STL",
+  "Höhe in Einheiten zu 7 mm, auch halbe (z. B. 5.5 u = 38.5 mm; nicht im Gridfinity-Standard, passt aber auf jede Grundplatte)": "Height in units of 7 mm, half units too (e.g. 5.5 u = 38.5 mm; not in the Gridfinity standard, but fits any baseplate)",
+  "Inhalt zum Start": "Starting contents",
+  "Ein leerer Bin; Werkzeuge und Formen kommen danach dazu": "An empty bin; add tools and shapes afterwards",
+  "Ein grosses Fach über die ganze Fläche": "One large compartment over the whole area",
+  "Gleich grosse Fächer in Spalten und Reihen": "Equal-sized compartments in columns and rows",
+  "Eine runde Mulde": "A round scoop",
+  "Anzahl Fächer nebeneinander": "Number of compartments side by side",
+  "Anzahl Fächer hintereinander": "Number of compartments front to back",
+  "Wandstärke zwischen den Fächern": "Wall thickness between the compartments",
+  "Den Bin so anlegen": "Create the bin like this",
+  "Alle Teile statt nur des gewählten drucken": "Print all parts instead of only the selected one",
+  "Spiel rundum, wie es die Tasche im Bin bekommt": "Clearance all around, the same as the pocket in the bin",
+  "Höhe des Testrahmens": "Height of the test frame",
+  "Breite des Testrahmens": "Width of the test frame",
+  "Tasche (Linie) und Umriss (gestrichelt) 1:1 auf A4, mit Massstab zum Nachmessen": "Pocket (line) and outline (dashed) 1:1 on A4, with a scale to check against",
+  "Dünne Rahmen, innen genau die Tasche: drucken und das Werkzeug hineinlegen": "Thin frames, exactly the pocket inside: print them and put the tool in",
+  "Schnitt durch einen Bin mit 1 Feld und 3 u auf der offenen Grundplatte, mit Massen": "Section through a bin with 1 cell and 3 u on the open baseplate, with dimensions",
+  "Ein Feld von oben mit den vier Magnetlöchern und ihren Abständen": "One cell from above with the four magnet holes and their spacing",
+  "Alle Werkzeuge, Bins und Koffer als Datei speichern": "Save all tools, bins and cases as a file",
+  "Eine Sicherung laden; Neueres ersetzt Älteres, nichts wird gelöscht": "Load a backup; newer replaces older, nothing is deleted",
+  "Die Daten mit einer Datei in deinem Google Drive abgleichen, auch zwischen mehreren Laptops": "Sync the data with a file in your Google Drive, also between several laptops",
+  "Den Abgleich mit Google Drive beenden; die Datei im Drive bleibt": "Stop syncing with Google Drive; the file stays in your Drive",
+  "Eine vorhandene Datendatei in einem synchronisierten Ordner verbinden (etwa OneDrive)": "Connect an existing data file in a synced folder (e.g. OneDrive)",
+  "Eine neue Datendatei in einem synchronisierten Ordner anlegen": "Create a new data file in a synced folder",
+  "Dem Browser erlauben, die Datendatei zu benutzen (nach jedem Start einmal)": "Allow the browser to use the data file (once after each start)",
+  "Die Datendatei trennen; die Daten bleiben in diesem Browser": "Disconnect the data file; the data stays in this browser",
+  "Eine einzelne Datei mit der App und allen Daten herunterladen, die ohne Internet läuft": "Download a single file with the app and all data that runs without internet",
+  "Fotos": "Photos",
+  "Werkzeuge": "Tools",
+  "Umrisse bearbeiten": "Edit outlines",
+  "Bin bearbeiten": "Edit bin",
+  "Koffer": "Case",
+  "Koffer bearbeiten": "Edit case",
+  "Nur in diesem Browser": "Only in this browser",
+  "Datendatei freigeben": "Allow data file",
+  "Mit Google abgleichen": "Sync with Google",
+  "Daten": "Data",
+  "Noch kein Foto": "No photo yet",
+  "Lege die Teile auf ein weisses Blatt und fotografiere sie von oben. Dann rechts «Foto hinzufügen». Zum Ausprobieren gibt es dort auch «Beispiel».": "Place the parts on a white sheet and photograph them from above. Then click “Add photo” on the right. To try it out, there is also “Example”.",
+  "Ziehe die vier Punkte genau auf die Papierecken, mit Strg fein. Mausrad zoomt, Ziehen auf freier Fläche verschiebt.": "Drag the four points exactly onto the paper corners, with Ctrl for fine control. The mouse wheel zooms, dragging on empty space pans.",
+  "Alles zeigen": "Fit view",
+  "Foto hinzufügen": "Add photo",
+  "Beispiel": "Example",
+  "Papier": "Paper",
+  "Format": "Size",
+  "Eigenes": "Custom",
+  "Breite mm": "Width mm",
+  "Höhe mm": "Height mm",
+  "Ecken automatisch finden": "Find corners automatically",
+  "Kamera": "Camera",
+  "Kamerahöhe über dem Papier (überschreiben)": "Camera height above the paper (override)",
+  "So wird das Foto gut": "How to take a good photo",
+  "Dunkle oder farbige Teile auf weissem Papier.": "Dark or colored parts on white paper.",
+  "Helle Teile auf dunklem Karton mit hellem Rand gehen nicht.": "Light parts on dark cardboard with a light border do not work.",
+  "Licht von oben oder weiches Licht": "Light from above or soft light",
+  "(bewölkter Tag am Fenster, Deckenlampe direkt darüber, zwei Lampen links und rechts). Seitliches Licht wirft Schatten. Cachfinity entfernt sie, aber unter dunklen, flach aufliegenden Teilen ist die Grenze zum Schatten im Foto oft unsichtbar.": "(cloudy day by a window, ceiling lamp directly above, two lamps left and right). Light from the side casts shadows. Cachfinity removes them, but under dark parts lying flat the edge of the shadow is often invisible in the photo.",
+  "Glänzendes Chrom:": "Shiny chrome:",
+  "Am besten auf eine Leuchtplatte oder ein Tablet mit weissem Bild unter dünnem Papier legen. Dann erscheint jedes Teil als scharfe dunkle Silhouette. Sonst das Spiel im Bin auf 1 bis 1.5 mm erhöhen.": "Best placed on a light pad or a tablet showing a white screen, under thin paper. Then every part appears as a sharp dark silhouette. Otherwise increase the clearance in the bin to 1 to 1.5 mm.",
+  "Von weiter oben mit Zoom": "Zoom in from higher up",
+  "fotografieren. Das verkleinert den Höhenfehler.": "when taking the photo. This reduces the height error.",
+  "Hohe Teile:": "Tall parts:",
+  "3 Fotos machen, Kamera jeweils über einer anderen Seite des Blatts. Teile und Papier dazwischen nicht bewegen. Cachfinity schneidet die Umrisse und entfernt so die Überhöhung.": "Take 3 photos, each with the camera over a different side of the sheet. Do not move the parts or paper in between. Cachfinity intersects the outlines and so removes the parallax.",
+  "Mehrere Fotos mit verschiedenen Teilen": "Several photos with different parts",
+  "lassen sich zusammen laden. Cachfinity erkennt, welche Fotos dieselben Teile zeigen, und wertet jedes Motiv für sich aus.": "can be loaded together. Cachfinity detects which photos show the same parts and evaluates each scene on its own.",
+  "Weiter: Umrisse erkennen": "Next: detect outlines",
+  "Bearbeiten": "Edit",
+  "Löschen": "Delete",
+  "Messen": "Measure",
+  "Foto": "Photo",
+  "Maske": "Mask",
+  "Noch keine Umrisse": "No outlines yet",
+  "Füge zuerst unter «Fotos» ein Foto hinzu.": "First add a photo under “Photos”.",
+  "Teil anklicken zum Bearbeiten. Punkte ziehen, Doppelklick auf eine Kante fügt einen Punkt ein, Rechtsklick löscht ihn.": "Click a part to edit it. Drag points; double-click an edge to insert a point, right-click to delete it.",
+  "Motive": "Scenes",
+  "Fotos mit anderen Teilen werden einzeln erkannt. Fotos mit denselben Teilen aus anderer Richtung werden geschnitten. Die Zuordnung lässt sich unter «Fotos» ändern.": "Photos with different parts are detected separately. Photos of the same parts from another direction are intersected. You can change the grouping under “Photos”.",
+  "Erkennung": "Detection",
+  "Kanten nachführen": "Snap to edges",
+  "Schatten entfernen": "Remove shadows",
+  "(bei mattgrauen Teilen, die angeschnitten wirken, ausschalten)": "(turn off for matte gray parts that look cut off)",
+  "Empfindlichkeit": "Sensitivity",
+  "Lücken schliessen mm": "Close gaps mm",
+  "Min. Grösse mm": "Min. size mm",
+  "Randzone mm": "Edge margin mm",
+  "Gefundene Teile": "Parts found",
+  "Vereinfachung": "Simplification",
+  "mehr Punkte": "more points",
+  "mehr Geraden": "more straight lines",
+  "Mit Teil verbinden": "Join with part",
+  "Punkt löschen": "Delete point",
+  "Umriss zurücksetzen": "Reset outline",
+  "Teil verwerfen": "Discard part",
+  "Symmetrieachse": "Symmetry axis",
+  "Links auf rechts spiegeln": "Mirror left onto right",
+  "Rechts auf links spiegeln": "Mirror right onto left",
+  "Achse neu": "New axis",
+  "Gespiegelt bearbeiten": "Edit mirrored",
+  "(jede Änderung auch auf der anderen Seite)": "(every change also on the other side)",
+  "Testdruck…": "Test print…",
+  "Höhenkorrektur": "Height correction",
+  "In Werkzeuge übernehmen": "Add to tools",
+  "Abbrechen": "Cancel",
+  "Deine Werkzeugsammlung. Jeder Umriss ist um die Höhenüberhöhung korrigiert und in Millimetern gespeichert. Die Höhe bestimmt die Taschentiefe im Bin.": "Your tool library. Each outline is corrected for height parallax and stored in millimeters. The height sets the pocket depth in the bin.",
+  "Beispiele entfernen": "Remove examples",
+  "Toleranz für neue Bins": "Clearance for new bins",
+  "Auf alle Bins anwenden": "Apply to all bins",
+  "Neuer Bin": "New bin",
+  "Duplizieren": "Duplicate",
+  "Sperren": "Lock",
+  "Draufsicht": "Top view",
+  "Noch kein Bin": "No bin yet",
+  "Lege mit «Neuer Bin» einen an oder ziehe im Koffer ein Rechteck auf.": "Create one with “New bin” or drag a rectangle in a case.",
+  "Teile und Formen ziehen zum Verschieben, die Anfasser an einer Form ändern ihre Grösse. Griffmulden zum Herausheben an der Wand entlang ziehen. Gezogen rastet alles auf 0.5 mm, mit Strg fein auf 0.1 mm. Pfeiltasten schieben um 1 mm, mit Shift um 5 mm. R dreht um 90°. Shift-Klick wählt mehrere Teile, Strg+A alle: sie bewegen sich dann zusammen.": "Drag parts and shapes to move them; the handles on a shape change its size. Drag lift grips along the wall. Dragging snaps to 0.5 mm, with Ctrl finely to 0.1 mm. Arrow keys move by 1 mm, with Shift by 5 mm. R rotates by 90°. Shift-click selects several parts, Ctrl+A all: they then move together.",
+  "Breite Felder": "Width cells",
+  "Tiefe Felder": "Depth cells",
+  "Höhe u (7 mm)": "Height u (7 mm)",
+  "Grösse automatisch anpassen": "Adjust size automatically",
+  "Felder und Höhe richten sich nach den Werkzeugen. Stellst du sie selbst ein, schaltet sich das aus.": "Cells and height follow the tools. If you set them yourself, this turns off.",
+  "ändern": "change",
+  "Toleranz zum Werkzeug mm": "Clearance to tool mm",
+  "(Abstand rundum zwischen Werkzeug und Taschenwand; Standard 0.5)": "(gap all around between tool and pocket wall; default 0.5)",
+  "Mindestrand mm": "Minimum wall mm",
+  "Boden mm": "Floor mm",
+  "Tasche tiefer als Werkzeug mm": "Pocket deeper than tool mm",
+  "(0 = bündig)": "(0 = flush)",
+  "Bin an Bauteile anpassen": "Fit bin to tools",
+  "Platzsparend anordnen": "Arrange compactly",
+  "Bauteile versenken": "Sink tools flush",
+  "Griffmulden optimieren": "Optimize grips",
+  "Beim platzsparenden Anordnen auch geneigt legen": "Also lay tools tilted when arranging compactly",
+  "(nutzt die Höhe)": "(uses the height)",
+  "Optionen": "Options",
+  "Stapelrand": "Stacking lip",
+  "Zusätzlich erhöhen um": "Raise by",
+  "Griffmulden zum Herausheben": "Lift grips",
+  "Keine": "None",
+  "Kugel": "Ball",
+  "Rechteckige Mulde": "Rectangular scoop",
+  "Im Bild an der Wand entlang verschieben. «Griffmulden optimieren» legt sie in Lücken am Rand, sonst mittig unter ein Werkzeug.": "Move them along the wall in the view. “Optimize grips” puts them in gaps at the edge, otherwise centered under a tool.",
+  "Magnetlöcher 6 × 2 mm": "Magnet holes 6 × 2 mm",
+  "4 pro Feld": "4 per cell",
+  "Nur 4 in den äussersten Ecken": "Only 4 in the outermost corners",
+  "Kanten oben abrunden": "Round top edges",
+  "Inhalt": "Contents",
+  "Hinzufügen": "Add",
+  "Form dazu:": "Add shape:",
+  "Kreis": "Circle",
+  "Langloch": "Slot",
+  "Rechteck": "Rectangle",
+  "Griffmulde an jedes Werkzeug": "Finger scoop on every tool",
+  "(rundes Langloch quer über das Werkzeug, wandert mit ihm)": "(round slot across the tool, moves with it)",
+  "Auswahl": "Selection",
+  "Prüfung": "Checks",
+  "ZIP mit": "ZIP with",
+  "zum Drucken, dazu": "for printing, plus",
+  "(exakte CAD-Geometrie) im Unterordner.": "(exact CAD geometry) in a subfolder.",
+  "Teile verbinden": "Join parts",
+  "Testdruck aller Werkzeuge…": "Test print of all tools…",
+  "Bins auf einen Koffer ziehen oder dort auswählen; sie landen auf dem ersten freien Platz. Ein Klick auf die Draufsicht öffnet ihn unter «Koffer bearbeiten».": "Drag bins onto a case or select them there; they land in the first free spot. Clicking the top view opens it under “Edit case”.",
+  "Neuer Koffer": "New case",
+  "Bins ziehen zum Verschieben, sie rasten auf den Feldern ein. ▲ ▼ neben dem gewählten Bin (oder Bild ↑ / Bild ↓) ändern die Höhe. Bins aus der Liste ins Raster ziehen; ein Rechteck auf freien Feldern legt einen neuen Bin an, Doppelklick öffnet ihn.": "Drag bins to move them; they snap to the cells. ▲ ▼ next to the selected bin (or Page Up / Page Down) change its height. Drag bins from the list into the grid; a rectangle on free cells creates a new bin, double-click opens it.",
+  "Länge Felder": "Length cells",
+  "Höhe u": "Height u",
+  "Koffer um 90° drehen": "Rotate case by 90°",
+  "Grundplatte (Grid)": "Baseplate (grid)",
+  "Offen (ohne Boden), 4.65 mm, Klammern an den Ecken": "Open (no floor), 4.65 mm, clips at the corners",
+  "Mit 3 mm Boden, Klammern in jedem Feld der Stossstellen": "With 3 mm floor, clips in every cell along the seams",
+  "(offen: auf Inseln in den Ecken, 3 mm höher)": "(open: on islands in the corners, 3 mm higher)",
+  "Grundplatte exportieren (ZIP)": "Export baseplate (ZIP)",
+  "Bins in diesem Koffer": "Bins in this case",
+  "Noch nicht platziert": "Not placed yet",
+  "Alle Bins exportieren (ZIP)": "Export all bins (ZIP)",
+  "Leer": "Empty",
+  "Ein Fach": "One compartment",
+  "Fächer": "Compartments",
+  "Kugelmulde": "Ball scoop",
+  "Spalten": "Columns",
+  "Reihen": "Rows",
+  "Trennwand mm": "Divider mm",
+  "Anlegen": "Create",
+  "Testdruck": "Test print",
+  "Prüfen, ob das Werkzeug passt, bevor der ganze Bin gedruckt wird. Der Rahmen hat innen genau die Tasche, die der Bin bekommt; auf Papier sind Tasche und Umriss als dünne Linien 1:1 gedruckt.": "Check whether the tool fits before printing the whole bin. The inside of the frame is exactly the pocket the bin gets; on paper, pocket and outline are printed 1:1 as thin lines.",
+  "Alle Teile": "All parts",
+  "Spiel zum Werkzeug mm": "Clearance to tool mm",
+  "Rahmen hoch mm": "Frame height mm",
+  "Rahmen breit mm": "Frame width mm",
+  "Schliessen": "Close",
+  "Was ist Gridfinity?": "What is Gridfinity?",
+  "Gridfinity ist ein offenes System zum Aufbewahren, das Zack Freedman 2022 vorgestellt hat. Eine Grundplatte trägt ein Raster aus quadratischen Feldern. Jeder Bin hat unten einen genormten Fuss: er passt damit in jedes Feld, und Bins lassen sich aufeinander stapeln. Weil die Masse offen sind, passen Bins und Platten aus verschiedenen Quellen zusammen. Cachfinity baut solche Bins, mit Taschen in der Form deiner Werkzeuge.": "Gridfinity is an open storage system that Zack Freedman introduced in 2022. A baseplate carries a grid of square cells. Every bin has a standardized foot underneath, so it fits into any cell, and bins can be stacked on top of each other. Because the dimensions are open, bins and plates from different sources fit together. Cachfinity builds such bins, with pockets shaped like your tools.",
+  "Tasche": "Pocket",
+  "Boden 1.2": "Floor 1.2",
+  "Feld 42": "Cell 42",
+  "Rand 4.4": "Lip 4.4",
+  "Schnitt durch einen Bin mit 1 Feld und 3 u auf der offenen Grundplatte, massstäblich (mm). «Rand» ist der Stapelrand.": "Section through a bin of 1 cell and 3 u on the open baseplate, to scale (mm). “Lip” is the stacking lip.",
+  "Ein Feld von oben mit den Magnetlöchern (mm).": "One cell from above with the magnet holes (mm).",
+  "Raster": "Grid",
+  "Feld": "Cell",
+  "Das Raster der Grundplatte. Ein Bin belegt ganze Felder.": "The baseplate grid. A bin occupies whole cells.",
+  "Bin aussen": "Bin outside",
+  "Felder × 42 − 0.5 mm": "Cells × 42 − 0.5 mm",
+  "Je Seite 0.25 mm Luft. 1 Feld = 41.5 mm, 2 Felder = 83.5 mm, 3 Felder = 125.5 mm.": "0.25 mm gap on each side. 1 cell = 41.5 mm, 2 cells = 83.5 mm, 3 cells = 125.5 mm.",
+  "Ecken": "Corners",
+  "Am Bin aussen. Die Sockel der Grundplatte haben 4 mm.": "On the outside of the bin. The baseplate sockets have 4 mm.",
+  "Höhe": "Height",
+  "«Höhe u» zählt ohne Stapelrand: 3 u = 21 mm, 6 u = 42 mm.": "“Height u” excludes the stacking lip: 3 u = 21 mm, 6 u = 42 mm.",
+  "Halbe Einheiten": "Half units",
+  "Nicht im Gridfinity-Standard. In Cachfinity von Hand einstellbar; der Bin passt trotzdem auf jede Grundplatte und lässt sich stapeln. Steht ein Bin auf einer halben Höhe, passen «Bauteile versenken» und die automatische Grösse ihn in halben Schritten an, sonst in ganzen.": "Not in the Gridfinity standard. Adjustable by hand in Cachfinity; the bin still fits any baseplate and stacks. If a bin is at a half height, “Sink tools flush” and the automatic size adjust it in half steps, otherwise in whole ones.",
+  "Fuss": "Foot",
+  "Gehört zum ersten u. Profil von unten: 0.8 mm schräg (45°), 1.8 mm senkrecht, 2.15 mm schräg. Unten 35.6 mm breit.": "Part of the first u. Profile from the bottom: 0.8 mm sloped (45°), 1.8 mm vertical, 2.15 mm sloped. 35.6 mm wide at the bottom.",
+  "Boden": "Floor",
+  "Über dem Fuss (unter «ändern» einstellbar). Eine Tasche ist darum höchstens 7 × u − 5.95 mm tief, bei 6 u gut 36 mm.": "Above the foot (adjustable under “change”). So a pocket is at most 7 × u − 5.95 mm deep, just over 36 mm at 6 u.",
+  "Kommt oben auf die Höhe. Profil von oben: 1.9 mm schräg, 1.8 mm senkrecht, 0.7 mm schräg, zusammen 2.6 mm breit. Cachfinity flacht die Spitze um 0.3 mm ab.": "Added on top of the height. Profile from the top: 1.9 mm sloped, 1.8 mm vertical, 0.7 mm sloped, 2.6 mm wide in total. Cachfinity flattens the tip by 0.3 mm.",
+  "Ganzer Bin": "Whole bin",
+  "Bei 6 u: 42 + 4.4 = 46.4 mm (gedruckt 46.1 mm wegen der abgeflachten Spitze).": "At 6 u: 42 + 4.4 = 46.4 mm (46.1 mm printed because of the flattened tip).",
+  "Stapeln": "Stacking",
+  "7 × u je Bin": "7 × u per bin",
+  "Der Fuss des oberen Bins steckt im Stapelrand des unteren. Im Stapel zählt jeder Bin 7 × u; der Stapelrand kommt nur beim obersten dazu. Ein Bin ohne Stapelrand trägt keinen anderen.": "The foot of the upper bin sits in the stacking lip of the lower one. In a stack each bin counts 7 × u; the stacking lip is added only for the top one. A bin without a stacking lip carries no other.",
+  "Stapelrand erhöhen": "Raise the lip",
+  "Hebt den Rand um ganze u (je 7 mm). Werkzeuge, die oben aus ihrer Tasche ragen, haben dann Platz unter dem Bin darüber.": "Raises the lip by whole u (7 mm each). Tools that stick up out of their pocket then have room under the bin above.",
+  "Grundplatte": "Baseplate",
+  "Sockel": "Socket",
+  "4.65 mm tief": "4.65 mm deep",
+  "Je Feld eine Vertiefung für den Fuss: oben 42 mm, unten 36.3 mm. Profil von oben: 2.15 mm schräg, 1.8 mm senkrecht, 0.7 mm schräg.": "One recess per cell for the foot: 42 mm at the top, 36.3 mm at the bottom. Profile from the top: 2.15 mm sloped, 1.8 mm vertical, 0.7 mm sloped.",
+  "Offen": "Open",
+  "ohne Boden": "no floor",
+  "Nur die Stege zwischen den Feldern; spart Material. Der Bin steht unten auf dem Kofferboden.": "Only the ridges between the cells; saves material. The bin stands on the case floor.",
+  "Mit Boden": "With floor",
+  "Ein Boden unter den Sockeln. Er kommt zur Höhe im Koffer dazu; die Koffer-Prüfung rechnet ihn mit.": "A floor under the sockets. It adds to the height in the case; the case checks include it.",
+  "Magnete": "Magnets",
+  "Durchmesser × Höhe. Die Löcher sind 6.5 mm weit und 2.4 mm tief.": "Diameter × height. The holes are 6.5 mm wide and 2.4 mm deep.",
+  "Lage": "Position",
+  "8 mm vom Feldrand": "8 mm from the cell edge",
+  "Vier je Feld, 26 mm auseinander (Mitte zu Mitte).": "Four per cell, 26 mm apart (center to center).",
+  "wählbar": "selectable",
+  "Im Bin keine, 4 pro Feld oder 4 in den äussersten Ecken. Die Grundplatte bekommt sie mit «Magnetlöcher 6 × 2 mm».": "In the bin none, 4 per cell or 4 in the outermost corners. The baseplate gets them with “Magnet holes 6 × 2 mm”.",
+  "Begriffe in Cachfinity": "Terms in Cachfinity",
+  "Grösse": "Size",
+  "5 Felder breit, 7 Felder tief, 5 u hoch.": "5 cells wide, 7 cells deep, 5 u high.",
+  "Toleranz": "Clearance",
+  "Standard 0.5 mm": "Default 0.5 mm",
+  "Spiel rundum zwischen Werkzeug und Tasche.": "Gap all around between tool and pocket.",
+  "Mindestrand": "Minimum wall",
+  "Standard 3 mm": "Default 3 mm",
+  "So viel Wand bleibt mindestens zwischen den Taschen und der Aussenseite des Bins (unter «ändern»).": "The least wall left between the pockets and the outside of the bin (under “change”).",
+  "Griffmulde (Werkzeug)": "Finger scoop (tool)",
+  "25 mm breit": "25 mm wide",
+  "Eine Mulde am Werkzeug zum Greifen. Sie ragt 15 mm über den Umriss hinaus.": "A scoop beside the tool to grab it. It extends 15 mm beyond the outline.",
+  "Griffmulde (Bin)": "Lift grip (bin)",
+  "Rechteckig 20 mm oder Kugel Ø 30 mm": "Rectangular 20 mm or ball Ø 30 mm",
+  "An der Wand, um den Bin aus der Grundplatte zu heben.": "On the wall, to lift the bin out of the baseplate.",
+  "Innenhöhe in u": "Inside height in u",
+  "Die Prüfung rechnet den Boden der Grundplatte mit.": "The checks include the baseplate floor.",
+  "Daten sichern (Datei)": "Back up data (file)",
+  "Sicherung laden…": "Load backup…",
+  "Laden führt zusammen: Neueres ersetzt Älteres, Neues kommt dazu.": "Loading merges: newer replaces older, new items are added.",
+  "Mit Google verbinden": "Connect to Google",
+  "Trennen": "Disconnect",
+  "Die App legt in deinem Google Drive die Datei «Cachfinity_Daten.json» an. Jede Änderung geht hinein, und was ein anderer Laptop dort neuer gespeichert hat, kommt hierher. Die App sieht nur diese Datei, nicht den Rest deines Drives. Google gibt den Zugriff jeweils für eine Stunde. Nach dem Start und wenn die Stunde um ist, erneuert ihn dein nächster Klick irgendwo in der App: Googles Fenster blitzt kurz auf und schliesst sich wieder. Blockiert der Browser es, gleicht der Knopf «Mit Google abgleichen» oben ab.": "The app creates the file “Cachfinity_Daten.json” in your Google Drive. Every change goes into it, and whatever another laptop saved there more recently comes here. The app sees only this file, not the rest of your Drive. Google grants access for one hour at a time. After startup and when the hour is up, your next click anywhere in the app renews it: Google's window flashes briefly and closes again. If the browser blocks it, the “Sync with Google” button at the top syncs instead.",
+  "Datenordner auf diesem Laptop (OneDrive, Google-Drive-Ordner)": "Data folder on this laptop (OneDrive, Google Drive folder)",
+  "Vorhandene Datendatei öffnen…": "Open existing data file…",
+  "Neue Datendatei anlegen…": "Create new data file…",
+  "Freigeben": "Allow access",
+  "Lege die Datei in deinen Google-Drive- oder OneDrive-Ordner. Die App schreibt jede Änderung hinein und übernimmt, was ein anderer Laptop dort neuer gespeichert hat. Auf dem zweiten Laptop: «Vorhandene Datendatei öffnen…» und dieselbe Datei wählen.": "Put the file in your Google Drive or OneDrive folder. The app writes every change into it and picks up whatever another laptop saved there more recently. On the second laptop: “Open existing data file…” and choose the same file.",
+  "Offline arbeiten": "Work offline",
+  "Eine einzelne HTML-Datei mit allem darin, auch dem CAD-Kern und deinen jetzigen Werkzeugen, Bins und Koffern. Per Doppelklick im Browser öffnen, sie braucht kein Internet und übernimmt deine Daten beim ersten Öffnen. Was du danach offline änderst, liegt in jenem Browser; mit «Daten sichern» und «Sicherung laden» bringst du es zurück.": "A single HTML file with everything in it, including the CAD kernel and your current tools, bins and cases. Double-click to open it in the browser; it needs no internet and imports your data the first time you open it. Whatever you change offline afterwards stays in that browser; bring it back with “Back up data” and “Load backup”.",
+  "Rechne…": "Computing…",
+  "Gespeichert:": "Saved:",
+  "Speichern abgebrochen.": "Saving canceled.",
+  "Es ist schon ein Speichern-Dialog offen.": "A save dialog is already open.",
+  "Speichern ging hier nicht (": "Saving didn't work here (",
+  "Fehler": "error",
+  "Entzerre Foto {0} von {1}…": "Straightening photo {0} of {1}…",
+  "Teil": "Part",
+  "Gabelschlüssel 13": "Open-end wrench 13",
+  "Schraubendreher": "Screwdriver",
+  "Cuttermesser": "Utility knife",
+  "Massband": "Tape measure",
+  "Verlängerung 1/4\"": "Extension 1/4\"",
+  "Erzeuge Beispielfoto {0} von {1}…": "Generating sample photo {0} of {1}…",
+  "Beispiel {0}": "Example {0}",
+  "keine": "none",
+  "4 in den äussersten Ecken": "4 in the outermost corners",
+  "Griffmulde": "Finger scoop",
+  "{0} ragt über den Bin hinaus.": "{0} sticks out beyond the bin.",
+  "{0} ragt in die Wand (weniger als {1} mm Wand übrig).": "{0} cuts into the wall (less than {1} mm of wall left).",
+  "{0}: Tiefe {1} mm passt nicht, wird auf {2} mm begrenzt.": "{0}: depth {1} mm does not fit, limited to {2} mm.",
+  "Griffmulde von «{0}»": "Finger scoop of “{0}”",
+  "{0} und {1} überschneiden sich. Verschiebe eine davon.": "{0} and {1} overlap. Move one of them.",
+  "{0} schneidet in die Tasche von «{1}».": "{0} cuts into the pocket of “{1}”.",
+  "{0} und {1} überlappen, die Taschen fliessen ineinander.": "{0} and {1} overlap; their pockets merge.",
+  "{0} steht {1} mm vor, gut zum Greifen.": "{0} sticks out {1} mm, easy to grab.",
+  "Tiefer geht die Tasche erst mit einem höheren Bin: Höhe {0} u für das ganze Werkzeug.": "A deeper pocket needs a taller bin: height {0} u for the whole tool.",
+  "Zum Stapeln unter «Stapelrand» «Zusätzlich erhöhen um» auf {0} u stellen, sonst stösst der Bin darüber an.": "To stack, set “Raise by” under “Stacking lip” to {0} u, or the bin above will hit it.",
+  "{0} liegt so geneigt zu tief: das tiefe Ende braucht {1} mm, der Bin erlaubt {2} mm. Weniger neigen oder den Bin {3} u hoch machen.": "Tilted like this, {0} goes too deep: the deep end needs {1} mm, the bin allows {2} mm. Tilt it less or make the bin {3} u high.",
+  "Die beiden Griffmulden zum Herausheben liegen aufeinander: eine an eine andere Stelle ziehen.": "The two lift grips overlap: drag one to another spot.",
+  "Beide Griffmulden zum Herausheben liegen an derselben Seite: der Bin kommt schräg heraus. Besser an zwei gegenüberliegende Seiten.": "Both lift grips are on the same side: the bin comes out at an angle. Better on two opposite sides.",
+  "und": "and",
+  "Die Griffmulden zum Herausheben liegen unter {0}: zuerst {1} herausnehmen, dann den Bin.": "The lift grips lie under {0}: take out {1} first, then the bin.",
+  "Der Bin ist leer. Füge unter «Inhalt» Werkzeuge oder Formen hinzu.": "The bin is empty. Add tools or shapes under “Contents”.",
+  "Alles passt.": "Everything fits.",
+  "liegt ausserhalb des Kofferrasters": "lies outside the case grid",
+  "kollidiert mit": "collides with",
+  "trägt {0}, hat aber keinen Stapelrand": "carries {0} but has no stacking lip",
+  "Werkzeuge stehen {0} mm vor und stossen an «{1}» darüber. Im Bin unter «Stapelrand» «Zusätzlich erhöhen um» auf {2} u stellen.": "Tools stick out {0} mm and hit “{1}” above. In the bin, under “Stacking lip”, set “Raise by” to {2} u.",
+  "liegt nur teilweise auf ({0} Feld{1} frei)": "only partly supported ({0} cell{1:er=s} free)",
+  "schwebt, darunter ist nichts": "floats, nothing underneath",
+  "ragt {0} mm über die Kofferhöhe": "sticks out {0} mm above the case height",
+  "(mit {0} mm Boden der Grundplatte)": "(with the baseplate's {0} mm floor)",
+  "Koffer 1": "Case 1",
+  "Der Speicher dieses Browsers ist voll: neue Änderungen bleiben hier nicht mehr erhalten. Sichere unter «Daten», verbinde Google Drive oder eine Datendatei, oder gib auf der Festplatte Platz frei.": "This browser's storage is full: new changes are no longer kept here. Back up under “Data”, connect Google Drive or a data file, or free up space on the disk.",
+  "Speichern im Konto ging nicht (": "Saving to the account failed (",
+  "). In diesem Browser ist alles da.": "). Everything is still in this browser.",
+  "Mit Google Drive abgeglichen": "Synced with Google Drive",
+  "Google Drive: Abgleich wartet auf Klick": "Google Drive: sync waiting for a click",
+  "{0}Datendatei «{1}» verbunden": "{0}Data file “{1}” connected",
+  "{0}Datendatei braucht Freigabe": "{0}Data file needs permission",
+  "In diesem Browser gespeichert": "Saved in this browser",
+  "Offline-Version: in diesem Browser": "Offline version: in this browser",
+  "Offline: Änderungen werden nachgeladen": "Offline: changes will sync later",
+  "Speichert…": "Saving…",
+  "In deinem Konto gespeichert": "Saved in your account",
+  "Eigenes Druckbett": "Custom print bed",
+  "Mitte": "middle",
+  "Spalte{0}": "column{0}",
+  "Reihe{0}": "row{0}",
+  "Geteilt mit Klammern": "Split with clips",
+  "Schnitt mitten durch die Felder, Klammern von unten über die Trennstelle (unsichtbar). Sie halten den Bin, wenn man ihn an beiden Enden hebt; wer ihn an einem Ende anhebt, leimt die Schnittflächen zusätzlich": "Cut through the middle of the cells, clips from below across the joint (invisible). They hold the bin when you lift it by both ends; if you lift it by one end, also glue the cut faces",
+  "Geteilt zum Leimen": "Split for gluing",
+  "Schnitt mitten durch die Felder, ohne Klammern: die Schnittflächen leimen, am besten auf der Grundplatte, die richtet die Teile aus": "Cut through the middle of the cells, no clips: glue the cut faces, ideally on the baseplate, which lines the parts up",
+  "Geteilt, lose": "Split, loose",
+  "Schnitt an den Feldgrenzen: die Teile stehen ohne Verbindung nebeneinander auf der Grundplatte": "Cut along the cell borders: the parts stand side by side on the baseplate, unconnected",
+  "Am Stück": "In one piece",
+  "Nicht teilen, etwa für einen Drucker mit grösserem Bett": "Don't split, e.g. for a printer with a larger bed",
+  "Zum Drucken: die STL-Dateien (eine pro Teil). Im Ordner {0} liegen dieselben Teile noch einmal als STEP, zum Weiterbearbeiten in einem CAD-Programm, nicht zusätzlich drucken.": "To print: the STL files (one per part). The folder {0} holds the same parts again as STEP, for further editing in a CAD program; don't print them as well.",
+  "Drucker": "Printer",
+  "Dein Drucker: was grösser ist als sein Druckbett, wird beim Export in Teile geteilt": "Your printer: anything larger than its print bed is split into parts on export",
+  "Bett": "Bed",
+  "Tasche {0} von {1}": "Pocket {0} of {1}",
+  "Griffmulden": "finger scoops",
+  "Kanten abrunden": "Rounding edges",
+  "Magnetlöcher": "Magnet holes",
+  "Aussparungen für die Klammern": "Recesses for the clips",
+  "{0}: Teil {1} schneiden…": "{0}: cutting part {1}…",
+  "{0}: STEP und STL schreiben…": "{0}: writing STEP and STL…",
+  "Teil {0},": "Part {0},",
+  "{0}: {1}STEP und STL schreiben…": "{0}: {1}writing STEP and STL…",
+  "_Teil-{0}-von-{1}": "_Part-{0}-of-{1}",
+  "{0}: Klammern schreiben…": "{0}: writing clips…",
+  "{0}_{1}_Teil-{2}-von-{3}.stl": "{0}_{1}_Part-{2}-of-{3}.stl",
+  "Der Schnitt läuft mitten durch die Felder: die halben Füsse an der Trennstelle sitzen zusammen in einem Fach der Grundplatte. Zusammenbau: die Teile mit der Unterseite nach oben aneinanderlegen und in jede Aussparung über der Trennstelle eine Klammer fest eindrücken (Teil {0}: alle {1} Klammern in einer Datei; flach drucken, 100 % Füllung). Sitzt eine locker, ein Tropfen Sekundenkleber in die Aussparung. Die Klammern halten die Trennstelle unten: so lässt sich der Bin an beiden Enden gefasst am Stück herausnehmen. Wer ihn an einem Ende anhebt (das andere in der Luft), leimt zusätzlich die Schnittflächen (Sekundenkleber oder 2-Komponenten-Kleber), sonst klappt die Trennstelle oben auf.": "The cut runs through the middle of the cells: the half feet at the joint sit together in one socket of the baseplate. Assembly: lay the parts bottom side up against each other and press a clip firmly into each recess over the joint (part {0}: all {1} clips in one file; print flat, 100 % infill). If one sits loose, put a drop of superglue in the recess. The clips hold the joint at the bottom, so the bin can be lifted out in one piece when held by both ends. If you lift it by one end (the other in the air), also glue the cut faces (superglue or two-part adhesive), otherwise the joint opens at the top.",
+  "Der Schnitt läuft mitten durch die Felder: die halben Füsse an der Trennstelle sitzen zusammen in einem Fach der Grundplatte. Die Schnittflächen leimen (Sekundenkleber oder 2-Komponenten-Kleber), am besten mit den Teilen in der Grundplatte, die richtet sie aus.": "The cut runs through the middle of the cells: the half feet at the joint sit together in one socket of the baseplate. Glue the cut faces (superglue or two-part adhesive), ideally with the parts in the baseplate, which lines them up.",
+  "Geschnitten an den Feldgrenzen: die Teile stehen im Raster nebeneinander, die Grundplatte richtet sie aus; an den Trennstellen ist je {0} mm Luft. Wer will, klebt sie dort zusammen.": "Cut along the cell borders: the parts stand side by side in the grid, the baseplate lines them up; there is a {0} mm gap at each joint. Glue them together there if you like.",
+  "Teil {0} {1} {2}×{3} Felder": "Part {0} {1} {2}×{3} cells",
+  "{0}: zu gross für {1} ({2} × {3} mm), in {4} Teile geteilt: {5} (von oben gesehen wie im Plan). {6}": "{0}: too large for {1} ({2} × {3} mm), split into {4} parts: {5} (seen from above, as in the plan). {6}",
+  "{0}: am Stück exportiert, obwohl grösser als das Bett des {1} ({2} × {3} mm); nur für einen Drucker mit grösserem Bett.": "{0}: exported in one piece although larger than the bed of the {1} ({2} × {3} mm); only for a printer with a larger bed.",
+  "+ {0} mm erhöhter Rand": "+ {0} mm raised lip",
+  ", Griffmulden zum Herausheben": ", lift grips",
+  "{0}: {1} x {2} Felder, {3} u ({4} mm{5}{6}), Spiel {7} mm, Magnete: {8}{9}": "{0}: {1} x {2} cells, {3} u ({4} mm{5}{6}), clearance {7} mm, magnets: {8}{9}",
+  "Teile und Zusammenbau:": "Parts and assembly:",
+  "Erzeugt mit Cachfinity.": "Made with Cachfinity.",
+  "Teil {0} von {1}": "Part {0} of {1}",
+  "Grundplatte {0}…": "Baseplate {0}…",
+  "Teil {0}:": "Part {0}:",
+  "Grundplatte {0}STEP und STL schreiben…": "Baseplate {0}writing STEP and STL…",
+  "Teil {0} {1} ({2} x {3})": "Part {0} {1} ({2} x {3})",
+  "{0}_Grundplatte-{1}x{2}_Teil-{3}-von-{4}.stl": "{0}_Baseplate-{1}x{2}_Part-{3}-of-{4}.stl",
+  "mit {0} mm Boden, {1} mm hoch": "with {0} mm floor, {1} mm high",
+  "offen, auf {0} mm hohen Inseln in den Ecken der Felder, {1} mm hoch": "open, on {0} mm high islands in the cell corners, {1} mm high",
+  "offen (ohne Boden), {0} mm hoch": "open (no floor), {0} mm high",
+  ", mit Magnetlöchern 6 x 2 mm (4 je Feld)": ", with magnet holes 6 x 2 mm (4 per cell)",
+  "Grundplatte für «{0}»: {1} x {2} Felder ({3} x {4} mm), {5}{6}.": "Baseplate for “{0}”: {1} x {2} cells ({3} x {4} mm), {5}{6}.",
+  "Drucker: {0}, Bett {1} x {2} mm.": "Printer: {0}, bed {1} x {2} mm.",
+  "In {0} Teile geteilt, so angeordnet (von oben gesehen, oben = hinten im Koffer):": "Split into {0} parts, arranged like this (seen from above, top = back of the case):",
+  "Passt in einem Stück aufs Druckbett.": "Fits on the print bed in one piece.",
+  "Drucken: mit der Unterseite aufs Bett, ohne Stützen.": "Print: bottom side down on the bed, no supports.",
+  "Klammern: Teil {0} enthält alle {1} Klammern (flach drucken, 100 % Füllung).": "Clips: part {0} contains all {1} clips (print flat, 100 % infill).",
+  "Zusammenbau: die Teile mit der Unterseite nach oben so hinlegen, wie oben gezeigt (dabei spiegelt sich die Anordnung links/rechts).": "Assembly: lay the parts bottom side up as shown above (this mirrors the layout left/right).",
+  "In jede Aussparung an den Ecken der Stossstellen (unten in den Stegen) eine Klammer drücken, dann umdrehen.": "Press a clip into each recess at the corners of the joints (underneath, in the ridges), then turn it over.",
+  "In jede Aussparung an den Stossstellen eine Klammer drücken, dann umdrehen.": "Press a clip into each recess at the joints, then turn it over.",
+  "Diese Teilung hat keine inneren Ecken für Klammern: die Teile nebeneinander in den Koffer legen, seine Wände halten sie zusammen.": "This split has no inner corners for clips: lay the parts side by side in the case, its walls hold them together.",
+  "Füge zuerst ein Foto hinzu.": "Add a photo first.",
+  "Ecken gefunden.": "Corners found.",
+  "Papier nicht sicher erkannt. Setze die Ecken von Hand.": "Paper not reliably detected. Set the corners by hand.",
+  "Lade Fotos…": "Loading photos…",
+  "Das Foto liess sich nicht laden (": "The photo could not be loaded (",
+  "Erzeuge Beispielfotos…": "Creating example photos…",
+  "Kamera ≈ {0} cm": "Camera ≈ {0} cm",
+  "Referenz": "Reference",
+  "Ansicht von Foto {0}, gedreht {1}°": "View of photo {0}, rotated {1}°",
+  "Zuordnung automatisch": "Match automatically",
+  "Eigene Teile": "Different parts",
+  "Gleiche Teile wie Foto {0}": "Same parts as photo {0}",
+  "Welche Teile zeigt dieses Foto?": "Which parts does this photo show?",
+  "Motiv {0}": "Scene {0}",
+  "Foto entfernen": "Remove photo",
+  "Dieses Foto entfernen": "Remove this photo",
+  "{0} Foto{1}": "{0} photo{1}",
+  "Gerät": "Device",
+  "{0} mm aus Foto": "{0} mm from photo",
+  "{0} mm angenommen": "{0} mm assumed",
+  "Höhe über Papier": "Height above paper",
+  "(von dir)": "(set by you)",
+  "Über Punkt": "Above point",
+  "Füge rechts ein Foto hinzu oder lade das Beispiel.": "Add a photo on the right or load the example.",
+  "Foto {0}: Ecken prüfen. Die Nummern zeigen, welche Papierecke zu welcher im ersten Foto mit denselben Teilen gehört.": "Photo {0}: check the corners. The numbers show which paper corner matches which one in the first photo with the same parts.",
+  "unter der Kamera": "under the camera",
+  "Klicke jetzt das Teil an, das mit dem ausgewählten verbunden werden soll.": "Now click the part to join with the selected one.",
+  "Entzerre Fotos…": "Straightening photos…",
+  "Suche Umrisse, Motiv {0} von {1}…": "Finding outlines, scene {0} of {1}…",
+  "Suche Umrisse…": "Finding outlines…",
+  "Die Erkennung ist fehlgeschlagen:": "Detection failed:",
+  "Teile verbunden.": "Parts joined.",
+  "Die Teile liegen zu weit auseinander (über 24 mm).": "The parts are too far apart (over 24 mm).",
+  "Links": "left",
+  "Rechts": "right",
+  "Oben": "top",
+  "Unten": "bottom",
+  "Die Achse muss quer durch den Umriss gehen. Zieh sie an ihrer Mitte dorthin.": "The axis must run across the outline. Drag it there by its middle.",
+  "Ein Umriss braucht mindestens 3 Punkte.": "An outline needs at least 3 points.",
+  "«{0}» ist gesperrt, weil der Testdruck passt. Unter «Werkzeuge» das Schloss anklicken, um es zu ändern.": "“{0}” is locked because the test print fits. Click the lock under “Tools” to change it.",
+  "Nichts geändert.": "Nothing changed.",
+  "Der Umriss fehlt. «Abbrechen» lässt das Werkzeug, wie es war.": "The outline is missing. “Cancel” leaves the tool as it was.",
+  "Umriss von «{0}» gespeichert": "Outline of “{0}” saved",
+  ", {0} Bin{1} angepasst.": ", {0} bin{1} adjusted.",
+  "Der Testdruck-Status steht wieder auf «offen».": "The test print status is back to “open”.",
+  "Wähle mindestens ein Teil aus.": "Select at least one part.",
+  "{0} Werkzeug{1} übernommen und ausgewählt. «Neuer Bin daraus» legt sie zusammen in einen Bin.": "{0} tool{1:e=s} added and selected. “New bin from these” puts them together in one bin.",
+  "Fotos {0} geschnitten": "Photos {0} intersected",
+  "Foto {0}": "Photo {0}",
+  "· {0} Teil{1}": "· {0} part{1:e=s}",
+  "bis {0} mm · {1} Punkte": "up to {0} mm · {1} points",
+  "«{0}» bearbeiten, im Hintergrund der Foto-Ausschnitt vom Übernehmen": "Editing “{0}”, behind it the photo crop from when it was added",
+  "«{0}» bearbeiten (vor dem Update übernommen, darum ohne Foto-Ausschnitt)": "Editing “{0}” (added before the update, so no photo crop)",
+  "gestrichelt: wie im Foto · durchgezogen: Grundfläche nach Höhenkorrektur": "dashed: as in the photo · solid: footprint after height correction",
+  "Umrisse wie im Foto. Für die Höhenkorrektur pro Teil die Höhe eintragen.": "Outlines as in the photo. For height correction, enter each part's height.",
+  "Motiv {0} von {1}": "Scene {0} of {1}",
+  "Umrisse aus {0} Fotos. Im Hintergrund Foto {1}, darin wirken hohe Teile grösser.": "Outlines from {0} photos. Behind them photo {1}, where tall parts look larger.",
+  "Strichpunkt: Spiegelachse · weiss gepunktet: so sähe der Umriss gespiegelt aus": "dash-dot: mirror axis · white dotted: the outline as it would look mirrored",
+  "Messen: von einem Punkt zum anderen ziehen, die Länge steht an der Linie. An Umrisspunkten rastet sie ein (Alt: frei), mit Strg fein und ohne Einrasten, Shift hält sie waagrecht oder senkrecht. Gemessen auf Papierhöhe: hohe Teile wirken im Foto etwas grösser. Esc oder «Bearbeiten» beendet.": "Measure: drag from one point to another, the length shows on the line. It snaps to outline points (Alt: free), with Ctrl fine and without snapping, Shift keeps it horizontal or vertical. Measured at paper height: tall parts look a little larger in the photo. Esc or “Edit” ends.",
+  "Teil anklicken, um seinen Umriss zu bearbeiten.": "Click a part to edit its outline.",
+  "Löschen: Punkte antippen, die weg sollen. Esc oder «Bearbeiten» beendet.": "Delete: tap the points you want gone. Esc or “Edit” ends.",
+  "Achse: an den Enden ziehen dreht sie, an der Mitte verschiebt sie. Gezogene Punkte rasten auf den Spiegelbildern der Punkte gegenüber ein (Alt: frei). Mit Strg ziehen: fein und ohne Einrasten. Rechtsklick löscht einen Punkt.": "Axis: drag its ends to rotate it, its middle to move it. Dragged points snap to the mirror images of the opposite points (Alt: free). Drag with Ctrl: fine and without snapping. Right-click deletes a point.",
+  "Punkt ziehen verschiebt ihn, er rastet bei rechten Winkeln und Geraden ein (Alt: frei). Mit Strg ziehen: fein und ohne Einrasten. Über eine Linie fahren: in der Mitte erscheint ein Punkt, ziehen fügt ihn ein. Rechtsklick oder Entf löscht, Strg+Z macht rückgängig.": "Drag a point to move it; it snaps to right angles and straight lines (Alt: free). Drag with Ctrl: fine and without snapping. Hover over a line: a point appears in the middle, drag it to insert it. Right-click or Del deletes, Ctrl+Z undoes.",
+  "Kein deutlicher Schatten gefunden.": "No clear shadow found.",
+  "Schatten bis {0} mm nach {1} erkannt und abgezogen.": "Shadow of up to {0} mm on the {1} side detected and removed.",
+  "{0} Foto{1}, {2} × {3} mm, {4} px/mm, Schwelle {5}.": "{0} photo{1}, {2} × {3} mm, {4} px/mm, threshold {5}.",
+  "Name, unter dem das Teil in die Werkzeuge kommt": "Name the part gets in the tools",
+  "Höhe in mm": "Height in mm",
+  "Höhe des Teils: korrigiert die Überhöhung im Foto und wird die Taschentiefe": "Height of the part: corrects the enlargement in the photo and becomes the pocket depth",
+  "übernehmen": "Add",
+  "Dieses Teil in die Werkzeuge übernehmen": "Add this part to the tools",
+  "{0} × {1} mm · {2} Punkte{3}": "{0} × {1} mm · {2} points{3}",
+  "berührt den Papierrand": "touches the paper edge",
+  "symmetrisch erkannt": "symmetry detected",
+  "Zurück zum Umriss vor dem Spiegeln": "Back to the outline before mirroring",
+  "Den Umriss an der erkannten Achse spiegeln (die breitere Seite gilt)": "Mirror the outline on the detected axis (the wider side counts)",
+  "Spiegelung aufheben": "Undo mirroring",
+  "Spiegeln": "Mirror",
+  "{0} von {1}": "{0} of {1}",
+  "Änderungen speichern": "Save changes",
+  "Alle {0} Teile aus {1} Motiven übernehmen": "Add all {0} parts from {1} scenes",
+  "{0} auf {1} spiegeln": "Mirror {0} onto {1}",
+  "Erscheint nach der Erkennung.": "Appears after detection.",
+  "Die Umrisse sind die": "The outlines are the",
+  "Schnittmenge der": "intersection of the",
+  "mit denselben Teilen. Jede Kamera sieht eine andere Seite der Teile unverfälscht, deshalb fällt die Überhöhung weg. Die Höhe brauchst du hier nur für die Taschentiefe.": "with the same parts. Each camera sees a different side of the parts undistorted, so the enlargement drops out. Here you only need the height for the pocket depth.",
+  "Die Kamera war etwa": "The camera was about",
+  "über dem Blatt (geschätzt). Hohe Teile wirken auf der von der Kamera abgewandten Seite grösser. Ohne Höhenangabe bleibt der Umriss wie im Foto, also eher etwas zu gross. Trägst du pro Teil die": "above the sheet (estimated). Tall parts look larger on the side facing away from the camera. Without a height the outline stays as in the photo, so rather a bit too large. Enter for each part the",
+  "Höhe seiner Aussenkante": "height of its outer edge",
+  "ein, nimmt Cachfinity diese Seite zurück. Genauer und ohne Höhenangabe: 3 Fotos machen.": "and Cachfinity pulls that side back in. More precise and without heights: take 3 photos.",
+  "✓ Testdruck passt": "✓ Test print fits",
+  "✗ Testdruck passt nicht": "✗ Test print doesn't fit",
+  "✗ passt nicht": "✗ doesn't fit",
+  "Beispiele entfernt.": "Examples removed.",
+  "Noch keine Werkzeuge. Fotografiere sie unter «Fotos» und übernimm die Umrisse.": "No tools yet. Photograph them under “Photos” and add their outlines.",
+  "Zu den Fotos": "Go to photos",
+  "Auch aus {0} Bin{1} entfernen?": "Also remove from {0} bin{1}?",
+  "Wirklich löschen?": "Really delete?",
+  "Gesperrte Bins behalten es.": "Locked bins keep it.",
+  "Dieses Werkzeug aus der Sammlung löschen (mit Rückfrage; auch aus den Bins)": "Delete this tool from the library (asks first; also from the bins)",
+  "(gesperrt, weil der Testdruck passt: das Schloss oben rechts entsperrt)": "(locked because the test print fits: the lock at the top right unlocks it)",
+  "Antippen wählt das Werkzeug für einen gemeinsamen Bin aus": "Tap to select the tool for a shared bin",
+  "Noch nicht getestet": "Not tested yet",
+  "Der Testdruck hat gepasst": "The test print fitted",
+  "Der Testdruck hat nicht gepasst: Umriss oder Spiel anpassen": "The test print did not fit: adjust the outline or clearance",
+  ", gesetzt am": ", set on",
+  "Gesperrt": "Locked",
+  "Entsperrt": "Unlocked",
+  "Testdruck passt, darum gesperrt: Name, Höhe, Status, Umriss und die Taschentiefe in den Bins bleiben, wie sie sind («Bauteile versenken» versenkt es trotzdem). Klicken entsperrt.": "Test print fits, so locked: name, height, status, outline and the pocket depth in the bins stay as they are (“Sink tools flush” still sinks it). Click to unlock.",
+  "Testdruck passt, entsperrt: Änderungen sind möglich. Klicken sperrt wieder.": "Test print fits, unlocked: changes are possible. Click to lock again.",
+  "Werkzeuge auswählen, um sie zusammen in einen Bin zu legen oder einen Testdruck zu machen": "Select tools to put them in a bin together or to make a test print",
+  "Auswählen": "Select",
+  "Ausgewählt": "Selected",
+  "Name des Werkzeugs": "Tool name",
+  "Liegt in:": "In:",
+  "Liegt noch in keinem Bin": "Not in any bin yet",
+  "und {0} weiteren": "and {0} more",
+  "Noch in keinem Bin": "Not in a bin yet",
+  "Höhe des Werkzeugs, wie es im Bin liegt: daraus wird die Taschentiefe; die Taschen in den Bins folgen": "Height of the tool as it lies in the bin: this sets the pocket depth; the pockets in the bins follow",
+  "{0} Bins": "{0} bins",
+  "Taschentiefe von «{0}» in {1} angepasst.": "Pocket depth of “{0}” adjusted in {1}.",
+  "Ob der Testdruck dieses Werkzeugs gepasst hat; wird wieder «offen», wenn sich der Umriss ändert": "Whether this tool's test print fitted; goes back to “open” when the outline changes",
+  "passt nicht": "doesn't fit",
+  "Das Werkzeug in «{0}» legen: den Bin, der zuletzt unter «Bin bearbeiten» offen war. Einen anderen wählst du dort oben in der Liste.": "Put the tool in “{0}”: the bin last open under “Edit bin”. To pick a different one, use the list at the top there.",
+  "Einen neuen Bin mit diesem Werkzeug anlegen: «{0}» ist gesperrt": "Create a new bin with this tool: “{0}” is locked",
+  "Einen neuen Bin mit diesem Werkzeug anlegen": "Create a new bin with this tool",
+  "In «{0}» legen": "Put in “{0}”",
+  "In neuen Bin legen": "Put in new bin",
+  "Umriss mit dem Punkte-Editor korrigieren, ohne Foto": "Correct the outline with the point editor, without a photo",
+  "Umriss bearbeiten": "Edit outline",
+  "In einem Bin, aber in keinem Koffer": "In a bin, but not in any case",
+  "{0}{1} Werkzeug{2}": "{0}{1} tool{2:e=s}",
+  "{0} Werkzeug{1} ausgewählt": "{0} tool{1:e=s} selected",
+  "Einen neuen Bin mit den ausgewählten Werkzeugen anlegen": "Create a new bin with the selected tools",
+  "Neuer Bin daraus": "New bin from these",
+  "Die ausgewählten Werkzeuge in den Bin legen, den du gerade bearbeitest": "Put the selected tools in the bin you are editing",
+  "Die ausgewählten Werkzeuge zum Anprobieren: dünne Rahmen (STL) oder 1:1 auf Papier (PDF)": "Try the selected tools for fit: thin frames (STL) or 1:1 on paper (PDF)",
+  "Testdruck: {0} Werkzeug{1}": "Test print: {0} tool{1:e=s}",
+  "Keines mehr auswählen": "Deselect all",
+  "Auswahl aufheben": "Clear selection",
+  "Neuer Bin {0} × {1} × {2} u mit {3} Werkzeug{4}.": "New bin {0} × {1} × {2} u with {3} tool{4:en=s}.",
+  "{0} Werkzeug{1} in «{2}» gelegt.": "{0} tool{1:e=s} put in “{2}”.",
+  "{0} liegt jetzt in «{1}».": "{0} is now in “{1}”.",
+  "«{0}» ist gesperrt: daran ändert sich nichts mehr, weder durch dich noch durch Anpassungen der App. Exportieren geht weiter.": "“{0}” is locked: nothing about it changes any more, neither by you nor by adjustments from the app. Exporting still works.",
+  "«{0}» ist entsperrt und lässt sich wieder bearbeiten.": "“{0}” is unlocked and can be edited again.",
+  "dieses Werkzeug": "this tool",
+  "diese Werkzeuge": "these tools",
+  "Am Rand ist keine Lücke frei: die Griffmulden liegen mittig an den kurzen Seiten, unter {0}. Zum Herausheben zuerst {1} herausnehmen.": "No free gap at the edge: the lift grips sit in the middle of the short sides, under {0}. To lift the bin out, first take out {1}.",
+  "Eine Griffmulde": "One finger scoop",
+  "{0} an den Werkzeugen neu gesetzt.": "{0} at the tools repositioned.",
+  "Die Griffmulden an den Werkzeugen liegen schon am besten Ort.": "The finger scoops at the tools are already in the best spot.",
+  "eine Griffmulde": "one finger scoop",
+  "Für {0} an den Werkzeugen ist kein freier Platz: Werkzeuge auseinanderschieben oder den Bin grösser machen.": "No free space for {0} at the tools: move the tools apart or make the bin bigger.",
+  "Die Griffmulden zum Herausheben liegen in Lücken am Rand.": "The lift grips sit in gaps at the edge.",
+  "Für die Griffmulden zum Herausheben ist am Rand keine Lücke frei: sie liegen mittig an den kurzen Seiten, unter {0}. Zum Herausheben zuerst {1} herausnehmen.": "No free gap at the edge for the lift grips: they sit in the middle of the short sides, under {0}. To lift the bin out, first take out {1}.",
+  "Die Griffmulden zum Herausheben liegen mittig an den kurzen Seiten.": "The lift grips sit in the middle of the short sides.",
+  "Für die Griffmulden zum Herausheben war am Rand keine Lücke frei; mit etwas mehr Platz hat es eine.": "There was no free gap at the edge for the lift grips; with a little more room there is one.",
+  "Für die Griffmulden zum Herausheben ist am Rand keine Lücke frei: sie sitzen in der Mitte der kurzen Seiten.": "No free gap at the edge for the lift grips: they sit in the middle of the short sides.",
+  "Für die Griffmulden zum Herausheben ist am Rand keine Lücke frei: Werkzeuge verschieben oder den Bin grösser machen.": "No free gap at the edge for the lift grips: move the tools or make the bin bigger.",
+  "Der Bin braucht jetzt {0} × {1} = {2} Felder statt {3}.": "The bin now needs {0} × {1} = {2} cells instead of {3}.",
+  "Strg+Z macht es rückgängig.": "Ctrl+Z undoes it.",
+  "{0} Griffmulde{1} gesetzt.": "{0} finger scoop{1:n=s} placed.",
+  "Jedes Werkzeug hat schon eine Griffmulde.": "Every tool already has a finger scoop.",
+  "Automatische Griffmulden entfernt.": "Automatic finger scoops removed.",
+  "Höher als ein Bin sein kann (30 u): {0}.": "Taller than a bin can be (30 u): {0}.",
+  "Alle Werkzeuge liegen bündig in ihren Taschen, der Bin bleibt {0} u hoch.": "All tools sit flush in their pockets; the bin stays {0} u high.",
+  "Höhe {0} → {1} u: alle Werkzeuge liegen bündig in ihren Taschen.": "Height {0} → {1} u: all tools sit flush in their pockets.",
+  "Ordne die Werkzeuge platzsparend an, auch geneigt…": "Arranging the tools compactly, tilted too…",
+  "Ordne die Werkzeuge platzsparend an…": "Arranging the tools compactly…",
+  "Das Anordnen ging nicht:": "Arranging failed:",
+  "Keine andere Anordnung gefunden, die in diesen Bin passt. Deine bleibt, wie sie ist.": "No other arrangement found that fits this bin. Yours stays as it is.",
+  "Auch so passen die Werkzeuge nicht in diesen Bin. Mit «Grösse automatisch anpassen» sucht die App die kleinste passende Grösse.": "Even so, the tools don't fit in this bin. With “Adjust size automatically” the app finds the smallest size that fits.",
+  "Im Bin liegt noch kein Werkzeug.": "There are no tools in the bin yet.",
+  "Keine Anordnung gefunden.": "No arrangement found.",
+  "Keine Anordnung mit weniger Feldern gefunden: deine braucht {0} × {1} = {2} Felder, die beste gefundene {3} × {4} = {5}. Deine bleibt.": "No arrangement with fewer cells found: yours needs {0} × {1} = {2} cells, the best one found {3} × {4} = {5}. Yours stays.",
+  "Ein Werkzeug liegt": "One tool lies",
+  "Werkzeuge liegen": "tools lie",
+  "eine Gruppe": "one group",
+  "Gruppen": "groups",
+  "Werkzeuge unter einer gemeinsamen Form ({0}) sind zusammen geblieben.": "Tools under a shared shape ({0}) stayed together.",
+  "Die Griffmulden liegen in Lücken am Rand.": "The lift grips sit in gaps at the edge.",
+  "Die Griffmulden liegen mittig an den kurzen Seiten.": "The lift grips sit in the middle of the short sides.",
+  "Die Griffmulden liegen mittig an den kurzen Seiten, unter {0}: zum Herausheben zuerst {1} herausnehmen.": "The lift grips sit in the middle of the short sides, under {0}: to lift the bin out, first take out {1}.",
+  "Platzsparend angeordnet: {0} × {1} = {2} Felder": "Arranged compactly: {0} × {1} = {2} cells",
+  "Platzsparend angeordnet.": "Arranged compactly.",
+  "Noch keine Werkzeuge vorhanden.": "No tools yet.",
+  "In diesem Bin liegt noch kein Werkzeug.": "There are no tools in this bin yet.",
+  "Testdruck «{0}»": "Test print “{0}”",
+  "Griffmulde entfernt. Dieses Werkzeug bekommt keine automatische mehr; «Griffmulde dazu» setzt wieder eine.": "Finger scoop removed. This tool no longer gets an automatic one; “Add finger scoop” puts one back.",
+  "{0} Teile entfernt. Strg+Z holt sie zurück.": "{0} items removed. Ctrl+Z brings them back.",
+  "Ziehen dreht, Mausrad zoomt. Die Ansicht zeigt die exakte CAD-Geometrie, wie sie exportiert wird.": "Drag to rotate, scroll to zoom. The view shows the exact CAD geometry as it will be exported.",
+  "Exakte 3D-Form: Oberfläche…": "Exact 3D shape: surface…",
+  "Die exakte Form liess sich nicht berechnen, es bleibt die Vorschau.": "The exact shape could not be computed; the preview stays.",
+  "Schnellvorschau": "Quick preview",
+  "Die exakte CAD-Form berechnen, wie sie exportiert wird (bei einem grossen Bin bis zu einer Minute). Danach bleibt sie gespeichert, bis du den Bin änderst; auch der Export speichert sie.": "Compute the exact CAD shape as it will be exported (up to a minute for a large bin). It then stays saved until you change the bin; exporting saves it too.",
+  "Exakt berechnen": "Compute exact",
+  "3D-Ansicht konnte nicht laden:": "3D view could not load:",
+  "Zum Drucken: {0}; dieselben Teile als STEP im Ordner {1}.": "For printing: {0}; the same parts as STEP in the folder {1}.",
+  "Achtung: Die Prüfung meldet Fehler.": "Warning: the checks report errors.",
+  "Export fehlgeschlagen:": "Export failed:",
+  "Export fehlgeschlagen. Details stehen unter dem Knopf.": "Export failed. Details are below the button.",
+  "Bin löschen?": "Delete bin?",
+  "Nein": "No",
+  "Gesperrt: zuerst entsperren": "Locked: unlock first",
+  "«{0}» und «{1}»": "“{0}” and “{1}”",
+  "«{0}» und {1} weitere": "“{0}” and {1} more",
+  "über den Bin hinaus": "beyond the bin",
+  "in die Wand": "into the wall",
+  "{0} {1} {2}. So lässt sich der Bin nicht drucken.": "{0} {1:ragt=sticks out|ragen=stick out} {2}. The bin can't be printed like this.",
+  "Der Bin ist gesperrt.": "The bin is locked.",
+  "Bin vergrössern": "Enlarge bin",
+  "Neu anordnen": "Rearrange",
+  "Auch mit 12 Feldern passt nicht alles. Ordne die Teile neu an oder verteile sie auf zwei Bins.": "Even with 12 cells not everything fits. Rearrange the parts or split them across two bins.",
+  "Bin jetzt {0} × {1} Felder.": "Bin now {0} × {1} cells.",
+  "Taschen +{0} mm": "Pockets +{0} mm",
+  "Taschen bündig": "Pockets flush",
+  "Toleranz {0} mm · Rand {1} mm · Boden {2} mm · {3}": "Clearance {0} mm · Wall {1} mm · Floor {2} mm · {3}",
+  "{0} × {1} × {2} mm{3}{4} Taschen bis {5} mm tief": "{0} × {1} × {2} mm{3}{4} Pockets up to {5} mm deep",
+  "(Werkzeug {0} mm hoch)": "(tool {0} mm high)",
+  "Tiefe {0} mm{1} · {2}°{3}{4}{5}": "Depth {0} mm{1} · {2}°{3}{4}{5}",
+  "Werkzeug in der 3D-Ansicht zeigen": "Show tool in the 3D view",
+  "{0} mm · Tiefe {1} mm": "{0} mm · depth {1} mm",
+  "Noch leer.": "Still empty.",
+  "Eine Tasche ist": "One pocket is",
+  "Taschen sind": "pockets are",
+  "{0} nicht so tief, wie die Werkzeughöhe es ergibt.": "{0} not as deep as the tool height calls for.",
+  "Eine Tasche": "One pocket",
+  "Taschen": "pockets",
+  "{0} an die Werkzeughöhe angepasst.": "{0} adjusted to the tool height.",
+  "An Werkzeughöhen anpassen": "Adjust to tool heights",
+  "Um 90° gegen den Uhrzeigersinn drehen": "Rotate 90° counterclockwise",
+  "Um 90° im Uhrzeigersinn drehen (auch Taste R)": "Rotate 90° clockwise (also key R)",
+  "Drehwinkel des Werkzeugs im Bin in Grad": "Rotation of the tool in the bin, in degrees",
+  "Das Werkzeug geneigt legen: ein Ende tiefer, dafür von oben gesehen kürzer. Die Tasche bekommt einen schrägen Boden; das tiefe Ende darf nicht tiefer liegen, als der Bin erlaubt": "Lay the tool tilted: one end lower, but shorter when seen from above. The pocket gets a sloped floor; the deep end may not go lower than the bin allows",
+  "Das andere Ende des Werkzeugs tiefer legen": "Put the other end of the tool lower",
+  "Anderes Ende tiefer": "Other end lower",
+  "Tasche {0} mm am flachen, {1} mm am tiefen Ende": "Pocket {0} mm at the shallow end, {1} mm at the deep end",
+  "Das Werkzeug liegt umgedreht im Bin: die Tasche wird gespiegelt": "The tool lies upside down in the bin: the pocket is mirrored",
+  "Spiegeln (Teil liegt umgedreht)": "Mirror (part lies upside down)",
+  "Tiefe dieser Tasche; eine hier eingetragene Tiefe bleibt, auch wenn sich die Werkzeughöhe ändert": "Depth of this pocket; a depth entered here stays even if the tool height changes",
+  "(gesperrt, weil der Testdruck passt: unter «Werkzeuge» das Schloss entsperrt)": "(locked because the test print fits: the lock under “Tools” unlocks it)",
+  "Taschentiefe mm (Teil {0} mm hoch, max {1})": "Pocket depth mm (part {0} mm high, max {1})",
+  "Ohne Griffmulde: von Hand entfernt. «Griffmulde dazu» setzt wieder eine.": "No finger scoop: removed by hand. “Add finger scoop” puts one back.",
+  "Eine weitere runde Griffmulde quer über dieses Werkzeug, an der besten freien Stelle": "Another round finger scoop across this tool, at the best free spot",
+  "Griffmulde dazu": "Add finger scoop",
+  "Umriss des Werkzeugs korrigieren; gilt in allen Bins": "Correct the tool's outline; applies in all bins",
+  "Aus dem Bin nehmen (auch Entf); Rückgängig mit Strg+Z": "Take out of the bin (also Del); undo with Ctrl+Z",
+  "Entfernen": "Remove",
+  "Breite (beim Kreis der Durchmesser) der Form; das Maximum ist das Innere des Bins": "Width of the shape (diameter for a circle); the maximum is the inside of the bin",
+  "Länge der Form; das Maximum ist das Innere des Bins": "Length of the shape; the maximum is the inside of the bin",
+  "Wie tief die Form in den Bin geht": "How deep the shape goes into the bin",
+  "Radius der Ecken des Rechtecks": "Corner radius of the rectangle",
+  "Drehwinkel der Form in Grad": "Rotation of the shape in degrees",
+  "Tiefe mm (max {0})": "Depth mm (max {0})",
+  "Mulde: rund ausgeformt wie eine Griffmulde; Loch: senkrechte Wand und flacher Boden": "Scoop: rounded like a finger scoop; hole: vertical wall and flat floor",
+  "Profil": "Profile",
+  "Mulde (Halbkreis)": "Scoop (semicircle)",
+  "Loch (senkrechte Wand)": "Hole (vertical wall)",
+  "Durchmesser mm (max {0})": "Diameter mm (max {0})",
+  "Länge mm{0}": "Length mm{0}",
+  "Breite mm{0}": "Width mm{0}",
+  "Eckradius mm": "Corner radius mm",
+  "Gehört zu «{0}» und wandert mit dem Werkzeug. Verschiebst du sie, bleibt sie an der neuen Stelle am Werkzeug.": "Belongs to “{0}” and moves with the tool. If you move it, it stays at the new spot on the tool.",
+  "Sie ist {0} mm tiefer als die Tasche des Werkzeugs und folgt deren Tiefe.": "It is {0} mm deeper than the tool's pocket and follows its depth.",
+  "Kreis, Langloch oder Rechteck": "Circle, slot or rectangle",
+  "Form": "Shape",
+  "der Durchmesser": "the diameter",
+  "die Breite": "the width",
+  "Runde Mulde: ein Kreis aus dem Material genommen, oben so breit wie {0} und so tief wie angegeben. Mit Tiefe {1} mm ist es ein genauer Halbkreis. Flacher wird es ein flacher Kreisbogen, tiefer ein Halbkreis unten mit senkrechten Wänden darüber. Am Rand einer Tasche greift der Finger darunter.": "Round scoop: a circle taken out of the material, as wide at the top as {0} and as deep as set. At a depth of {1} mm it is an exact semicircle. Shallower, it becomes a flat arc; deeper, a semicircle at the bottom with vertical walls above. At the edge of a pocket, the finger reaches underneath.",
+  "Ein Zylinder mit senkrechter Wand und flachem Boden, so tief wie angegeben.": "A cylinder with a vertical wall and a flat floor, as deep as set.",
+  "Senkrechte Wand, flacher Boden, so tief wie angegeben. Ein Teil darf darin liegen: jede Tasche bekommt ihre eigene Tiefe.": "Vertical wall, flat floor, as deep as set. A part may lie inside: each pocket gets its own depth.",
+  "Tiefe auf den halben Durchmesser setzen": "Set the depth to half the diameter",
+  "Halbkreis ({0} mm tief)": "Semicircle ({0} mm deep)",
+  "Mittig und so gross wie das Innere: {0} × {1} mm": "Centered and as large as the interior: {0} × {1} mm",
+  "Ganze Innenfläche": "Whole interior",
+  "Um 90° drehen": "Rotate 90°",
+  "Eine Kopie dieser Form daneben legen": "Place a copy of this shape next to it",
+  "Passt auf das Druckbett ({0} × {1} mm).": "Fits the print bed ({0} × {1} mm).",
+  "Grösser als das Druckbett ({0} × {1} mm), wird trotzdem am Stück exportiert: nur für einen grösseren Drucker.": "Larger than the print bed ({0} × {1} mm), but exported in one piece anyway: only for a larger printer.",
+  "Zu gross für das Druckbett ({0} × {1} mm): {2} Teile ({3}, in der Draufsicht gestrichelt).": "Too large for the print bed ({0} × {1} mm): {2} parts ({3}, dashed in the top view).",
+  "Der Schnitt läuft mitten durch die Felder; {0} Klammern von unten halten die Teile zusammen, wenn du den Bin an beiden Enden hebst. Zum Anheben an einem Ende die Schnittflächen zusätzlich leimen.": "The cut runs through the middle of the cells; {0} clips from below hold the parts together when you lift the bin by both ends. To lift it by one end, also glue the cut faces.",
+  "Der Schnitt läuft mitten durch die Felder; die Teile werden geleimt, die Grundplatte richtet sie dabei aus.": "The cut runs through the middle of the cells; the parts are glued, with the baseplate lining them up.",
+  "Geschnitten an den Feldgrenzen; die Teile stehen nebeneinander, die Grundplatte richtet sie aus.": "Cut along the cell borders; the parts stand side by side, the baseplate lines them up.",
+  "{0} ausgewählt: ziehen oder mit Pfeiltasten schieben, R dreht, Entf entfernt, Esc hebt auf": "{0} selected: drag or nudge with the arrow keys, R rotates, Del removes, Esc deselects",
+  "Druckteile: {0}": "Print parts: {0}",
+  "{0} · Tasche {1} von {2} mm": "{0} · pocket {1} of {2} mm",
+  "Neuer Bin {0} × {1} angelegt. Doppelklick öffnet ihn im Bin-Editor.": "New bin {0} × {1} created. Double-click to open it in the bin editor.",
+  "Koffer {0}": "Case {0}",
+  "«{0}» ist jetzt {1} × {2} Felder.": "“{0}” is now {1} × {2} cells.",
+  "Tiefer geht nicht: darunter ist der Boden oder ein anderer Bin.": "Can't go lower: below is the floor or another bin.",
+  "Ragt {0} mm über den Koffer hinaus": "Sticks out {0} mm above the case",
+  "(mit dem Boden der Grundplatte).": "(including the baseplate floor).",
+  "Ebene {0}": "Layer {0}",
+  ", am Boden": ", on the floor",
+  "Ebene {0}{1}: ein- oder ausblenden": "Layer {0}{1}: show or hide",
+  "Die Grundplatte ein- oder ausblenden": "Show or hide the baseplate",
+  "Ablage": "Parking area",
+  "Die Bins in der Ablage neben dem Koffer ein- oder ausblenden": "Show or hide the bins in the parking area beside the case",
+  "Ebenen": "Layers",
+  "Alles wieder zeigen": "Show everything again",
+  "Alle zeigen": "Show all",
+  "In diesem Koffer liegt noch kein Bin.": "There is no bin in this case yet.",
+  "Export der Grundplatte fehlgeschlagen:": "Baseplate export failed:",
+  "{0} × {1} mm, passt in einem Stück auf das Bett ({2} × {3} mm).": "{0} × {1} mm, fits on the bed in one piece ({2} × {3} mm).",
+  "Zu gross für das Bett ({0} × {1} mm): {2} Teile ({3}), in der Draufsicht gestrichelt.": "Too large for the bed ({0} × {1} mm): {2} parts ({3}), dashed in the top view.",
+  "Verbunden mit {0} Klammern, die von unten in Aussparungen an den Stossstellen gedrückt werden": "Joined with {0} clips that press into recesses at the seams from below",
+  ", an den Ecken der Felder": ", at the corners of the cells",
+  ". In der 3D-Ansicht orange (von unten anschauen).": ". Orange in the 3D view (look at it from below).",
+  "Diese Teilung hat keine inneren Ecken für Klammern; die Kofferwände halten die Teile zusammen.": "This split has no inner corners for clips; the case walls hold the parts together.",
+  "Koffer löschen? Die Bins bleiben erhalten.": "Delete case? The bins are kept.",
+  "Diesen Koffer löschen; seine Bins bleiben (mit Rückfrage; der letzte Koffer bleibt)": "Delete this case; its bins stay (asks first; the last case stays)",
+  "Feldern am Boden belegt. Innenhöhe": "floor cells in use. Inner height",
+  ", höchster Stapel {0} mm": ", tallest stack {0} mm",
+  "(mit {0} mm Boden der Grundplatte).": "(including the baseplate's {0} mm floor).",
+  "In der Ablage neben dem Koffer (zählt nicht zum Koffer):": "In the parking area beside the case (not part of the case):",
+  "in der Ablage": "in the parking area",
+  "am Boden": "on the floor",
+  "auf": "on",
+  "Im Bin «Stapelrand» ankreuzen, damit der Bin darüber darin steht": "Tick “Stacking lip” in the bin so the bin above sits in it",
+  "«{0}» hat jetzt einen Stapelrand.": "“{0}” now has a stacking lip.",
+  "Stapelrand einschalten": "Turn on stacking lip",
+  "Drehen": "Rotate",
+  "Eine Einheit höher (Bild ↑ oder +)": "One unit up (Page Up or +)",
+  "Eine Einheit tiefer (Bild ↓ oder −)": "One unit down (Page Down or −)",
+  "Auf den ersten freien Platz im Koffer": "To the first free spot in the case",
+  "Im Koffer ist kein freier Platz. Der Bin liegt jetzt oben links, verschiebe ihn.": "There is no free spot in the case. The bin is now at the top left; move it.",
+  "In den Koffer": "Into the case",
+  "Den Bin so tief setzen, wie es geht (auf den Boden oder einen Bin darunter)": "Set the bin as low as it goes (onto the floor or a bin below)",
+  "Absenken": "Lower",
+  "Diesen Bin bearbeiten": "Edit this bin",
+  "Öffnen": "Open",
+  "Den Bin aus dem Koffer nehmen; er bleibt erhalten": "Take the bin out of the case; it is kept",
+  "Herausnehmen": "Take out",
+  "Ziehe im Raster ein Rechteck auf oder platziere unten einen Bin.": "Drag a rectangle in the grid or place a bin below.",
+  "Ins Raster ziehen": "Drag into the grid",
+  "An den ersten freien, abgestützten Platz im Koffer setzen": "Put it in the first free, supported spot in the case",
+  "Kein freier, abgestützter Platz gefunden. Der Bin liegt jetzt oben links, verschiebe ihn.": "No free, supported spot found. The bin is now at the top left; move it.",
+  "Platzieren": "Place",
+  "Alle Bins sind platziert, {0} davon in anderen Koffern.": "All bins are placed, {0} of them in other cases.",
+  "Alle Bins sind platziert.": "All bins are placed.",
+  "Nur die Bins dieser Ebene zeigen": "Show only the bins on this layer",
+  "Alle Ebenen": "All layers",
+  "{0} Klammern (orange) halten die Teile der Grundplatte zusammen: Ansicht nach unten drehen": "{0} clips (orange) hold the baseplate parts together: rotate the view to look from below",
+  "Grundplatte Teil {0}": "Baseplate part {0}",
+  "Ablage · zählt nicht zum Koffer": "Parking area · not part of the case",
+  "{0} × {1} Felder · {2} × {3} mm · {4} u": "{0} × {1} cells · {2} × {3} mm · {4} u",
+  "In «{0}» ist kein freier Platz für «{1}». Er liegt jetzt oben links, verschiebe ihn unter «Koffer bearbeiten».": "“{0}” has no free spot for “{1}”. It is now at the top left; move it under “Edit case”.",
+  "ohne Koffer": "no case",
+  "ein gesperrter behält seine": "one locked bin keeps its own",
+  "gesperrte behalten ihre": "locked bins keep their own",
+  "{0} Bins übernommen; {1}.": "{0} bins; {1}.",
+  "alle {0} Bins übernommen.": "all {0} bins.",
+  "Toleranz {0} mm für {1}": "Clearance {0} mm applied to {1}",
+  "{0} Bin{1}, {2} davon in Koffern": "{0} bin{1}, {2} of them in cases",
+  "Noch keine Bins. Wähle unter «Werkzeuge» Werkzeuge aus und lege daraus einen Bin an.": "No bins yet. Select tools under “Tools” and create a bin from them.",
+  "In welchem Koffer dieser Bin liegt": "Which case this bin is in",
+  "Kein Koffer": "No case",
+  "Gesperrt: zuerst unter «Bin bearbeiten» entsperren": "Locked: unlock it first under “Edit bin”",
+  "Toleranz {0} mm": "Clearance {0} mm",
+  "{0}: {1} × {2} Felder, {3} u. Auf einen anderen Koffer ziehen.": "{0}: {1} × {2} cells, {3} u. Drag onto another case.",
+  "Aus dem Koffer nehmen": "Take out of the case",
+  "{0} aus dem Koffer nehmen": "Take {0} out of the case",
+  "{0} öffnen": "Open {0}",
+  "Bin in {0} legen": "Put a bin in {0}",
+  "Einen Bin in diesen Koffer legen": "Put a bin in this case",
+  "Bin hinzufügen…": "Add bin…",
+  "Alle Bins sind schon hier": "All bins are already here",
+  "Koffer löschen? Die Bins bleiben.": "Delete case? The bins stay.",
+  "in einem Stück": "in one piece",
+  "in {0} Teilen": "in {0} parts",
+  "{0} × {1} Felder · {2} u · {3} Bin{4} · {5} von {6} Feldern am Boden belegt · Grundplatte {7}": "{0} × {1} cells · {2} u · {3} bin{4} · {5} of {6} floor cells in use · baseplate {7}",
+  "{0} Problem{1}, siehe «Bearbeiten»": "{0} problem{1:e=s}, see “Edit”",
+  "Leer. Bins hierher ziehen oder unten auswählen.": "Empty. Drag bins here or pick them below.",
+  "Bins in diesem Koffer platzieren und stapeln": "Place and stack bins in this case",
+  "Ohne Koffer": "Not in a case",
+  "Alle Bins liegen in einem Koffer. Hierher ziehen nimmt einen heraus.": "All bins are in a case. Drag one here to take it out.",
+  "Noch kein Umriss da.": "No outline yet.",
+  "Alle {0} Teile statt nur «{1}»": "All {0} parts instead of just “{1}”",
+  "«{0}»: Rahmen {1} × {2} mm, etwa {3} g": "“{0}”: frame {1} × {2} mm, about {3} g",
+  "– grösser als das Druckbett ({0}), besser auf Papier testen": "– larger than the print bed ({0}), better to test on paper",
+  "– nur schräg auf dem Druckbett": "– fits the print bed only diagonally",
+  "A4-Blätter": "A4 sheets",
+  "Erzeuge den Testrahmen…": "Creating the test frame…",
+  "Cachfinity Testrahmen": "Cachfinity test frame",
+  "{0}: Innenkante = Tasche (Umriss + {1} mm Spiel), Rahmen {2} mm breit, {3} mm hoch": "{0}: inner edge = pocket (outline + {1} mm clearance), frame {2} mm wide, {3} mm high",
+  "Testrahmen aus Cachfinity.": "Test frame from Cachfinity.",
+  "Drucken, Werkzeug hineinlegen: so sitzt es später in der Tasche des Bins. Zu eng oder zu weit: das Spiel anpassen oder den Umriss nachbessern.": "Print it and put the tool in: that is how it will sit in the bin's pocket. Too tight or too loose: adjust the clearance or touch up the outline.",
+  "Der Testrahmen liess sich nicht erzeugen (": "The test frame could not be created (",
+  "«{0}», Blatt {1} von {2} (Reihe {3}, Spalte {4})": "“{0}”, sheet {1} of {2} (row {3}, column {4})",
+  "{0} Teile": "{0} parts",
+  "Linie: Tasche (Umriss + {0} mm Spiel). Gestrichelt: Umriss.": "Line: pocket (outline + {0} mm clearance). Dashed: outline.",
+  "Mit 100 % drucken. Blätter so überlappen, dass die Kreuze decken, dann zusammenkleben.": "Print at 100 %. Overlap the sheets so the crosses line up, then tape them together.",
+  "Mit 100 % («Tatsächliche Grösse») drucken, nicht «An Seite anpassen».": "Print at 100 % (“Actual size”), not “Fit to page”.",
+  "nachmessen: genau 100 mm": "check: exactly 100 mm",
+  "Seite {0}/{1}": "Page {0}/{1}",
+  "Leerer Bin": "Empty bin",
+  "Fach": "Compartment",
+  "{0} × {1} mm innen, bis {2} mm tief": "{0} × {1} mm inside, up to {2} mm deep",
+  "Ohne Ausschnitte. Formen und Werkzeuge fügst du danach im Editor hinzu.": "No cutouts. Add shapes and tools afterwards in the editor.",
+  "Ein grosses Fach mit gerundeten Ecken.": "One large compartment with rounded corners.",
+  "{0} Fächer, je {1} × {2} mm.": "{0} compartments, each {1} × {2} mm.",
+  "Zu viele Fächer für diese Grösse.": "Too many compartments for this size.",
+  "Eine runde Mulde, Ø {0} mm, {1} mm tief.": "One round scoop, Ø {0} mm, {1} mm deep.",
+  "«{0}» angelegt. Formen ziehen, Griffe ändern ihre Grösse; weitere Formen unter «Inhalt».": "“{0}” created. Drag shapes, handles resize them; more shapes under “Contents”.",
+  "Keine Verbindung: Cachfinity arbeitet offline weiter, Änderungen werden später ins Konto geladen.": "No connection: Cachfinity keeps working offline; changes will be uploaded to your account later.",
+  "Wieder online: Änderungen gehen jetzt ins Konto.": "Back online: changes now go to your account.",
+  "Sicherung hier loslassen": "Drop backup here",
+  "Deine Daten liegen in diesem Browser auf diesem Rechner, auch ohne Internet. Damit sie auch auf einem anderen Laptop sind, verbinde unten Google Drive oder eine Datendatei in einem synchronisierten Ordner, oder sichere ab und zu.": "Your data is stored in this browser on this computer, even without internet. To have it on another laptop too, connect Google Drive or a data file in a synced folder below, or back up now and then.",
+  "Du arbeitest in der Offline-Version: alles liegt nur in diesem Browser auf diesem Rechner. Sichere ab und zu, und lade die Sicherung in der Version auf claude.ai, um die Daten dorthin mitzunehmen.": "You are working in the offline version: everything is stored only in this browser on this computer. Back up now and then, and load the backup in the version on claude.ai to take your data there.",
+  "Deine Daten liegen in deinem claude.ai-Konto und als Kopie in diesem Browser.": "Your data is stored in your claude.ai account, with a copy in this browser.",
+  "Deine Daten liegen in diesem Browser.": "Your data is stored in this browser.",
+  "{0} Werkzeuge, {1} Bins, {2} Koffer": "{0} tools, {1} bins, {2} cases",
+  "Cachfinity wurde aktualisiert. Lade die Seite neu (F5), um die neue Version zu nutzen.": "Cachfinity has been updated. Reload the page (F5) to use the new version.",
+  "Offline (keine Verbindung)": "Offline (no connection)",
+  "Du arbeitest bereits in der Offline-Version.": "You are already working in the offline version.",
+  "Ohne Verbindung lässt sich die Offline-Datei nicht holen. Diese Seite arbeitet aber offline weiter.": "The offline file can't be fetched without a connection. This page keeps working offline, though.",
+  "Offline-Version mit deinen Daten gespeichert. Öffne «Cachfinity_offline.html» per Doppelklick; sie braucht kein Internet.": "Offline version saved with your data. Double-click “Cachfinity_offline.html” to open it; it needs no internet.",
+  "Du arbeitest bereits online.": "You are already working online.",
+  "Deine Daten sind als «Cachfinity_Daten_….json» gespeichert. Zieh die Datei auf die geöffnete Online-Version, dann sind sie dort.": "Your data is saved as “Cachfinity_Daten_….json”. Drag the file onto the open online version to bring it there.",
+  "Die Datei ist keine Cachfinity-Sicherung.": "This file is not a Cachfinity backup.",
+  "Sicherung geladen: {0} neu, {1} ersetzt": "Backup loaded: {0} new, {1} replaced",
+  ", {0} hier neuer und behalten.": ", {0} newer here and kept.",
+  "Stelle die Offline-Version mit deinen Daten zusammen…": "Putting together the offline version with your data…",
+  "Die Offline-Version liess sich nicht laden (": "The offline version could not be loaded (",
+  "Deine Daten vom {0} sind übernommen: {1} Werkzeuge, {2} Bins, {3} Koffer": "Your data from {0} has been imported: {1} tools, {2} bins, {3} cases",
+  "({0} hier neuere behalten).": "(kept {0} newer ones here).",
+  "Nichts mehr rückgängig zu machen.": "Nothing left to undo.",
+  "Nichts zum Wiederholen.": "Nothing to redo.",
+  "Cachfinity-Daten": "Cachfinity data",
+  "Die Datei liess sich nicht verbinden (": "The file could not be connected (",
+  "Ohne Erlaubnis kann die App die Datei nicht benutzen.": "Without permission, the app can't use the file.",
+  "Die Datendatei ist nicht freigegeben; die App arbeitet nur im Browser weiter.": "Access to the data file is not allowed; the app keeps working in the browser only.",
+  "Datendatei «{0}» verbunden": "Data file “{0}” connected",
+  ": {0} neu, {1} aktualisiert, {2} entfernt übernommen.": ": imported {0} new, {1} updated, {2} removed.",
+  ". Jede Änderung wird jetzt hineingeschrieben.": ". Every change is now written into it.",
+  "«{0}» ist keine Cachfinity-Datei, sie wird nicht verändert.": "“{0}” is not a Cachfinity file; it will not be changed.",
+  "Aus der Datendatei übernommen: {0} neu, {1} aktualisiert, {2} entfernt.": "Imported from the data file: {0} new, {1} updated, {2} removed.",
+  "Datendatei getrennt. Die Daten bleiben in diesem Browser.": "Data file disconnected. The data stays in this browser.",
+  "Dieser Browser kann keine Dateien verbinden. Nimm Edge oder Chrome.": "This browser can't connect files. Use Edge or Chrome.",
+  "Den Datenordner gibt es in der Offline-Datei (Edge oder Chrome). Hier liegen die Daten in deinem claude.ai-Konto.": "The data folder is available in the offline file (Edge or Chrome). Here the data is stored in your claude.ai account.",
+  "Verbunden mit {0}": "Connected to {0}",
+  "{0} braucht deine Freigabe (der Browser fragt nach jedem Start einmal).": "{0} needs your permission (the browser asks once after each start).",
+  "{0} wurde nicht gefunden (verschoben oder gelöscht). Wähle sie neu.": "{0} was not found (moved or deleted). Choose it again.",
+  "{0} liess sich nicht lesen oder schreiben. Wähle sie neu oder trenne sie.": "{0} could not be read or written. Choose it again or disconnect it.",
+  "Nicht verbunden: die Daten liegen nur in diesem Browser.": "Not connected: the data is stored only in this browser.",
+  "Google ist nicht erreichbar": "Google can't be reached",
+  "keine Antwort": "no response",
+  "Drive nicht erlaubt": "Drive not permitted",
+  "Anmeldung abgelaufen": "Sign-in expired",
+  "Google Drive antwortet mit {0}": "Google Drive responds with {0}",
+  "Google Drive nannte keine Adresse für das Hochladen": "Google Drive gave no address for the upload",
+  "«{0}» in deinem Google Drive ist keine Cachfinity-Datei; die App verändert sie nicht.": "“{0}” in your Google Drive is not a Cachfinity file; the app does not change it.",
+  "Ohne Internet geht der Abgleich mit Google nicht. Die Daten bleiben solange in diesem Browser.": "Syncing with Google doesn't work without internet. Until then, the data stays in this browser.",
+  "Übernommen: {0} neu, {1} aktualisiert, {2} entfernt.": "Imported: {0} new, {1} updated, {2} removed.",
+  "Aus Google Drive": "From Google Drive",
+  "Übernommen": "Imported",
+  "übernommen": "imported",
+  "Mit Google Drive verbunden ({0}).": "Connected to Google Drive ({0}).",
+  "Die Datei «{0}» ist angelegt; jede Änderung kommt jetzt hinein.": "The file “{0}” has been created; every change now goes into it.",
+  "Mit Google Drive abgeglichen.": "Synced with Google Drive.",
+  "Aus Google Drive übernommen: {0} neu, {1} aktualisiert, {2} entfernt.": "Imported from Google Drive: {0} new, {1} updated, {2} removed.",
+  "Anmeldung bei Google abgebrochen. Die Daten bleiben in diesem Browser.": "Google sign-in cancelled. The data stays in this browser.",
+  "Der Browser hat das Google-Fenster blockiert. Erlaube Pop-ups für diese Seite und klicke nochmals.": "The browser blocked the Google window. Allow pop-ups for this page and click again.",
+  "Google Drive wurde nicht erlaubt. Setze beim Verbinden den Haken bei Google Drive.": "Google Drive was not allowed. When connecting, tick the box for Google Drive.",
+  "Die Anmeldung bei Google ging nicht (": "Signing in to Google failed (",
+  "Von Google Drive getrennt. Die Datei bleibt in deinem Drive, die Daten bleiben in diesem Browser.": "Disconnected from Google Drive. The file stays in your Drive, the data stays in this browser.",
+  ", zuletzt geschrieben {0}": ", last written {0}",
+  "Den Abgleich mit Google Drive gibt es in der Web-App: {0}": "Syncing with Google Drive is available in the web app: {0}",
+  "Verbunden mit {0}{1}.": "Connected to {0}{1}.",
+  "Verbunden mit {0}.": "Connected to {0}.",
+  "Klicke «Mit Google abgleichen», um weiter abzugleichen.": "Click “Sync with Google” to keep syncing.",
+  "Dein nächster Klick in der App erneuert den Zugriff bei Google.": "Your next click in the app renews access with Google.",
+  "Erneut versuchen": "Try again",
+  "«{0}» {1} → {2} u": "“{0}” {1} → {2} u",
+  "einem Bin": "one bin",
+  "Toleranz in {0} von 0.8 auf {1} mm umgestellt (der neue Standard).": "Clearance in {0} changed from 0.8 to {1} mm (the new default).",
+  "Taschentiefen in {0} an die Werkzeughöhen angepasst, so tief, wie der Bin es zulässt.": "Pocket depths in {0} adjusted to the tool heights, as deep as the bin allows.",
+  "«{0}» ist": "“{0}” is",
+  "{0} Bins sind": "{0} bins are",
+  "{0} jetzt so hoch, dass die Werkzeuge ganz in ihren Taschen liegen.": "{0} now tall enough for the tools to sit fully in their pockets.",
+  "Taschen in {0} jetzt {1} mm tiefer als die Werkzeuge hoch sind (Reserve nach oben).": "Pockets in {0} now {1} mm deeper than the tools are tall (headroom on top).",
+  "{0} Taschen in {1} 1 mm weniger tief: die Werkzeuge liegen jetzt bündig. Grösse und Höhe der Bins sind gleich geblieben.": "{0} pockets in {1} 1 mm shallower: the tools now sit flush. The bins' size and height are unchanged.",
+  "Gesperrt und darum unverändert: {0}. Zum Absenken entsperren und unter «ändern» «Tasche tiefer als Werkzeug» auf 0 stellen.": "Locked and therefore unchanged: {0}. To lower them, unlock them and set “Pocket deeper than tool” to 0 under “change”.",
+  "«Werkzeug-Allgemein» liegt wieder, wie es war: alle Werkzeuge 0.18 mm nach rechts und 0.20 mm nach oben zurück, auf das Raster, auf das sie von Hand gelegt waren. Sonst ist nichts verändert.": "“Werkzeug-Allgemein” is back as it was: all tools moved back 0.18 mm right and 0.20 mm up, onto the grid where they were placed by hand. Nothing else has changed.",
+  "In «Werkzeug-USM» liegt die Griffmulde der Rätsche wieder 0.65 mm weiter innen, 0.2 mm vor der Wand. Sonst ist nichts verändert.": "In “Werkzeug-USM” the ratchet's finger scoop is back 0.65 mm further in, 0.2 mm from the wall. Nothing else has changed.",
+  "Die Griffmulden der Werkzeuge in {0} sind wieder so lang wie vorher: die Verlängerung um 1 mm beim letzten Start ist zurückgenommen. Bestehende Bins verändert die App nicht mehr von selbst; unter «Bin bearbeiten» lässt sich ein Bin sperren.": "The finger scoops of the tools in {0} are as long as before again: the 1 mm extension at the last start has been undone. The app no longer changes existing bins on its own; a bin can be locked under “Edit bin”.",
+  "Griffmulden der Werkzeuge wieder {0} mm breit (in {1} angepasst).": "Tool finger scoops back to {0} mm wide (adjusted in {1}).",
+  "Griffmulden machen Bins nicht mehr höher: {0}.": "Finger scoops no longer make bins taller: {0}.",
+  "Start fehlgeschlagen:": "Start failed:",
+  "LIESMICH.txt": "README.txt",
+  "Taschen bis {0} mm tief": "Pockets up to {0} mm deep",
+  "{0} Fotos": "{0} photos",
+  "{0} Felder": "{0} cells",
+  "{0} Werkzeuge": "{0} tools",
+  "{0} × {1} × {2} mm + 4.4 Stapelrand": "{0} × {1} × {2} mm + 4.4 stacking lip",
+  "{0} × {1} × {2} mm + {3} mm erhöhter Rand + 4.4 Stapelrand": "{0} × {1} × {2} mm + {3} mm raised rim + 4.4 stacking lip",
+  "{0} × {1} × {2} mm + {3} mm erhöhter Rand": "{0} × {1} × {2} mm + {3} mm raised rim",
+  "Wiederholen (Strg+Y)": "Redo (Ctrl+Y)",
+  "Auf Papier, 1:1 (PDF)": "On paper, 1:1 (PDF)",
+  "Schnittmenge der {0} Fotos": "Intersection of the {0} photos",
+  "{0} (ohne Koffer)": "{0} (no case)",
+  "{0} · am Boden": "{0} · on the floor",
+  ", ab {0} u gestapelt": ", stacked from {0} u",
+  "{0} · ab {1} u gestapelt": "{0} · stacked from {1} u",
+  ", höchster Stapel {0} mm.": ", highest stack {0} mm.",
+  "{0} Griffmulden": "{0} finger scoops",
+  "{0} Griffmulde": "{0} finger scoop",
+  "Ebene {0}, am Boden: ein- oder ausblenden": "Layer {0}, on the floor: show or hide",
+  "Ebene {0}, ab {1} u gestapelt: ein- oder ausblenden": "Layer {0}, stacked from {1} u: show or hide",
+  "{0} · {1} × {2} mm innen, bis {3} mm tief.": "{0} · {1} × {2} mm inside, up to {3} mm deep.",
+  "Verbunden mit {0} Klammern, die von unten in Aussparungen an den Stossstellen gedrückt werden, an den Ecken der Felder.": "Joined with {0} clips that press into recesses at the seams from below, at the corners of the cells.",
+  "Verbunden mit {0} Klammern, die von unten in Aussparungen an den Stossstellen gedrückt werden.": "Joined with {0} clips that press into recesses at the seams from below.",
+  "offen": "open",
+  "Motiv {0}: {1}": "Scene {0}: {1}",
+  "Art": "Type",
+  "Ja": "Yes",
+  "links": "left",
+  "rechts": "right",
+  "oben": "top",
+  "unten": "bottom",
+  "u (je 7 mm)": "u (7 mm each)",
+  "Beispiel ×3": "Example ×3",
+  "STEP + STL herunterladen": "Download STEP + STL",
+  "3D-Rahmen (STL)": "3D frame (STL)",
+  "Fuss 4.75": "Foot 4.75",
+  "Platte 4.65": "Plate 4.65",
+  "Einheit u": "Unit u",
+  "ganze u": "whole u",
+  "z. B. 5.5 u = 38.5 mm": "e.g. 5.5 u = 38.5 mm",
+  "Offline-Version herunterladen (etwa 6 MB)": "Download offline version (about 6 MB)",
+  "Offline-Version herunterladen (etwa {0} MB)": "Download offline version (about {0} MB)",
+  "IndexedDB abgebrochen": "IndexedDB aborted",
+  "(gesperrt)": "(locked)",
+  "+ 4.4 mm Stapelrand": "+ 4.4 mm stacking lip",
+  "{0}_Grundplatte-{1}x{2}": "{0}_Baseplate-{1}x{2}",
+  "· {0} Motiv{1}": "· {0} scene{1:e=s}",
+  "Motiv {0}:": "Scene {0}:",
+  "{0} + {1} weitere": "{0} + {1} more",
+  "{0} geneigt.": "{0} tilted.",
+  "statt {0}.": "instead of {0}.",
+  "(gespiegelt)": "(mirrored)",
+  "Lade CAD-Kern…": "Loading CAD kernel…",
+  "Exakte 3D-Form: {0}…": "Exact 3D shape: {0}…",
+  "Exakte CAD-Geometrie": "Exact CAD geometry",
+  "Lade CAD-Kern (einmalig ~11 MB)…": "Loading CAD kernel (once, ~11 MB)…",
+  "(Kopie)": "(copy)",
+  "🔒 Gesperrt": "🔒 Locked",
+  "+ 4.4 Stapelrand": "+ 4.4 stacking lip",
+  "· gespiegelt": "· mirrored",
+  "· {0}° geneigt": "· tilted {0}°",
+  "{0} · {1}° geneigt · {2}→{3} mm": "{0} · tilted {1}° · {2}→{3} mm",
+  "{0}_alle_Bins.zip": "{0}_all_bins.zip",
+  "{0}_Grundplatte.zip": "{0}_baseplate.zip",
+  "· ab {0} u gestapelt": "· stacked from {0} u",
+  "· 🔒 gesperrt": "· 🔒 locked",
+  "(+{0} weitere)": "(+{0} more)",
+  "· Ablage": "· parking area",
+  "1 A4-Blatt": "1 A4 sheet",
+  ". Auf Papier: {0}.": ". On paper: {0}.",
+  "_Testrahmen": "_test_frame",
+  "Cachfinity_{0}Testrahmen.zip": "Cachfinity_{0}test_frame.zip",
+  "Cachfinity Testdruck 1:1 – {0}": "Cachfinity test print 1:1 – {0}",
+  "Cachfinity_{0}Testdruck_A4.pdf": "Cachfinity_{0}test_print_A4.pdf",
+  "Cachfinity_Daten_{0}.json": "Cachfinity_Data_{0}.json",
+  ", {0} entfernt": ", {0} removed",
+  ", zuletzt geschrieben {0}.": ", last written {0}.",
+  "automatisch": "automatic",
+  "{0} · Kamera ≈ {1} cm": "{0} · camera ≈ {1} cm",
+  "Brennweite (KB)": "Focal length (35 mm equiv.)",
+  "Winkel °": "Angle °",
+  "Neigung °": "Tilt °",
+  "passt": "fits",
+  "STEP-fuer-CAD": "STEP-for-CAD",
+  "{0}_Teil-{1}-von-{2}.step": "{0}_Part-{1}-of-{2}.step",
+  "{0}_Teil-{1}-von-{2}.stl": "{0}_Part-{1}-of-{2}.stl",
+  "In der 3D-Ansicht orange (von unten anschauen).": "Orange in the 3D view (look at it from below).",
+  "Jede Änderung wird jetzt hineingeschrieben.": "Every change is now written into it.",
+  "Auf Papier: {0}.": "On paper: {0}.",
+};
+
+// ===== Language: German (the app's own) or English (Camille 2026-10-22: a switch in the top bar, German first) =====
+// The code and the page stay German. In English a layer translates what is shown: every text and tooltip on the
+// page as it appears (a MutationObserver), the labels drawn on the canvases (drawLabel), and what leaves the page
+// (file names, the README in a ZIP, the test print PDF). A text is looked up whole (I18N_EN, 01-en.js); one with
+// numbers or names in it by a pattern made from a template in the code: {0}, {1} … stand for the values, a value
+// that is itself a German piece is looked up in turn, and {1:e=s} maps a German plural ending to the English one.
+// The switch stores the choice in this browser and reloads the page, so German is always the page untouched.
+const LANG_KEY = 'cf-lang';
+const LANG = lsGet(LANG_KEY) === 'en' ? 'en' : 'de';
+const I18n = {
+  exact: null, pats: null, miss: new Set(), seen: new WeakMap(),
+  // whole texts and patterns from the dictionary (patterns: the most literal text first)
+  load() {
+    if (this.exact) return;
+    this.exact = new Map(); this.pats = [];
+    const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    for (const [k, v] of Object.entries(typeof I18N_EN === 'object' ? I18N_EN : {})) {
+      if (!/\{\d+\}/.test(k)) { this.exact.set(k, v); continue; }
+      const lits = k.split(/\{\d+\}/), order = [...k.matchAll(/\{(\d+)\}/g)].map((m) => +m[1]);
+      if (!lits.join('').replace(/[^A-Za-zÄÖÜäöü]/g, '')) continue; // (nothing but values: would match anything)
+      const quoted = new Set([...k.matchAll(/«\{(\d+)\}»/g)].map((m) => +m[1])); // (a name in «»: anything goes)
+      this.pats.push({ re: new RegExp('^' + lits.map(esc).join('([\\s\\S]*?)') + '$'), order, out: v, quoted, lit: lits.reduce((a, b) => (b.length > a.length ? b : a), ''), size: lits.join('').length });
+    }
+    this.pats.sort((a, b) => b.size - a.size);
+  },
+  core(s, depth = 0) {
+    const hit = this.exact.get(s); if (hit != null) return hit;
+    for (const p of this.pats) {
+      if (!s.includes(p.lit)) continue;
+      const m = p.re.exec(s); if (!m) continue;
+      const vals = []; p.order.forEach((n, i) => { vals[n] = m[i + 1]; });
+      // a value must be one: a plural ending (a few letters) where the translation maps one, otherwise a number,
+      // a name or a German piece known itself. A short pattern such as «{0} von {1}» would otherwise take half a
+      // sentence into a value and leave it German.
+      let bad = false;
+      const out = p.out.replace(/\{(\d+)(?::([^}]*))?\}/g, (_, n, map) => {
+        const v = vals[+n] ?? '';
+        if (map != null) { if (v.length > 3) bad = true; for (const pair of map.split('|')) { const [a, b = ''] = pair.split('='); if (v === a) return b; } return v; }
+        const t = depth < 4 ? this.piece(v, depth + 1) : v;
+        if (t === v && !p.quoted.has(+n) && (I18n.PHRASE.test(v) || (/[äöüÄÖÜß]/.test(v) && /\s/.test(v.trim())))) bad = true;
+        return t;
+      });
+      if (!bad) return out;
+    }
+    return null;
+  },
+  PHRASE: /(^|[\s(«])(der|die|das|und|oder|nicht|mit|für|auf|im|am|um|zu|zum|zur|vom|beim|von|ist|sind|wird|werden|ein|eine|einen|einem|den|dem|des|es|sie|er|man|sich|hat|haben|kann|können|muss|macht|liegt|liegen|noch|nur|auch|wie|wenn|dann|denn|dass|ob|so|da|hier|jetzt|wieder|schon|aus|bei|nach|über|unter|ohne|als|Werkzeuge?n?|Taschen?|Felder|Koffer)(?=[\s,.;:!?)»]|$)/,
+  // a text with its spaces around kept; null where nothing is known
+  piece(s, depth = 0) {
+    const t = s.replace(/\s+/g, ' ').trim(); if (!t) return s;
+    const lead = s.match(/^\s*/)[0], trail = s.match(/\s*$/)[0];
+    // a text set with line breaks (\n): line by line where every line is known, so the breaks stay
+    if (/\n/.test(s.trim())) {
+      const lines = s.trim().split('\n'), out = lines.map((l) => { const c = l.replace(/\s+/g, ' ').trim(); return c ? this.core(c, depth) : ''; });
+      if (out.every((x, i) => x != null || !/[A-Za-zÄÖÜäöü]/.test(lines[i]))) return lead + out.map((x, i) => (x == null ? lines[i] : x)).join('\n') + trail;
+    }
+    let r = this.core(t, depth);
+    // several sentences put together by the code (a message and «Strg+Z macht es rückgängig.»): sentence by
+    // sentence where each one is known
+    if (r == null) {
+      const parts = t.split(/(?<=[.!?…])\s+(?=[A-ZÄÖÜ«(0-9])/), out = [];
+      // (the longest run of sentences known as one: a message may hold two sentences in one text)
+      for (let i = 0; parts.length > 1 && i < parts.length;) {
+        let j = parts.length, hit = null;
+        for (; j > i && hit == null; j--) hit = this.core(parts.slice(i, j).join(' '), depth);
+        if (hit == null) { if (/[A-Za-zÄÖÜäöü]{2}/.test(parts[i])) { out.length = 0; break; } out.push(parts[i]); i++; } else { out.push(hit); i = j + 1; }
+      }
+      if (out.length) r = out.join(' ');
+    }
+    return r == null ? s : lead + r + trail;
+  },
+  // the page as it is and as it changes: texts and tooltips; a node keeps its German original, so a text the
+  // app sets anew is taken as the new original. An element with data-en gives its own text in English where one
+  // German word means two things (the tab «Koffer»: «Cases»; the card «Koffer»: «Case»)
+  node(n) {
+    if (n.nodeType === 3) {
+      const p = n.parentNode; if (!p || this.skip(p)) return;
+      const cur = n.nodeValue, rec = this.seen.get(n), orig = rec && rec.shown === cur ? rec.orig : cur;
+      const own = p.getAttribute && p.getAttribute('data-en');
+      const t = own && /[A-Za-zÄÖÜäöü]/.test(orig) ? orig.match(/^\s*/)[0] + own + orig.match(/\s*$/)[0] : tr(orig); if (t !== cur) n.nodeValue = t;
+      this.seen.set(n, { orig, shown: t });
+    } else if (n.nodeType === 1) {
+      if (this.skip(n)) return;
+      for (const a of I18n.ATTRS) if (n.hasAttribute(a)) this.attr(n, a);
+      for (let c = n.firstChild; c; c = c.nextSibling) this.node(c);
+    }
+  },
+  ATTRS: ['title', 'aria-label', 'placeholder', 'alt'],
+  attr(el, a) {
+    let recs = this.seen.get(el); if (!recs) this.seen.set(el, (recs = {}));
+    const cur = el.getAttribute(a), rec = recs[a], orig = rec && rec.shown === cur ? rec.orig : cur;
+    const t = tr(orig); if (t !== cur) el.setAttribute(a, t);
+    recs[a] = { orig, shown: t };
+  },
+  // names the user gave (and code) are not translated: elements marked translate="no", inputs, scripts
+  skip(el) { return el.closest && !!el.closest('[translate="no"], script, style, textarea'); },
+  start() {
+    document.documentElement.lang = LANG;
+    for (const b of document.querySelectorAll('[data-lang]')) b.setAttribute('aria-pressed', String(b.dataset.lang === LANG));
+    for (const b of document.querySelectorAll('[data-lang]')) b.onclick = () => { if (b.dataset.lang !== LANG) { lsSet(LANG_KEY, b.dataset.lang); location.reload(); } };
+    if (LANG === 'de') return;
+    this.load(); this.node(document.body);
+    new MutationObserver((list) => {
+      for (const m of list) {
+        if (m.type === 'childList') for (const n of m.addedNodes) this.node(n);
+        else if (m.type === 'characterData') this.node(m.target);
+        else if (m.type === 'attributes' && !this.skip(m.target)) this.attr(m.target, m.attributeName);
+      }
+    }).observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: I18n.ATTRS });
+  },
+};
+// a text in the language chosen (German: as it is)
+function tr(s) {
+  if (LANG === 'de' || s == null || s === '') return s;
+  I18n.load();
+  const str = String(s), r = I18n.piece(str);
+  if (r === str && /[A-Za-zÄÖÜäöü]{2}/.test(str)) I18n.miss.add(str.replace(/\s+/g, ' ').trim());
+  return r;
+}
+// a text of several lines (a README): each line on its own
+const trLines = (s) => (LANG === 'de' ? s : s.split(/(\r?\n)/).map((x) => (/\n/.test(x) ? x : tr(x))).join(''));
+// a path in a ZIP: each part on its own
+const trPath = (p) => (LANG === 'de' ? p : p.split('/').map((x) => tr(x)).join('/'));
 
 // ===== vision: photos, paper corners, rectification, segmentation, outlines =====
 const PAPERS = { A4: [297, 210], A3: [420, 297], Letter: [279.4, 215.9], Legal: [355.6, 215.9] };
@@ -10583,7 +11785,7 @@ function detectItems() {
   // the numbers go on across the scenes, so that every part has a name of its own
   const sc = T.cur;
   if (!sc.nameStart) { const before = T.scenes.slice(0, Math.max(0, T.scenes.indexOf(sc))); sc.nameStart = 1 + before.reduce((a, o) => a + o.items.length, 0); }
-  next.forEach((it, i) => { if (!it.name) it.name = 'Teil ' + ((sc.nameStart || 1) + i); it.color = ITEM_COLORS[i % ITEM_COLORS.length]; });
+  next.forEach((it, i) => { if (!it.name) it.name = tr('Teil') + ' ' + ((sc.nameStart || 1) + i); it.color = ITEM_COLORS[i % ITEM_COLORS.length]; });
   T.items = next;
   if (T.selItem && !T.items.includes(T.selItem)) { T.selItem = null; T.selVertex = -1; }
 }
@@ -11803,7 +13005,7 @@ function toolFromOutline(name, poly, height, extra = {}) {
 // long. No example tools or bins (they are not wanted on every start).
 function seedState() {
   S = { cases: [], tools: [], bins: [], ui: { tab: 'foto', binId: null, caseId: null } };
-  const cs = { id: uid(), name: 'Koffer 1', gx: 8, gy: 5, hu: 15 };
+  const cs = { id: uid(), name: tr('Koffer 1'), gx: 8, gy: 5, hu: 15 };
   S.cases.push(cs); S.ui.caseId = cs.id;
 }
 
@@ -12768,7 +13970,8 @@ async function exportBins(bins) {
   }
   const info = bins.map((b) => `${b.name}: ${b.gx} x ${b.gy} Felder, ${b.hu} u (${binTop(b)} mm${binLift(b) ? ` + ${binLift(b) * GF.unit} mm erhöhter Rand` : ''}${b.lip ? ' + 4.4 mm Stapelrand' : ''}), Spiel ${b.clearance} mm, Magnete: ${MAGNET_TEXT[magnetMode(b)]}${b.grips ? ', Griffmulden zum Herausheben' : ''}`).join('\r\n');
   const notes = splitNotes.length ? '\r\n\r\nTeile und Zusammenbau:\r\n' + splitNotes.join('\r\n') : '';
-  files.push({ name: 'LIESMICH.txt', data: enc.encode('Erzeugt mit Cachfinity.\r\n\r\n' + STEP_NOTE + '\r\n\r\n' + info + notes + '\r\n') });
+  files.push({ name: 'LIESMICH.txt', data: enc.encode(trLines('Erzeugt mit Cachfinity.\r\n\r\n' + STEP_NOTE + '\r\n\r\n' + info + notes + '\r\n')) });
+  for (const f of files) f.name = trPath(f.name);
   return { zip: makeZip(files), meshes, files };
 }
 
@@ -12917,7 +14120,8 @@ async function exportPlate(cs) {
       opt.type === 'light' ? 'In jede Aussparung an den Ecken der Stossstellen (unten in den Stegen) eine Klammer drücken, dann umdrehen.' : 'In jede Aussparung an den Stossstellen eine Klammer drücken, dann umdrehen.',
     ] : plan.parts > 1 ? ['Diese Teilung hat keine inneren Ecken für Klammern: die Teile nebeneinander in den Koffer legen, seine Wände halten sie zusammen.'] : []),
   ];
-  files.push({ name: 'LIESMICH.txt', data: enc.encode(txt.join('\r\n') + '\r\n') });
+  files.push({ name: 'LIESMICH.txt', data: enc.encode(trLines(txt.join('\r\n') + '\r\n')) });
+  for (const f of files) f.name = trPath(f.name);
   return { zip: makeZip(files), files, plan, clips };
 }
 
@@ -13303,6 +14507,7 @@ function matGrid(c, st, step, x0, y0, x1, y1) {
 function visibleWorld(st) { const [x0, y0] = st.s2w(0, 0), [x1, y1] = st.s2w(st.w, st.h); return { x0, y0, x1, y1 }; }
 function pathPoly(c, p) { c.beginPath(); p.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.closePath(); }
 function drawLabel(c, st, text, x, y, opts = {}) {
+  text = tr(text);
   const [sx, sy] = st.w2s(x, y); st.screen(c);
   c.font = `${opts.weight || 600} ${opts.size || 12}px ${cssVar('--font-body') || 'sans-serif'}`;
   c.textAlign = opts.align || 'center'; c.textBaseline = 'middle';
@@ -14811,7 +16016,7 @@ const BinUI = {
     }
   },
   duplicate(b) {
-    const c = JSON.parse(JSON.stringify(b)); c.id = uid(); c.name = b.name + ' (Kopie)'; c.place = null; c.example = false; delete c.locked; delete c.frozen; delete c.lockedAt;
+    const c = JSON.parse(JSON.stringify(b)); c.id = uid(); c.name = b.name + tr(' (Kopie)'); c.place = null; c.example = false; delete c.locked; delete c.frozen; delete c.lockedAt;
     const ids = new Map(); c.items.forEach((it) => { const n = uid(); ids.set(it.id, n); it.id = n; });
     c.fingers.forEach((f) => { f.id = uid(); if (f.itemId) f.itemId = ids.get(f.itemId); });
     const used = new Set(S.bins.map((x) => x.color)); c.color = BIN_COLORS.find((x) => !used.has(x)) || c.color;
@@ -14892,7 +16097,7 @@ const BinUI = {
     // (a bin that fits its content does this by itself on every change)
     $('#bin-autosize').hidden = b.autoFit !== false;
     $('#bin-dims').textContent = `${nf(binW(b), 1)} × ${nf(binD(b), 1)} × ${nf(binTop(b), binTop(b) % 1 ? 1 : 0)} mm${binLift(b) ? ` + ${binLift(b) * GF.unit} mm erhöhter Rand` : ''}${b.lip ? ' + 4.4 Stapelrand' : ''}\nTaschen bis ${nf(Math.floor(maxDepth(b) * 10 + 1e-6) / 10, 1)} mm tief`;
-    const add = $('#bin-add-tool'); add.replaceChildren(...S.tools.map((t) => h('option', { value: t.id, text: t.name })));
+    const add = $('#bin-add-tool'); add.replaceChildren(...S.tools.map((t) => h('option', { value: t.id, text: t.name, translate: 'no' })));
     const items = $('#bin-items'); items.replaceChildren();
     for (const it of b.items) {
       const t = binTool(b, it.toolId);
@@ -15168,7 +16373,7 @@ const CaseUI = {
     document.addEventListener('keydown', (e) => this.key(e));
     $('#case-fit').onclick = () => this.stage.fit();
     $('#case-select').onchange = (e) => { S.ui.caseId = e.target.value; this.sel = null; Store.saveUi(); this.stage.fitted = false; this.render(); this.stage.fit(); };
-    $('#case-new').onclick = () => { const cs = { id: uid(), name: 'Koffer ' + (S.cases.length + 1), gx: 5, gy: 8, hu: 15 }; S.cases.push(cs); S.ui.caseId = cs.id; Store.save('case', cs); this.stage.fitted = false; this.render(); this.stage.fit(); };
+    $('#case-new').onclick = () => { const cs = { id: uid(), name: tr(`Koffer ${S.cases.length + 1}`), gx: 5, gy: 8, hu: 15 }; S.cases.push(cs); S.ui.caseId = cs.id; Store.save('case', cs); this.stage.fitted = false; this.render(); this.stage.fit(); };
     $('#case-view-2d').onclick = () => this.setView('2d');
     $('#case-view-3d').onclick = () => this.setView('3d');
     const bindNum = (id, key, lo, hi) => { $(id).onchange = (e) => { const cs = curCase(); if (!cs) return; cs[key] = Math.round(clamp(num(e.target, cs[key]), lo, hi)); Store.save('case', cs); this.stage.fitted = false; this.render(); this.stage.fit(); }; };
@@ -15247,7 +16452,7 @@ const CaseUI = {
     const group = (label, list, title) => {
       const ids = list.map((b) => b.id);
       rows.push(h('label', { title }, box(ids, title), ...(list.length === 1 ? [sw(list[0])] : []), h('span', { text: label + ' · ' + (list.length === 1 ? list[0].name : list.length + ' Bins') })));
-      if (list.length > 1) for (const b of list) rows.push(h('label', { class: 'sub', title: b.name }, box([b.id], b.name), sw(b), h('span', { text: b.name })));
+      if (list.length > 1) for (const b of list) rows.push(h('label', { class: 'sub', title: b.name }, box([b.id], b.name), sw(b), h('span', { text: b.name, translate: 'no' })));
     };
     zs.slice().reverse().forEach((z) => { const n = zs.indexOf(z) + 1; group(`Ebene ${n}`, inside.filter((b) => b.place.z === z), `Ebene ${n}${z ? `, ab ${z} u gestapelt` : ', am Boden'}: ein- oder ausblenden`); });
     rows.push(h('label', { title: 'Die Grundplatte ein- oder ausblenden' }, box(['plate'], 'Die Grundplatte ein- oder ausblenden'), h('span', { text: 'Grundplatte' })));
@@ -15326,7 +16531,7 @@ const CaseUI = {
       const row = h('div', { class: 'item' + (this.sel === b.id ? ' sel' : ''), onclick: () => { this.sel = b.id; this.render(); } },
         h('span', { class: 'swatch', style: { background: b.color } }),
         h('div', null,
-          h('div', { class: 't', text: b.name }),
+          h('div', { class: 't', text: b.name, translate: 'no' }),
           h('div', { class: 's', text: `${sizeTag(fp.w, fp.h, b.hu)}${b.place.z ? ` · ab ${b.place.z} u gestapelt` : ''} · ${where}` }),
           parked ? h('span', { class: 'pill mute', text: 'Ablage' }) : worst ? h('span', { class: 'pill ' + worst.level, text: worst.text }) : h('span', { class: 'pill ok', text: 'passt' }),
           // (a bin carrying another without its stacking lip: ticked here with one click)
@@ -15354,7 +16559,7 @@ const CaseUI = {
       ondragstart: (e) => { this.dnd = b; e.dataTransfer.setData('text/plain', b.id); e.dataTransfer.effectAllowed = 'move'; },
       ondragend: () => { this.dnd = null; if (this.ghost) { this.ghost = null; this.stage.redraw(); } } },
       h('span', { class: 'swatch', style: { background: b.color } }),
-      h('div', null, h('div', { class: 't', text: b.name }), h('div', { class: 's', text: binTag(b) })),
+      h('div', null, h('div', { class: 't', text: b.name, translate: 'no' }), h('div', { class: 's', text: binTag(b) })),
       h('button', { class: 'btn small', type: 'button', title: 'An den ersten freien, abgestützten Platz im Koffer setzen', onclick: () => { const ok = freePlace(cs, b); Store.save('bin', b); this.sel = b.id; this.render(); if (!ok) toast('Kein freier, abgestützter Platz gefunden. Der Bin liegt jetzt oben links, verschiebe ihn.'); } }, 'Platzieren')));
     const others = S.bins.filter((b) => b.place && caseById(b.place.caseId) && b.place.caseId !== cs.id);
     if (!unplaced.length) free.append(h('p', { text: others.length ? `Alle Bins sind platziert, ${others.length} davon in anderen Koffern.` : 'Alle Bins sind platziert.' }));
@@ -15545,7 +16750,7 @@ const Overview = {
       toast(`Toleranz ${nf(t, 1)} mm für ${locked ? `${S.bins.length - locked} Bins übernommen; ${locked === 1 ? 'ein gesperrter behält seine' : locked + ' gesperrte behalten ihre'}.` : `alle ${S.bins.length} Bins übernommen.`}`); this.renderBins();
     };
     $('#bin-all-new').onclick = () => NewBin.open();
-    $('#case-all-new').onclick = () => { const cs = { id: uid(), name: 'Koffer ' + (S.cases.length + 1), gx: 5, gy: 8, hu: 15 }; S.cases.push(cs); Store.save('case', cs); this.renderCases(); };
+    $('#case-all-new').onclick = () => { const cs = { id: uid(), name: tr(`Koffer ${S.cases.length + 1}`), gx: 5, gy: 8, hu: 15 }; S.cases.push(cs); Store.save('case', cs); this.renderCases(); };
   },
   // ---------- bins ----------
   // the overview has a tab of its own («Bins»); the editor is «Bin bearbeiten»
@@ -15564,7 +16769,7 @@ const Overview = {
     for (const b of S.bins) {
       const bad = binChecks(b).filter((x) => x.level === 'bad');
       const caseSel = h('select', { 'aria-label': 'Koffer', title: 'In welchem Koffer dieser Bin liegt', onchange: (e) => { assignBin(b, caseById(e.target.value) || null); this.renderBins(); } },
-        h('option', { value: '', text: 'Kein Koffer' }), ...S.cases.map((cs) => h('option', { value: cs.id, text: cs.name })));
+        h('option', { value: '', text: 'Kein Koffer' }), ...S.cases.map((cs) => h('option', { value: cs.id, text: cs.name, translate: 'no' })));
       caseSel.value = b.place && caseById(b.place.caseId) ? b.place.caseId : '';
       const del = this.confirm === b.id
         ? h('span', { class: 'confirm' }, 'Wirklich löschen?',
@@ -15599,7 +16804,7 @@ const Overview = {
       ondragstart: (e) => { this.dnd = b; e.dataTransfer.setData('text/plain', b.id); e.dataTransfer.effectAllowed = 'move'; },
       ondragend: () => { this.dnd = null; for (const el of $$('.case-card.drop')) el.classList.remove('drop'); } },
     h('span', { class: 'sw', style: { background: b.color } }),
-    h('span', { class: 'n', text: b.name }),
+    h('span', { class: 'n', text: b.name, translate: 'no' }),
     h('span', { class: 'unit', text: sizeTag(fp.w, fp.h, b.hu) + (inCase && b.place.x >= (caseById(b.place.caseId) || { gx: 1e9 }).gx ? ' · Ablage' : '') }),
     inCase ? h('button', { class: 'x', type: 'button', title: 'Aus dem Koffer nehmen', 'aria-label': `${b.name} aus dem Koffer nehmen`, onclick: () => { assignBin(b, null); this.renderCases(); } }, '✕')
       : h('button', { class: 'x', type: 'button', title: 'Öffnen', 'aria-label': `${b.name} öffnen`, onclick: () => { S.ui.binId = b.id; BinUI.sel = null; S.ui.binView = 'edit'; App.show('bin'); } }, '↗'));
@@ -15776,7 +16981,7 @@ const TestPrint = {
     const o = this.opts(), parts = this.chosen(), sheets = this.layout(parts, o);
     const K = 72 / 25.4, pt = (x, y) => `${(x * K).toFixed(2)} ${((SHEET.h - y) * K).toFixed(2)}`;
     const line = (poly, dx, dy) => poly.map(([x, y], i) => `${pt(x + dx, y + dy)} ${i ? 'l' : 'm'}`).join(' ') + ' h S';
-    const text = (x, y, size, s) => `BT /F1 ${size} Tf ${pt(x, y)} Td (${pdfText(s)}) Tj ET`;
+    const text = (x, y, size, s) => `BT /F1 ${size} Tf ${pt(x, y)} Td (${pdfText(tr(s))}) Tj ET`;
     const cross = (x, y) => `${pt(x - 4, y)} m ${pt(x + 4, y)} l ${pt(x, y - 4)} m ${pt(x, y + 4)} l S`;
     const pages = sheets.map((sh, k) => {
       const c = ['1 J 1 j'];
@@ -16661,6 +17866,7 @@ const App = {
       }
       S.ui.flushFix = 1;
     }
+    I18n.start(); // (English: from here on every text shown is translated)
     FotoUI.init(); TraceUI.init(); LibUI.init(); BinUI.init(); CaseUI.init(); Overview.init(); NewBin.init(); TestPrint.init(); DataUI.init(); HelpUI.init(); Undo.init(); DataFolder.init(); GDrive.init();
     window.addEventListener('online', () => Store.sendAll());
     DataUI.takeStartData();
@@ -16693,7 +17899,7 @@ if (location.hash === '#selbsttest') setTimeout(async () => {
     document.title = 'SELBSTTEST OK ' + Math.round(r.measureVolume(s)) + ' mm3, Schrift ' + (document.fonts.check('600 14px Barlow') ? 'da' : 'fehlt');
   } catch (e) { document.title = 'SELBSTTEST FEHLER ' + (e && (e.message || e)); }
 }, 800);
-window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, binKey, hashStr, idbGet, fastBinKept, meshGroup, caseGroup, huFor, sinkTools, autoSize, FotoUI, TraceUI, BinUI, CaseUI, HelpUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, sinkTools, gripShapes, gripGaps, placeGrips, itemPoly, depthExtraOf, defaultDepth, tiltFor, toolPlan, tiltDeep, tiltPt, gripCovers, settleGrips, unreachTrough, FINGER_REACH, lockBin, binLocked, binTool, gripDims, roundCutters, EDGE_ROUND, optimizeTroughs, fingerEdges, fingerEdgePicks, gripPlaces, gripRoom, fieldsFor, GRIP, GRIP_BALL, loadThree, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner, binSplit, halfCuts, binClipSpots, binMagnetSpots, BIN_CLIP, dogbonePoly };
+window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, I18n, tr, LANG, binKey, hashStr, idbGet, fastBinKept, meshGroup, caseGroup, huFor, sinkTools, autoSize, FotoUI, TraceUI, BinUI, CaseUI, HelpUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, sinkTools, gripShapes, gripGaps, placeGrips, itemPoly, depthExtraOf, defaultDepth, tiltFor, toolPlan, tiltDeep, tiltPt, gripCovers, settleGrips, unreachTrough, FINGER_REACH, lockBin, binLocked, binTool, gripDims, roundCutters, EDGE_ROUND, optimizeTroughs, fingerEdges, fingerEdgePicks, gripPlaces, gripRoom, fieldsFor, GRIP, GRIP_BALL, loadThree, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner, binSplit, halfCuts, binClipSpots, binMagnetSpots, BIN_CLIP, dogbonePoly };
 // The mouse wheel over a number field that has the focus changes its value: easily by accident while
 // scrolling the panel (a bin's tolerance, wall, floor). The field gives up the focus instead, and the page
 // scrolls on.
