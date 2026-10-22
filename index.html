@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'a674b0c5ce49';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = 'f72b0f179140';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -318,6 +318,7 @@ label.f.sub-opt input { flex: none; }
 .seg { display: inline-flex; background: var(--surface-2); padding: 2px; border-radius: 7px; }
 .seg button { border: 0; background: transparent; padding: 4px 10px; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted); }
 .seg button[aria-pressed="true"] { background: var(--surface); color: var(--fg); box-shadow: var(--shadow); }
+.seg button:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .list { display: flex; flex-direction: column; gap: 6px; }
 .item {
@@ -10230,6 +10231,8 @@ const I18N_EN = {
   "oben": "top",
   "unten": "bottom",
   "u (je 7 mm)": "u (7 mm each)",
+  "Keine Maske: Ein Werkzeug aus der Liste wird auf seinem Foto-Ausschnitt bearbeitet, ohne Erkennung": "No mask: a tool from the library is edited on its piece of photo, without detection",
+  "Die Maske gibt es erst nach der Erkennung": "The mask is there only after detection",
   "Beispiel ×3": "Example ×3",
   "STEP + STL herunterladen": "Download STEP + STL",
   "3D-Rahmen (STL)": "3D frame (STL)",
@@ -15286,8 +15289,15 @@ const TraceUI = {
     $('#trace-cancel').hidden = !tool; $('#trace-merge').hidden = !!tool; $('#trace-del').hidden = !!tool;
     $('#trace-parts-title').textContent = tool ? 'Werkzeug' : 'Gefundene Teile';
     $('#trace-empty').hidden = has;
-    $('#trace-show-photo').setAttribute('aria-pressed', String(!this.showMask));
-    $('#trace-show-mask').setAttribute('aria-pressed', String(this.showMask));
+    // the mask is what the detection made: a tool from the library is edited on its kept piece of photo,
+    // without one (the switch stays as chosen for the next photos)
+    const noMask = !(T.rect && T.rect.maskCanvas), mb = $('#trace-show-mask');
+    mb.disabled = noMask;
+    mb.title = !noMask ? 'Zeigt orange über dem Foto, was die Erkennung als Teil gezählt hat'
+      : tool ? 'Keine Maske: Ein Werkzeug aus der Liste wird auf seinem Foto-Ausschnitt bearbeitet, ohne Erkennung'
+      : 'Die Maske gibt es erst nach der Erkennung';
+    $('#trace-show-photo').setAttribute('aria-pressed', String(!this.showMask || noMask));
+    mb.setAttribute('aria-pressed', String(this.showMask && !noMask));
     $('#sens').value = T.params.sens; $('#sens-val').textContent = (T.params.sens >= 0 ? '+' : '') + nf(T.params.sens, 2);
     $('#min-size').value = T.params.minSize; $('#border').value = T.params.border; $('#gap').value = T.params.gap;
     $('#detail').value = T.params.detail;

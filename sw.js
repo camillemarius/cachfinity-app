@@ -2,8 +2,8 @@
 // the browser, so Cachfinity starts and works without internet once it has been opened. build.py fills in
 // the file list, a version made from the files' content and the build of the page; a changed file makes a
 // new version, which the browser fetches in the background and takes over at once.
-const VERSION = '419f74f7fb01';
-const BUILD = 'a674b0c5ce49';
+const VERSION = '45c822ca20d1';
+const BUILD = 'f72b0f179140';
 const FILES = ["apple-touch-icon.png", "fonts/-F63fjptAgt5VM-kVkqdyU8n1i8q1w.woff2", "fonts/-F63fjptAgt5VM-kVkqdyU8n1iEq129k.woff2", "fonts/-F6qfjptAgt5VM-kVkqdyU8n3twJwl5FgtIU.woff2", "fonts/-F6qfjptAgt5VM-kVkqdyU8n3twJwlBFgg.woff2", "fonts/7cHpv4kjgoGqM7E_Ass52Hs.woff2", "fonts/7cHpv4kjgoGqM7E_DMs5.woff2", "fonts/7cHqv4kjgoGqM7E30-8s51os.woff2", "fonts/7cHqv4kjgoGqM7E30-8s6VospT4.woff2", "fonts/7cHqv4kjgoGqM7E3_-gs51os.woff2", "fonts/7cHqv4kjgoGqM7E3_-gs6VospT4.woff2", "fonts/7cHqv4kjgoGqM7E3t-4s51os.woff2", "fonts/7cHqv4kjgoGqM7E3t-4s6VospT4.woff2", "fonts/HTxwL3I-JCGChYJ8VI-L6OO_au7B46r2z3bWuQ.woff2", "fonts/HTxwL3I-JCGChYJ8VI-L6OO_au7B46r2z3jWuZEC.woff2", "fonts/HTxwL3I-JCGChYJ8VI-L6OO_au7B4873z3bWuQ.woff2", "fonts/HTxwL3I-JCGChYJ8VI-L6OO_au7B4873z3jWuZEC.woff2", "icon-192.png", "icon-512.png", "icon-maskable-512.png", "./", "manifest.webmanifest", "oc.bundle.js", "replicad.bundle.js", "replicad_single.wasm", "three.bundle.js"];
 const CACHE = 'cachfinity-' + VERSION;
 
@@ -22,7 +22,9 @@ self.addEventListener('message', (e) => { if (e.data === 'build?' && e.source) e
 // The page itself comes from the server when there is a connection, so a new version shows with the first
 // reload (it used to take two: the kept page first, the new one only after the worker had updated); without
 // one, or when the server takes more than 3 s, the kept copy. Everything else of the app's own comes from
-// the cache; other addresses, such as a sign-in at Google, go to the network as usual.
+// the cache; other addresses, such as a sign-in at Google, go to the network as usual. So does media/ (the
+// README's demo video and its poster), which is not part of the app: opening the video's link would
+// otherwise show the app page.
 async function page() {
   const cache = await caches.open(CACHE);
   try {
@@ -35,8 +37,9 @@ async function page() {
   return (await cache.match('./')) || fetch(new URL('./', self.location).href);
 }
 self.addEventListener('fetch', (e) => {
-  const req = e.request;
-  if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
+  const req = e.request, url = new URL(req.url);
+  if (req.method !== 'GET' || url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith(new URL('media/', self.location).pathname)) return;
   if (req.mode === 'navigate') { e.respondWith(page()); return; }
   e.respondWith((async () => {
     const cache = await caches.open(CACHE);
