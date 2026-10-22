@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '20f70f7c2ffd';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '410a7820f78e';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -683,7 +683,7 @@ label.f.sub-opt input { flex: none; }
         <button title="Sperren, zum Beispiel wenn der Bin gedruckt ist: danach ändert sich nichts mehr daran, weder durch dich noch durch Anpassungen der App (auch nicht, wenn sich ein Werkzeug später ändert). Exportieren geht weiter; ein Klick entsperrt wieder" class="btn small" type="button" id="bin-lock" aria-pressed="false">Sperren</button>
         <span id="bin-del-wrap" class="confirm"><button title="Diesen Bin löschen (mit Rückfrage)" class="btn small danger" type="button" id="bin-del">Löschen</button></span>
         <span class="hint"></span>
-        <div class="seg" role="group" aria-label="Ansicht"><button title="Draufsicht: Werkzeuge und Formen anordnen" type="button" id="bin-view-2d" aria-pressed="true">Draufsicht</button><button title="3D-Ansicht; die exakte Form wird nach einem Moment berechnet. Werkzeuge mit Haken «3D» in der Liste erscheinen darin" type="button" id="bin-view-3d" aria-pressed="false">3D</button></div>
+        <div class="seg" role="group" aria-label="Ansicht"><button title="Draufsicht: Werkzeuge und Formen anordnen" type="button" id="bin-view-2d" aria-pressed="true">Draufsicht</button><button title="3D-Ansicht: zuerst die Schnellvorschau; die exakte Form mit «Exakt berechnen» oder nach dem Export (danach gespeichert). Werkzeuge mit Haken «3D» in der Liste erscheinen darin" type="button" id="bin-view-3d" aria-pressed="false">3D</button></div>
       </div>
       <div class="stage" id="stage-bin"><canvas id="cv-bin"></canvas><div class="three-host" id="bin-3d" hidden></div>
         <div class="stage-empty" id="bin-empty" hidden><div><strong>Noch kein Bin</strong>Lege mit «Neuer Bin» einen an oder ziehe im Koffer ein Rechteck auf.</div></div>
@@ -14731,7 +14731,7 @@ const BinUI = {
     $('#cv-bin').hidden = v !== '2d'; $('#bin-3d').hidden = v !== '3d';
     $('#bin-fit').hidden = v !== '2d';
     $('#bin-hint').textContent = v === '2d' ? 'Teile und Formen ziehen zum Verschieben, die Anfasser an einer Form ändern ihre Grösse. Griffmulden zum Herausheben an der Wand entlang ziehen. Gezogen rastet alles auf 0.5 mm, mit Strg fein auf 0.1 mm. Pfeiltasten schieben um 1 mm, mit Shift um 5 mm. R dreht um 90°. Shift-Klick wählt mehrere Teile, Strg+A alle: sie bewegen sich dann zusammen.' : 'Ziehen dreht, Mausrad zoomt. Die Ansicht zeigt die exakte CAD-Geometrie, wie sie exportiert wird.';
-    if (v === '3d') { this.update3d(); setTimeout(() => this.exact3d(curBin()), 250); } else this.stage.redraw();
+    if (v === '3d') this.update3d(); else this.stage.redraw(); // (the exact form only when asked for: exact3d)
   },
   // The exact model's mesh, kept by what the bin is made from (binKey) and the app's build: here, and in the
   // browser's IndexedDB (the last one per bin), so a bin computed or exported once shows exact at once, also
@@ -14757,9 +14757,10 @@ const BinUI = {
       for (const k of (await idb('readonly', (s) => s.getAllKeys())) || []) if (typeof k === 'string' && k.startsWith('exact:') && !ids.has(k)) await idbDel(k);
     } catch { /* nothing kept */ }
   },
-  // The exact CAD model for the 3D view, computed when the view opens (a few seconds; the page waits) unless it
-  // is kept. The quick stand-in shows the round troughs in fine steps, which leave small teeth where they meet a
-  // pocket. After a change in the 3D view the stand-in shows again, with a button to compute the exact form.
+  // The exact CAD model for the 3D view, computed only when asked for with «Exakt berechnen» (Camille: it took up
+  // to a minute for a large bin each time the view opened; the page waits) or by the export, and kept from then on.
+  // Until then the quick stand-in: it shows the round troughs in fine steps, which leave small teeth where they
+  // meet a pocket.
   async exact3d(b) {
     if (!b || this.computing || this.view !== '3d') return;
     if (await this.loadExact(b)) { if (this.view === '3d') this.update3d(); return; }
@@ -14791,7 +14792,7 @@ const BinUI = {
       self.viewer.set(grp, self.viewer.lastBin === b.id); self.viewer.lastBin = b.id;
       const exact = !!mesh;
       $('#bin-overlay').replaceChildren(...[h('span', { class: 'chip-on-mat', text: exact ? 'Exakte CAD-Geometrie' : 'Schnellvorschau' }),
-        exact || self.computing ? null : h('button', { class: 'btn small', type: 'button', style: { pointerEvents: 'auto' }, onclick: () => self.exact3d(curBin()) }, 'Exakt berechnen')].filter(Boolean));
+        exact || self.computing ? null : h('button', { class: 'btn small', type: 'button', style: { pointerEvents: 'auto' }, title: 'Die exakte CAD-Form berechnen, wie sie exportiert wird (bei einem grossen Bin bis zu einer Minute). Danach bleibt sie gespeichert, bis du den Bin änderst; auch der Export speichert sie.', onclick: () => self.exact3d(curBin()) }, 'Exakt berechnen')].filter(Boolean));
     } catch (e) { console.error(e); toast('3D-Ansicht konnte nicht laden: ' + (e.message || e), 'bad'); }
   }, 150),
   async exportCur() {
