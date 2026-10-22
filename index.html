@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '2caabb971ad4';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Cachfinity</title><meta name="description" content="Gridfinity-Bins aus Werkzeugfotos: Umrisse, Bins, Koffer, STEP und STL."><meta name="theme-color" content="#e8ede9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script>window.CF_OFFLINE = true; window.CF_WEB = true; window.CF_BUILD = '003990b5a0a7';</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><style>@font-face {
   font-family: 'Barlow';
   font-style: normal;
   font-weight: 400;
@@ -496,8 +496,19 @@ label.f.sub-opt input { flex: none; }
 /* online / offline */
 .mode-switch { margin-left: auto; }
 .mode-switch + .savestate, .lang-switch + .savestate { margin-left: 8px; }
-.mode-switch + .lang-switch { margin-left: 8px; }
+.mode-switch:not([hidden]) + .lang-switch { margin-left: 8px; } /* (the web app hides the mode switch: then the language switch goes right) */
 .lang-switch button { min-width: 34px; }
+/* the top bar on one line where the screen is wide enough (Camille: with the language switch the status and
+   «Mit Google abgleichen» went onto a second line): the status text gives way first, cut with «…» (its full text
+   in the tooltip); the language switch goes right, after the tabs */
+.lang-switch { margin-left: auto; }
+.savestate .btn, .savestate .dot { flex: none; }
+@media (min-width: 1360px) {
+  .topbar { flex-wrap: nowrap; }
+  .topbar > .brand, .topbar > .tabs, .topbar > .seg { flex-shrink: 0; }
+  .savestate { min-width: 0; }
+  #savestate-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
 .mode-switch button[aria-pressed="true"]#mode-offline { color: var(--warn); }
 .drop-hint { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: rgba(8, 14, 10, 0.6); color: #fff; font: 600 20px var(--font-display); pointer-events: none; }
 
@@ -13193,6 +13204,7 @@ function setSaveState(st) {
     : window.CF_OFFLINE ? (df === 'on' ? `${where}Datendatei «${DataFolder.handle.name}» verbunden` : df === 'needs' ? `${where}Datendatei braucht Freigabe` : window.CF_WEB ? 'In diesem Browser gespeichert' : 'Offline-Version: in diesem Browser')
     : st === 'offline' ? 'Offline: Änderungen werden nachgeladen'
       : Store.mode !== 'db' ? 'Nur in diesem Browser' : st === 'pending' ? 'Speichert…' : 'In deinem Konto gespeichert';
+  tx.title = tx.textContent; // (cut short where the top bar is full)
 }
 
 // ===== «Platzsparend anordnen»: the tools nested into each other by their real outlines =====
@@ -14163,18 +14175,20 @@ class Viewer3D {
     this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); this.render();
   }
   render() { if (this.renderer) this.renderer.render(this.scene, this.camera); }
+  // (the geometry of a kept stand-in stays: it is shown again, see fastBinKept)
   set(group, keepView) {
-    for (const c of [...this.root.children]) { this.root.remove(c); c.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); }
+    for (const c of [...this.root.children]) { this.root.remove(c); c.traverse((o) => { if (o.geometry && !o.geometry.userData.kept) o.geometry.dispose(); }); }
     this.root.add(group);
-    if (!keepView || !this.viewed) {
-      const box = new this.THREE.Box3().setFromObject(group); const c = box.getCenter(new this.THREE.Vector3()); const sz = box.getSize(new this.THREE.Vector3());
-      const R = Math.max(sz.x, sz.y, sz.z) * 1.05 + 20;
-      this.controls.target.copy(c);
-      this.camera.position.set(c.x - R * 0.9, c.y - R * 1.5, c.z + R * 1.3);
-      this.camera.near = R / 50; this.camera.far = R * 30; this.camera.updateProjectionMatrix();
-      this.controls.update(); this.viewed = true;
-    }
+    if (!keepView || !this.viewed) this.frame(group);
     this.render();
+  }
+  frame(group) {
+    const box = new this.THREE.Box3().setFromObject(group); const c = box.getCenter(new this.THREE.Vector3()); const sz = box.getSize(new this.THREE.Vector3());
+    const R = Math.max(sz.x, sz.y, sz.z) * 1.05 + 20;
+    this.controls.target.copy(c);
+    this.camera.position.set(c.x - R * 0.9, c.y - R * 1.5, c.z + R * 1.3);
+    this.camera.near = R / 50; this.camera.far = R * 30; this.camera.updateProjectionMatrix();
+    this.controls.update(); this.viewed = true;
   }
 }
 function threeShape(THREE, poly, holes = []) {
@@ -14223,9 +14237,12 @@ const fastKept = new Map();
 function fastBinKept(THREE, b, opts = {}) {
   const id = b.id + (opts.ghost ? ':ghost' : ''), key = binKey(b) + b.color, hit = fastKept.get(id);
   if (hit && hit.key === key) return hit.grp.clone();
-  const grp = fastBinGroup(THREE, b, opts); fastKept.set(id, { key, grp });
+  if (hit) hit.grp.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); // (the bin changed: its old stand-in goes)
+  const grp = fastBinGroup(THREE, b, opts); grp.traverse((o) => { if (o.geometry) o.geometry.userData.kept = true; });
+  fastKept.set(id, { key, grp });
   return grp.clone();
 }
+const fastIsKept = (b, opts = {}) => { const hit = fastKept.get(b.id + (opts.ghost ? ':ghost' : '')); return !!hit && hit.key === binKey(b) + b.color; };
 function fastBinGroup(THREE, b, opts = {}) {
   const grp = new THREE.Group();
   const mat = new THREE.MeshStandardMaterial({ color: b.color, roughness: 0.62, metalness: 0.02, transparent: !!opts.ghost, opacity: opts.ghost ? 0.25 : 1 });
@@ -14377,7 +14394,8 @@ function plateGroup(THREE, cs) {
   return { grp, floor: F };
 }
 // (hidden: ids of bins left out, and 'plate' for the baseplate; CaseUI's layer list)
-function caseGroup(THREE, cs, focusId, hidden = null) {
+// (bins: false leaves the bins out, for a view that adds them one by one with caseBinGroup)
+function caseGroup(THREE, cs, focusId, hidden = null, bins = true) {
   const grp = new THREE.Group();
   const W = cs.gx * GF.pitch, D = cs.gy * GF.pitch, H = cs.hu * GF.unit;
   // the baseplate stands for the case's floor (no floor drawn under it, so turned to look from below one sees
@@ -14385,17 +14403,17 @@ function caseGroup(THREE, cs, focusId, hidden = null) {
   const plate = plateGroup(THREE, cs); if (!hidden || !hidden.has('plate')) grp.add(plate.grp);
   const box = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(W + 6, D + 6, H)), new THREE.LineBasicMaterial({ color: 0x9fb3a7 }));
   box.position.set(W / 2, -D / 2, H / 2); grp.add(box);
-  for (const b of placedIn(cs)) {
-    if (hidden && hidden.has(b.id)) continue;
-    const g = fastBinKept(THREE, b, { ghost: focusId && focusId !== b.id });
-    g.add(toolsGroup(THREE, b)); // the tools ticked «3D» in the bin
-    const fp = footprint(b);
-    g.rotation.z = b.place.rot === 90 ? -Math.PI / 2 : 0; // clockwise seen from above, like the 2D plan
-    // (bins in the storage area beside the case stand on the floor, not on the plate)
-    g.position.set((b.place.x + fp.w / 2) * GF.pitch, -(b.place.y + fp.h / 2) * GF.pitch, (isParked(b, cs) ? 0 : plate.floor) + b.place.z * GF.unit);
-    grp.add(g);
-  }
+  if (bins) for (const b of placedIn(cs)) if (!hidden || !hidden.has(b.id)) grp.add(caseBinGroup(THREE, cs, b, focusId));
   return grp;
+}
+function caseBinGroup(THREE, cs, b, focusId = null) {
+  const g = fastBinKept(THREE, b, { ghost: focusId && focusId !== b.id });
+  g.add(toolsGroup(THREE, b)); // the tools ticked «3D» in the bin
+  const fp = footprint(b);
+  g.rotation.z = b.place.rot === 90 ? -Math.PI / 2 : 0; // clockwise seen from above, like the 2D plan
+  // (bins in the storage area beside the case stand on the floor, not on the plate)
+  g.position.set((b.place.x + fp.w / 2) * GF.pitch, -(b.place.y + fp.h / 2) * GF.pitch, (isParked(b, cs) ? 0 : plateFloor(cs)) + b.place.z * GF.unit);
+  return g;
 }
 
 // ===== Stage: zoomable 2D canvas with pointer tools =====
@@ -16460,14 +16478,28 @@ const CaseUI = {
     const any = [...bins.map((b) => b.id), 'plate'].some((id) => hid.has(id));
     host.replaceChildren(h('div', { class: 'lh' }, h('span', { text: 'Ebenen' }), ...(any ? [h('button', { type: 'button', title: 'Alles wieder zeigen', onclick: () => set([...bins.map((b) => b.id), 'plate'], true) }, 'Alle zeigen')] : [])), ...rows);
   },
+  // The plate and the box at once, then the bins one by one: a bin whose stand-in is built for the first time
+  // takes a moment, and all of them in one go held the page for seconds (Camille: it froze once). A newer
+  // drawing stops an older one.
   update3d: debounce(async function () {
     const self = CaseUI; if (self.view !== '3d') return;
     const cs = curCase(); if (!cs) return;
+    const run = (self.run3d = (self.run3d || 0) + 1);
     try {
       if (!self.viewer) self.viewer = new Viewer3D($('#case-3d'));
       await self.viewer.ready;
       const { THREE } = await loadThree();
-      self.viewer.set(caseGroup(THREE, cs, null, self.hide3d), self.viewer.lastCase === cs.id); self.viewer.lastCase = cs.id;
+      if (run !== self.run3d) return;
+      const keep = self.viewer.lastCase === cs.id, grp = caseGroup(THREE, cs, null, self.hide3d, false);
+      self.viewer.set(grp, keep); self.viewer.lastCase = cs.id;
+      for (const b of placedIn(cs)) {
+        if (self.hide3d.has(b.id)) continue;
+        if (!fastIsKept(b)) { self.viewer.render(); await frame(); }
+        if (run !== self.run3d || self.view !== '3d' || curCase() !== cs) return;
+        grp.add(caseBinGroup(THREE, cs, b));
+      }
+      if (!keep) self.viewer.frame(grp);
+      self.viewer.render();
     } catch (e) { console.error(e); toast('3D-Ansicht konnte nicht laden: ' + (e.message || e), 'bad'); }
   }, 150),
   async exportAll() {
@@ -17899,7 +17931,7 @@ if (location.hash === '#selbsttest') setTimeout(async () => {
     document.title = 'SELBSTTEST OK ' + Math.round(r.measureVolume(s)) + ' mm3, Schrift ' + (document.fonts.check('600 14px Barlow') ? 'da' : 'fehlt');
   } catch (e) { document.title = 'SELBSTTEST FEHLER ' + (e && (e.message || e)); }
 }, 800);
-window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, I18n, tr, LANG, binKey, hashStr, idbGet, fastBinKept, meshGroup, caseGroup, huFor, sinkTools, autoSize, FotoUI, TraceUI, BinUI, CaseUI, HelpUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, sinkTools, gripShapes, gripGaps, placeGrips, itemPoly, depthExtraOf, defaultDepth, tiltFor, toolPlan, tiltDeep, tiltPt, gripCovers, settleGrips, unreachTrough, FINGER_REACH, lockBin, binLocked, binTool, gripDims, roundCutters, EDGE_ROUND, optimizeTroughs, fingerEdges, fingerEdgePicks, gripPlaces, gripRoom, fieldsFor, GRIP, GRIP_BALL, loadThree, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner, binSplit, halfCuts, binClipSpots, binMagnetSpots, BIN_CLIP, dogbonePoly };
+window.GFW = { T, get S() { return S; }, App, sampleTruth, correctedOutline, clipBool, polyArea, polyBBox, loadSamplePhotos, rectifyAll, detectItems, exportBins, binChecks, I18n, tr, LANG, binKey, hashStr, idbGet, fastBinKept, meshGroup, caseGroup, caseBinGroup, fastIsKept, huFor, sinkTools, autoSize, FotoUI, TraceUI, BinUI, CaseUI, HelpUI, edgeOffsets, fitShadow, ringsPx, paperAt, ratioAt, erode, dilate, fillHoles, clearBorder, snapMask, rasterize, buildMask, resimplify, fitStraight, toggleMirror, mirrorPreview, alignPhotos, lowres, pearson, scoreMap, warpPaper, homFor, gridBoxSum, frameOf, plausibleRots, sceneSig, rectifyScene, withScene, scenePhotos, toolFromOutline, newBin, addToolToBin, packBin, fitBin, snapPlace, isParked, inCase, parkX0, autoFinger, ensureFingers, syncFingers, relocateFingers, attachLocal, fingerWorld, LibUI, NewBin, DataUI, DataFolder, GDrive, Undo, Store, exportPlate, buildPlatePart, clipSolid, splitPlan, bedUnits, plateClips, binParts, loadCAD, buildBinSolid, scoopCutter, fastBinGroup, binPockets, TestPrint, mirrorHalf, startAxis, reflectPt, axisSide, makePdf, freePlace, caseChecks, fitsHeight, plateFloor, toolHeightChanged, plateClipSpots, clipDims, CLIP_OPEN, plateOpts, plateFloor, padCross, sinkTools, gripShapes, gripGaps, placeGrips, itemPoly, depthExtraOf, defaultDepth, tiltFor, toolPlan, tiltDeep, tiltPt, gripCovers, settleGrips, unreachTrough, FINGER_REACH, lockBin, binLocked, binTool, gripDims, roundCutters, EDGE_ROUND, optimizeTroughs, fingerEdges, fingerEdgePicks, gripPlaces, gripRoom, fieldsFor, GRIP, GRIP_BALL, loadThree, nestBin, nestFootprint, noFit, nestUnits, nestStrip, offsetPolys, binInner, binSplit, halfCuts, binClipSpots, binMagnetSpots, BIN_CLIP, dogbonePoly };
 // The mouse wheel over a number field that has the focus changes its value: easily by accident while
 // scrolling the panel (a bin's tolerance, wall, floor). The field gives up the focus instead, and the page
 // scrolls on.
